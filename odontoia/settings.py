@@ -127,11 +127,11 @@ CSRF_COOKIE_HTTPONLY = True
 
 # Garante que cookies de sessão e CSRF só sejam enviados por HTTPS
 # (em localhost, mantenha False até ativar HTTPS no servidor)
-SESSION_COOKIE_SECURE = False  # mude para True em produção (HTTPS)
-CSRF_COOKIE_SECURE = False     # idem
+SESSION_COOKIE_SECURE = True  # mude para True em produção (HTTPS)
+CSRF_COOKIE_SECURE = True     # idem
 
 # Previne carregamento de conteúdo inseguro em HTTPS
-SECURE_SSL_REDIRECT = False    # True em produção (redireciona http → https)
+SECURE_SSL_REDIRECT = True    # True em produção (redireciona http → https)
 SECURE_HSTS_SECONDS = 31536000  # 1 ano (ativa HSTS)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
