@@ -13,7 +13,13 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 
 DEBUG = os.getenv("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = ['app.odontoia.codertec.com.br', 'odontoia.codertec.com.br', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = [
+    'app.odontoia.codertec.com.br',
+    'odontoia.codertec.com.br',
+    '04vv6rw3.up.railway.app',
+    'localhost',
+    '127.0.0.1'
+]
 
 
 # Aplicativos instalados
