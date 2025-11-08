@@ -1,0 +1,546 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+{% block title %}Dashboard - OdontoIA{% endblock %}
+
+{% block content %}
+<h2>📊 Dashboard - OdontoIA</h2>
+
+<!-- Cards Financeiros -->
+<div class="cards-container finance">
+    <div class="card money">
+        <h3>💰 Faturamento Total</h3>
+        <p class="num">R$ {{ faturamento_total|floatformat:2 }}</p>
+    </div>
+    <div class="card money">
+        <h3>💼 Comissões Totais</h3>
+        <p class="num">R$ {{ comissoes_total|floatformat:2 }}</p>
+    </div>
+    <div class="card money">
+        <h3>📆 Faturamento Líquido</h3>
+        <p class="num">R$ {{ faturamento_liquido|floatformat:2 }}</p>
+    </div>
+    <div class="card money">
+        <h3>💳 Ticket Médio</h3>
+        <p class="num">R$ {{ faturamento_medio|floatformat:2 }}</p>
+    </div>
+</div>
+
+<!-- Cards Gerais -->
+<div class="cards-container">
+    <div class="card">
+        <h3>Pacientes</h3>
+        <p class="num">{{ total_pacientes }}</p>
+    </div>
+    <div class="card">
+        <h3>Consultas</h3>
+        <p class="num">{{ total_consultas }}</p>
+    </div>
+    <div class="card success">
+        <h3>Concluídas</h3>
+        <p class="num">{{ consultas_concluidas }}</p>
+    </div>
+    <div class="card warning">
+        <h3>Pendentes</h3>
+        <p class="num">{{ consultas_pendentes }}</p>
+    </div>
+</div>
+
+<!-- Filtro de período -->
+<div class="filtro-periodo">
+    <label>Período:</label>
+    <select id="filtroPeriodo">
+        <option value="7">Últimos 7 dias</option>
+        <option value="30" selected>Últimos 30 dias</option>
+        <option value="90">Últimos 90 dias</option>
+        <option value="365">Ano Atual</option>
+    </select>
+</div>
+
+<!-- Gráficos -->
+<div class="charts-wrapper">
+    <div class="chart-card">
+        <h4>🦷 Consultas por Dentista</h4>
+        <canvas id="graficoDentistasConsultas"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h4>💸 Receita por Dentista</h4>
+        <canvas id="graficoDentistasReceita"></canvas>
+    </div>
+    <div class="chart-card">
+        <h4>💼 Comissão por Dentista</h4>
+        <canvas id="graficoDentistasComissao"></canvas>
+    </div>
+    <div class="chart-card" style="width: 700px;">
+        <h4>📈 Desempenho Mensal (Consultas x Receita)</h4>
+        <canvas id="graficoDesempenhoMensal"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h4>📅 Consultas por Mês</h4>
+        <canvas id="graficoConsultas"></canvas>
+    </div>
+
+    <div class="chart-card">
+        <h4>Status das Consultas</h4>
+        <canvas id="graficoPizza"></canvas>
+    </div>
+</div>
+
+
+<!-- Ranking de Dentistas -->
+<div class="table-container">
+    <h3>🏆 Ranking de Dentistas</h3>
+    {% if ranking_dentistas %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Dentista</th>
+                <th>Consultas</th>
+                <th>Receita (R$)</th>
+                <th>Comissão (R$)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in ranking_dentistas %}
+            <tr>
+                <td>{{ d.dentista__nome }}</td>
+                <td>{{ d.total_consultas }}</td>
+                <td>{{ d.receita|floatformat:2 }}</td>
+                <td>{{ d.comissao|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="vazio">Nenhum dado disponível no período selecionado.</p>
+    {% endif %}
+</div>
+
+<!-- Próximas Consultas -->
+<div class="table-container">
+    <h3>📅 Próximas Consultas (7 dias)</h3>
+    {% if proximas_consultas %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Paciente</th>
+                <th>Dentista</th>
+                <th>Data</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in proximas_consultas %}
+            <tr>
+                <td>{{ c.paciente.nome }}</td>
+                <td>{{ c.dentista.nome }}</td>
+                <td>{{ c.data|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if c.concluida %}
+                    <span class="status status-ok">Concluída</span>
+                    {% else %}
+                    <span class="status status-pendente">Pendente</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="vazio">Nenhuma consulta agendada para esta semana.</p>
+    {% endif %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // === Gráfico de Consultas por Mês ===
+    const ctxConsultasMes = document.getElementById('graficoConsultas').getContext('2d');
+    const graficoConsultasMes = new Chart(ctxConsultasMes, {
+        type: 'line',
+        data: {
+            labels: {{ meses| safe }},
+    datasets: [{
+        label: 'Consultas por Mês',
+        data: {{ dados_consultas| safe }},
+        borderWidth: 2,
+        borderColor: '#0b5394',
+        backgroundColor: 'rgba(11,83,148,0.2)',
+        tension: 0.3,
+        fill: true,
+        pointRadius: 5,
+        pointBackgroundColor: '#0b5394'
+        }]
+    },
+    options: {
+        responsive: true,
+            scales: { y: { beginAtZero: true } },
+        plugins: { legend: { display: false } }
+    }
+});
+
+    // === Gráfico de Status das Consultas ===
+    const ctxPizza = document.getElementById('graficoPizza').getContext('2d');
+    const graficoPizza = new Chart(ctxPizza, {
+        type: 'doughnut',
+        data: {
+            labels: ['Concluídas', 'Pendentes'],
+            datasets: [{
+                data: [{{ status_consultas.concluidas }}, {{ status_consultas.pendentes }}],
+        backgroundColor: ['#28a745', '#ffc107'],
+        borderWidth: 1
+    }]
+    },
+    options: {
+        responsive: true,
+            plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { enabled: true },
+            title: { display: true, text: 'Status das Consultas' }
+        }
+    }
+});
+
+    // === Gráfico de Consultas por Dentista ===
+    const ctxDentistasConsultas = document.getElementById('graficoDentistasConsultas').getContext('2d');
+    const graficoDentistasConsultas = new Chart(ctxDentistasConsultas, {
+        type: 'bar',
+        data: {
+            labels: {{ dentistas_labels| safe }},
+    datasets: [{
+        label: 'Consultas',
+        data: {{ dentistas_qtd| safe }},
+        backgroundColor: '#0074D9',
+        borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+            responsive: true,
+                plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Consultas por Dentista' }
+        },
+        scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } },
+            y: { ticks: { font: { size: 12 } } }
+        }
+    }
+});
+
+    // === Gráfico de Receita por Dentista ===
+    const ctxDentistasReceita = document.getElementById('graficoDentistasReceita').getContext('2d');
+    const graficoDentistasReceita = new Chart(ctxDentistasReceita, {
+        type: 'bar',
+        data: {
+            labels: {{ dentistas_labels| safe }},
+    datasets: [{
+        label: 'Receita (R$)',
+        data: {{ dentistas_receita| safe }},
+        backgroundColor: '#0b5394',
+        borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+            responsive: true,
+                plugins: {
+            legend: { display: false },
+            title: { display: true, text: '💸 Receita por Dentista' }
+        },
+        scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } },
+            y: { ticks: { font: { size: 12 } } }
+        }
+    }
+});
+
+    // === Gráfico de Comissão por Dentista ===
+    const ctxDentistasComissao = document.getElementById('graficoDentistasComissao').getContext('2d');
+    const graficoDentistasComissao = new Chart(ctxDentistasComissao, {
+        type: 'bar',
+        data: {
+            labels: {{ dentistas_labels| safe }},
+    datasets: [{
+        label: 'Comissão (R$)',
+        data: {{ dentistas_comissao| safe }},
+        backgroundColor: '#28a745',
+        borderRadius: 6
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+            responsive: true,
+                plugins: {
+            legend: { display: false },
+            title: { display: true, text: '💼 Comissão por Dentista' }
+        },
+        scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 } },
+            y: { ticks: { font: { size: 12 } } }
+        }
+    }
+});
+
+    // === Gráfico de Desempenho Mensal (Consultas x Receita) ===
+    const ctxDesempenho = document.getElementById('graficoDesempenhoMensal').getContext('2d');
+    const graficoDesempenhoMensal = new Chart(ctxDesempenho, {
+        data: {
+            labels: {{ meses| safe }},
+    datasets: [
+        {
+            type: 'bar',
+            label: 'Receita (R$)',
+            data: {{ dados_receita| safe }},
+        backgroundColor: 'rgba(11,83,148,0.6)',
+        borderColor: '#0b5394',
+        borderWidth: 1,
+        yAxisID: 'y1',
+            },
+        {
+            type: 'line',
+            label: 'Consultas',
+            data: {{ dados_consultas| safe }},
+        borderColor: '#ffc107',
+        backgroundColor: '#ffc107',
+        borderWidth: 2,
+        fill: false,
+        tension: 0.3,
+        yAxisID: 'y2',
+            }
+    ]
+    },
+    options: {
+        responsive: true,
+            interaction: { mode: 'index', intersect: false },
+        plugins: {
+            title: { display: true, text: '📈 Desempenho Mensal' },
+            legend: { position: 'bottom' }
+        },
+        scales: {
+            y1: {
+                type: 'linear',
+                    position: 'left',
+                        title: { display: true, text: 'Receita (R$)' },
+                beginAtZero: true
+            },
+            y2: {
+                type: 'linear',
+                    position: 'right',
+                        title: { display: true, text: 'Consultas' },
+                beginAtZero: true,
+                    grid: { drawOnChartArea: false }
+            }
+        }
+    }
+});
+</script>
+
+
+<script>
+    document.getElementById('filtroPeriodo').addEventListener('change', function () {
+        const periodo = this.value;
+
+        fetch(`/dashboard/data/?periodo=${periodo}`)
+            .then(response => response.json())
+            .then(data => {
+                // Atualiza os cards de valores
+                document.querySelectorAll('.card.money .num')[0].textContent = `R$ ${data.faturamento_total.toFixed(2)}`;
+                document.querySelectorAll('.card.money .num')[1].textContent = `R$ ${data.faturamento_mensal.toFixed(2)}`;
+                document.querySelectorAll('.card.money .num')[2].textContent = `R$ ${data.faturamento_medio.toFixed(2)}`;
+
+                // Atualiza o gráfico de status
+                graficoPizza.data.datasets[0].data = [
+                    data.status_consultas.concluidas,
+                    data.status_consultas.pendentes
+                ];
+                graficoPizza.update();
+
+                // Atualiza o gráfico combinado
+                graficoDesempenhoMensal.data.labels = data.meses;
+                graficoDesempenhoMensal.data.datasets[0].data = data.dados_receita;
+                graficoDesempenhoMensal.data.datasets[1].data = data.dados_consultas;
+                graficoDesempenhoMensal.update();
+
+                // Atualiza gráfico de dentistas
+                const dentistas = data.dentistas.map(d => d.dentista__nome);
+                const receitas = data.dentistas.map(d => d.receita);
+                const consultas = data.dentistas.map(d => d.total_consultas);
+                const comissoes = data.dentistas.map(d => d.comissao);
+
+                graficoDentistasConsultas.data.labels = dentistas;
+                graficoDentistasConsultas.data.datasets[0].data = consultas;
+                graficoDentistasConsultas.update();
+
+                graficoDentistasReceita.data.labels = dentistas;
+                graficoDentistasReceita.data.datasets[0].data = receitas;
+                graficoDentistasReceita.update();
+
+                graficoDentistasComissao.data.labels = dentistas;
+                graficoDentistasComissao.data.datasets[0].data = comissoes;
+                graficoDentistasComissao.update();
+            })
+            .catch(error => console.error('Erro ao carregar dados:', error));
+    });
+</script>
+
+<!-- CSS -->
+<style>
+    h2 {
+        text-align: center;
+        margin-top: 20px;
+        color: #0b5394;
+    }
+
+    .cards-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        margin: 30px 0;
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        width: 180px;
+        text-align: center;
+        transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+        transform: scale(1.05);
+    }
+
+    .card h3 {
+        margin-bottom: 10px;
+        color: #444;
+    }
+
+    .card .num {
+        font-size: 2em;
+        font-weight: bold;
+        color: #0b5394;
+    }
+
+    .card.success {
+        border-top: 5px solid #28a745;
+    }
+
+    .card.warning {
+        border-top: 5px solid #ffc107;
+    }
+
+    .charts-wrapper {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 30px;
+        margin: 30px auto;
+    }
+
+    .chart-card {
+        width: 350px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+    }
+
+    .table-container {
+        width: 90%;
+        max-width: 900px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+    }
+
+    .status {
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.85em;
+        font-weight: bold;
+    }
+
+    .status-ok {
+        background: #28a745;
+        color: white;
+    }
+
+    .status-pendente {
+        background: #ffc107;
+        color: #333;
+    }
+
+    .vazio {
+        text-align: center;
+        color: #777;
+    }
+
+    .filtro-periodo {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        width: 90%;
+        max-width: 1000px;
+        margin: 0 auto 10px auto;
+    }
+
+    .filtro-periodo label {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .filtro-periodo select {
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+
+    .card.money {
+        background: #e8f5e9;
+        border-top: 5px solid #28a745;
+    }
+
+    .card.money .num {
+        color: #1b5e20;
+    }
+
+    /* === CORREÇÃO DE TEXTO EM TABELAS DO DASHBOARD === */
+    .table-container table th,
+    .table-container table td {
+        color: #0b5394 !important;
+        /* azul escuro OdontoIA */
+    }
+
+    /* Cabeçalhos das tabelas um pouco mais destacados */
+    .table-container table th {
+        font-weight: 700;
+        background-color: #E2EFF7;
+        /* azul-claro do tema */
+    }
+</style>
+{% endblock %}

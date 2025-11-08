@@ -1,0 +1,13 @@
+{% extends "clinic/base.html" %}
+{% block title %}Excluir Consulta{% endblock %}
+
+{% block content %}
+<h2>Excluir Consulta</h2>
+<p>Tem certeza que deseja excluir a consulta de <strong>{{ consulta.paciente.nome }}</strong> com o dentista <strong>{{ consulta.dentista.nome }}</strong>?</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit" class="btn-danger">Excluir</button>
+    <a href="{% url 'clinic:consultas_list' %}" class="btn-cancel">Cancelar</a>
+</form>
+{% endblock %}

@@ -1,0 +1,105 @@
+/* Remove possíveis sombras ou filtros herdados */
+#user-tools a:after,
+#user-tools a:before {
+    display: none !important;
+}
+
+
+/* Fonte personalizada */
+body, td, th {
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* Botões */
+input[type=submit], .button, .submit-row input {
+    background: #ff9800;
+    border-radius: 6px;
+    padding: 6px 12px;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+input[type=submit]:hover {
+    background: #e68900;
+}
+
+/* Força o logo a ocupar toda a área */
+/* Remove limites e faz o logo preencher todo o quadrado azul */
+#header #branding {
+    height: 120px;         /* altura do quadrado azul do login */
+    padding: 0;            /* remove padding padrão */
+    margin: 0;             /* remove margin */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #E2EFF7; /* mantém azul */
+}
+
+#header #branding img {
+    height: 100%;          /* preenche toda a altura */
+    width: 100%;           /* mantém proporção */
+    object-fit: contain;   /* ajusta para caber sem cortar */
+}
+
+/* === CORREÇÃO FINAL DOS LINKS DO TOPO (BEM-VINDO / ENCERRAR SESSÃO) === */
+
+/* Força cor e contraste do texto completo no canto direito */
+#user-tools {
+    color: #0b5394 !important; /* azul escuro OdontoIA */
+    font-weight: 600 !important;
+    background-color: #E2EFF7 !important;
+    position: relative;
+    z-index: 10;
+}
+
+/* === CORREÇÃO ESPECÍFICA PARA O LINK "ENCERRAR SESSÃO" === */
+
+/* Corrige especificamente todos os links do topo */
+#user-tools a,
+#user-tools a:link,
+#user-tools a:visited,
+#user-tools a:active,
+#user-tools strong {
+    color: #0b5394 !important;
+    font-weight: 600 !important;
+    text-decoration: none !important;
+}
+
+/* Corrige o hover */
+#user-tools a:hover {
+    color: #063769 !important;
+    text-decoration: underline !important;
+}
+
+/* Garante que o fundo do header é claro e sem sombras */
+#header, 
+#header #branding {
+    background-color: #E2EFF7 !important;
+    box-shadow: none !important;
+}
+
+/* Remove interferência do tema original (evita sobreposição) */
+#user-tools a:before,
+#user-tools a:after {
+    display: none !important;
+}
+
+/* Corrige texto “Bem-vindo(a)” que às vezes é renderizado como span */
+#user-tools strong, 
+#user-tools span {
+    color: #0b5394 !important;
+}
+
+/* Remove qualquer sombra de texto que o Django adiciona no header */
+#header, #user-tools, #user-tools a {
+    text-shadow: none !important;
+}
+
+/* Especificamente para o link de logout */
+#user-tools a[href*="logout"] {
+    color: #000080 !important;
+    border-bottom: 1px solid #000080;
+}
+

@@ -1,0 +1,224 @@
+/* === BASE GLOBAL === */
+:root {
+  --azul-claro: #E2EFF7;
+  --azul: #0b5394;
+  --verde: #28a745;
+  --amarelo: #ffc107;
+  --texto: #333;
+  --branco: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background-color: var(--azul-claro);
+  color: var(--texto);
+}
+
+/* === NAVBAR === */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--azul-claro);
+  padding: 0 40px;
+  height: 140px;
+  border-bottom: 2px solid var(--azul);
+  position: relative;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+}
+
+.logo {
+  height: 100%;
+  width: 120px;
+  max-height: 150px;
+  object-fit: contain;
+  display: block;
+}
+
+.logo-container h1 {
+  margin: 0;
+  color: var(--azul);
+  font-size: 1.8rem;
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: var(--azul);
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover {
+  color: #063769;
+}
+
+/* === MAIN CONTENT === */
+.main-content {
+  padding: 24px;
+  min-height: calc(100vh - 120px);
+}
+
+/* === FOOTER === */
+.footer {
+  text-align: center;
+  padding: 15px;
+  background: var(--azul);
+  color: var(--branco);
+  font-size: 0.9em;
+}
+
+/* BOTÃO HAMBURGUER */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--azul);
+  cursor: pointer;
+}
+
+/* === RESPONSIVO === */
+@media (max-width: 768px) {
+  .navbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 20px;
+  }
+
+  .menu-toggle {
+    display: block;
+    position: absolute;
+    right: 20px;
+    top: 25px;
+  }
+
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    margin-top: 10px;
+    padding: 10px 0;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.3s ease;
+  }
+
+  .nav-links.show {
+    display: flex;
+  }
+
+  .nav-links a {
+    padding: 10px;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid #eee;
+  }
+
+  .nav-links a:last-child {
+    border-bottom: none;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* === CENTRALIZAÇÃO DO LOGO EM TELAS PEQUENAS === */
+@media (max-width: 768px) {
+  .logo-container {
+    justify-content: center !important;
+    width: 100%;
+    text-align: center;
+  }
+
+  #branding,
+  #header #branding {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .logo {
+    display: block;
+    margin: 0 auto;
+    height: 180px;
+    /* menor em telas pequenas */
+    width: 150px;
+    object-fit: contain;
+  }
+}
+
+@media (max-width: 768px) {
+  .filtros-container form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtros-container .input-group,
+  .filtros-container select,
+  .filtros-container input,
+  .filtros-container button {
+    width: 100%;
+  }
+}
+
+.logout-link {
+  background: #d32f2f;
+  color: white !important;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.logout-link:hover {
+  background: #b71c1c;
+  text-decoration: none;
+}
+
+
+/* Link "Sair" minimalista, sem fundo/borda */
+.logout-link, .login-link {
+  color: #d32f2f !important;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2 ease;
+  padding: 0;            /* sem padding pra não parecer botão */
+  border: none;          /* garantia */
+  background: transparent !important; /* sem fundo */
+}
+
+.logout-link:hover {
+  color: #b71c1c !important;
+  text-decoration: underline;
+}

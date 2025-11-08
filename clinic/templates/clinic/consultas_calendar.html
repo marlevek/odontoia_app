@@ -1,0 +1,262 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+{% block title %}Calendário de Consultas{% endblock %}
+
+{% block content %}
+<h2 class="text-center text-primary mb-4">📅 Calendário de Consultas</h2>
+
+<!-- 🎯 Filtro por dentista -->
+<div class="filtro-dentista">
+  <label for="filtroDentista" class="fw-semibold text-primary">Dentista:</label>
+  <select id="filtroDentista" class="form-select shadow-sm">
+    <option value="">Todos</option>
+    {% for d in dentistas %}
+    <option value="{{ d.id }}">{{ d.nome }}</option>
+    {% endfor %}
+  </select>
+  <button id="filtrarBtn" class="btn btn-sm btn-primary shadow-sm">
+    <i class="bi bi-funnel-fill"></i> Filtrar
+  </button>
+</div>
+
+<!-- 🗓️ Calendário -->
+<div id="calendar"></div>
+
+<!-- 🪟 Modal: Nova Consulta -->
+<div class="modal fade" id="novaConsultaModal" tabindex="-1" aria-labelledby="novaConsultaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="novaConsultaLabel">Nova Consulta</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="novaConsultaForm">
+          <div class="mb-3">
+            <label for="paciente" class="form-label">Paciente</label>
+            <select id="paciente" name="paciente" class="form-select" required>
+              {% for p in pacientes %}
+              <option value="{{ p.id }}">{{ p.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="dentista" class="form-label">Dentista</label>
+            <select id="dentista" name="dentista" class="form-select" required>
+              {% for d in dentistas %}
+              <option value="{{ d.id }}">{{ d.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="procedimento" class="form-label">Procedimento</label>
+            <select id="procedimento" name="procedimento" class="form-select" required>
+              {% for proc in procedimentos %}
+              <option value="{{ proc.id }}">{{ proc.nome }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label for="data" class="form-label">Data e Hora</label>
+            <input type="datetime-local" id="data" name="data" class="form-control" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="observacoes" class="form-label">Observações</label>
+            <textarea id="observacoes" name="observacoes" class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save"></i> Salvar
+            </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dependências -->
+<!-- FULLCALENDAR COMPLETO (com todos os plugins globais) -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/main.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales-all.global.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const calendarEl = document.getElementById('calendar');
+  const filtroDentista = document.getElementById('filtroDentista');
+  const filtrarBtn = document.getElementById('filtrarBtn');
+
+  const isMobile = window.innerWidth < 768;
+
+  // Botões customizados (garantem a troca de view mesmo se a toolbar padrão falhar)
+  const customButtons = {
+    btnMes:   { text: 'Mês',    click: () => calendar.changeView('dayGridMonth') },
+    btnSemana:{ text: 'Semana', click: () => calendar.changeView('timeGridWeek') },
+    btnDia:   { text: 'Dia',    click: () => calendar.changeView('timeGridDay') },
+    btnAgenda:{ text: 'Agenda', click: () => calendar.changeView('listWeek') }
+  };
+
+  const headerToolbarDesktop = {
+    left: 'prev,next today',
+    center: 'title',
+    right: 'btnMes,btnSemana,btnDia,btnAgenda'
+  };
+
+  const headerToolbarMobile = {
+    left: 'prev,next',
+    center: 'title',
+    right: 'today,btnAgenda'
+  };
+
+  // Se quiser garantir os plugins no build global (opcional, mas seguro)
+  if (window.FullCalendar) {
+    FullCalendar.globalLocales && FullCalendar.globalLocales; // força carregar locales
+    // Se sua CDN não incluir plugins por padrão, descomente abaixo:
+    // FullCalendar.globalPlugins = [ FullCalendar.DayGrid, FullCalendar.TimeGrid, FullCalendar.List ];
+  }
+
+  const calendar = new FullCalendar.Calendar(calendarEl, {
+    customButtons,
+    locale: 'pt-br',
+    height: 'auto',
+    expandRows: true,
+    nowIndicator: true,
+    initialView: isMobile ? 'listWeek' : 'timeGridWeek',
+    allDaySlot: false,
+    editable: true,
+    slotMinTime: '08:00:00',
+    slotMaxTime: '20:00:00',
+    headerToolbar: isMobile ? headerToolbarMobile : headerToolbarDesktop,
+    buttonText: {
+      today: 'Hoje',
+      month: 'Mês',
+      week: 'Semana',
+      day: 'Dia',
+      list: 'Agenda'
+    },
+    events: {
+      url: '{% url "clinic:consultas_calendar" %}',
+      extraParams: () => ({ dentista: filtroDentista.value }),
+      failure: () => alert('❌ Erro ao carregar eventos.')
+    },
+    eventClick(info) {
+      info.jsEvent.preventDefault();
+      if (info.event.url) window.location.href = info.event.url;
+    }
+  });
+
+  // Expor para debug no console
+  window._calendar = calendar;
+
+  // Filtros
+  filtroDentista.addEventListener('change', () => calendar.refetchEvents());
+  filtrarBtn.addEventListener('click', () => calendar.refetchEvents());
+
+  calendar.render();
+
+  // Responsividade ao redimensionar
+  window.addEventListener('resize', () => {
+    const mobileNow = window.innerWidth < 768;   // ✅ corrigido
+    if (mobileNow && calendar.view.type !== 'listWeek') {
+      calendar.changeView('listWeek');
+      calendar.setOption('headerToolbar', headerToolbarMobile);
+    } else if (!mobileNow && calendar.view.type === 'listWeek') {
+      calendar.changeView('timeGridWeek');
+      calendar.setOption('headerToolbar', headerToolbarDesktop);
+    }
+  });
+});
+</script>
+
+<style>
+  #calendar {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+    min-height: 600px;
+  }
+
+  /* Filtro visual igual aos cards */
+  .filtro-dentista {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    background: #E2EFF7;
+    border: 2px solid #d1e4f2;
+    padding: 15px 20px;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 90%;
+    max-width: 900px;
+    margin: 0 auto 25px auto;
+  }
+
+  /* Toolbar responsiva */
+  .fc-toolbar {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 6px !important;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0b5394;
+  }
+
+  .fc-button {
+    background: #0b5394 !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+  }
+
+  .fc-button:hover {
+    background: #063769 !important;
+  }
+
+  .fc-button-active {
+    background: #ff9800 !important;
+  }
+
+  /* Responsivo */
+  @media (max-width: 768px) {
+    .filtro-dentista {
+      flex-direction: column;
+      width: 92%;
+      padding: 12px;
+    }
+
+    .filtro-dentista select,
+    .filtro-dentista button {
+      width: 100%;
+    }
+
+    #calendar {
+      width: 94%;
+      padding: 12px;
+      min-height: 500px;
+    }
+
+    .fc .fc-toolbar-title {
+      font-size: 1.1rem;
+    }
+  }
+</style>
+{% endblock %}

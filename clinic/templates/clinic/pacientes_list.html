@@ -1,0 +1,74 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Pacientes - OdontoIA{% endblock %}
+
+{% block content %}
+<h2>👨‍⚕️ Lista de Pacientes</h2>
+
+<!-- FILTROS -->
+<div class="filtros-container">
+  <form method="get" class="d-flex flex-wrap align-items-center gap-2 justify-content-center">
+    <!-- Campo de busca -->
+    <div class="input-group" style="max-width: 480px;">
+      <span class="input-group-text bg-white border-end-0">
+        <i class="bi bi-search text-secondary"></i>
+      </span>
+      <input
+        type="text"
+        name="search"
+        class="form-control border-start-0 shadow-sm"
+        placeholder="Buscar por nome ou cidade (começa com...)"
+        value="{{ search }}"
+      >
+    </div>
+
+    <!-- Botões (pequenos, lado a lado) -->
+    <button type="submit" class="btn btn-primary btn-sm">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+
+    <a href="{% url 'clinic:pacientes_list' %}" class="btn btn-secondary btn-sm">
+      <i class="bi bi-arrow-counterclockwise"></i> Limpar
+    </a>
+
+    <a href="{% url 'clinic:paciente_create' %}" class="btn btn-warning text-white btn-sm">
+      <i class="bi bi-person-plus-fill"></i> Novo Paciente
+    </a>
+  </form>
+</div>
+
+<!-- LISTA -->
+<div class="table-container">
+  {% if pacientes %}
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Nome</th>
+        <th>CPF</th>
+        <th>Telefone</th>
+        <th>Cidade</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pacientes %}
+      <tr>
+        <td>{{ p.nome }}</td>
+        <td>{{ p.cpf }}</td>
+        <td>{{ p.telefone }}</td>
+        <td>{{ p.cidade }}</td>
+        <td>
+          <a href="{% url 'clinic:paciente_update' p.id %}" class="acao editar">✏️ Editar</a>
+          <a href="{% url 'clinic:paciente_delete' p.id %}" class="acao excluir">🗑️ Excluir</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="vazio">Nenhum paciente encontrado.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

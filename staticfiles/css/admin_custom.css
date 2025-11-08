@@ -1,0 +1,91 @@
+/* Remove possíveis sombras ou filtros herdados */
+#user-tools a:after,
+#user-tools a:before {
+    display: none !important;
+}
+
+
+/* Fonte personalizada */
+body, td, th {
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* Botões */
+input[type=submit], .button, .submit-row input {
+    background: #ff9800;
+    border-radius: 6px;
+    padding: 6px 12px;
+    border: none;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+input[type=submit]:hover {
+    background: #e68900;
+}
+
+/* Força o logo a ocupar toda a área */
+/* Remove limites e faz o logo preencher todo o quadrado azul */
+#header #branding {
+    height: 120px;         /* altura do quadrado azul do login */
+    padding: 0;            /* remove padding padrão */
+    margin: 0;             /* remove margin */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #E2EFF7; /* mantém azul */
+}
+
+#header #branding img {
+    height: 100%;          /* preenche toda a altura */
+    width: 100%;           /* mantém proporção */
+    object-fit: contain;   /* ajusta para caber sem cortar */
+}
+
+/* === CORREÇÃO FINAL DOS LINKS DO TOPO (BEM-VINDO / ENCERRAR SESSÃO) === */
+
+/* Força cor e contraste do texto completo no canto direito */
+#user-tools {
+    color: #0b5394 !important; /* azul escuro OdontoIA */
+    font-weight: 600 !important;
+    background-color: #E2EFF7 !important;
+    position: relative;
+    z-index: 10;
+}
+
+/* === CORREÇÃO ESPECÍFICA PARA O LINK "ENCERRAR SESSÃO" === */
+
+/* === CORREÇÃO FINAL - LINK "Encerrar sessão" SEM ALTERAR O FUNDO === */
+
+/* Força a cor azul escuro, ignorando o estilo inline do Django */
+#user-tools a[href*="logout"] {
+    color: #0b5394 !important;      /* azul escuro OdontoIA */
+    font-weight: 600 !important;
+    text-decoration: none !important;
+    background: transparent !important;
+}
+
+/* Hover mais escuro e visível */
+#user-tools a[href*="logout"]:hover {
+    color: #063769 !important;      /* azul mais forte no hover */
+    text-decoration: underline !important;
+}
+
+/* Garante que o texto “Bem-vindo(a)” e os demais links fiquem iguais */
+#user-tools,
+#user-tools a,
+#user-tools strong,
+#user-tools span {
+    color: #0b5394 !important;
+    text-shadow: none !important;
+}
+
+/* Remove qualquer sombra ou gradiente que o admin possa aplicar */
+#header, #user-tools {
+    background-color: #E2EFF7 !important; /* mantém o fundo azul claro */
+    box-shadow: none !important;
+    border: none !important;
+}
+
+

@@ -1,0 +1,93 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+{% block title %}Consultas Agendadas{% endblock %}
+
+{% block content %}
+
+<h2 class="text-center text-primary mb-4">🗓️ Consultas Agendadas</h2>
+
+<!-- 🔍 Filtros -->
+<div class="filtros-container">
+  <form method="get" class="d-flex flex-wrap align-items-center gap-2 justify-content-center">
+    
+    <!-- Campo de busca -->
+    <div class="input-group" style="max-width: 320px;">
+      <span class="input-group-text bg-white border-end-0">
+        <i class="bi bi-search text-secondary"></i>
+      </span>
+      <input type="text" name="search" class="form-control border-start-0 shadow-sm"
+        placeholder="Buscar por paciente ou dentista" value="{{ search }}">
+    </div>
+
+    <!-- Status -->
+    <select name="status" class="form-select form-select-sm shadow-sm" style="max-width: 160px;">
+      <option value="">-- Status --</option>
+      <option value="pendente" {% if status == 'pendente' %}selected{% endif %}>Pendente</option>
+      <option value="concluida" {% if status == 'concluida' %}selected{% endif %}>Concluída</option>
+    </select>
+
+    <!-- Data -->
+    <input type="date" name="data" value="{{ data_filtro }}" class="form-control form-control-sm shadow-sm"
+      style="max-width: 180px;">
+
+    <!-- Botões -->
+    <button type="submit" class="btn btn-sm btn-primary">
+      <i class="bi bi-funnel-fill"></i> Filtrar
+    </button>
+
+    <a href="{% url 'clinic:consultas_list' %}" class="btn btn-sm btn-secondary">
+      <i class="bi bi-arrow-counterclockwise"></i> Limpar
+    </a>
+
+    <a href="{% url 'clinic:consulta_create' %}" class="btn btn-sm btn-warning text-white">
+      <i class="bi bi-calendar-plus"></i> Nova Consulta
+    </a>
+  </form>
+</div>
+
+<!-- 🧾 Tabela de Consultas -->
+<div class="table-container mt-3">
+  <div class="table-responsive">   {# 👈 adiciona esta div #}
+    <table class="table table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Paciente</th>
+          <th>Dentista</th>
+          <th>Procedimento</th>
+          <th>Data</th>
+          <th>Status</th>
+          <th class="text-center">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for consulta in consultas %}
+        <tr>
+          <td data-label="Paciente">{{ consulta.paciente.nome }}</td>
+          <td data-label="Dentista">{{ consulta.dentista.nome }}</td>
+          <td data-label="Procedimento">{{ consulta.procedimento.nome }}</td>
+          <td data-label="Data">{{ consulta.data|date:"d/m/Y H:i" }}</td>
+          <td data-label="Status">
+            {% if consulta.concluida %}
+              <span class="badge bg-success">Concluída</span>
+            {% else %}
+              <span class="badge bg-warning text-dark">Pendente</span>
+            {% endif %}
+          </td>
+          <td data-label="Ações" class="text-center">
+            <a href="{% url 'clinic:consulta_update' consulta.id %}" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a href="{% url 'clinic:consulta_delete' consulta.id %}" class="btn btn-outline-danger btn-sm ms-1">
+              <i class="bi bi-trash"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted py-3">Nenhuma consulta encontrada.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>  {# 👈 fecha a div table-responsive #}
+</div>
+
+{% endblock %}

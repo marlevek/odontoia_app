@@ -1,0 +1,33 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}OdontoIA - Administração{% endblock %}
+
+{% block branding %}
+<div id="branding">
+  <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo OdontoIA" style="height:90px;object-fit:contain;">
+</div>
+{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'css/admin_custom.css' %}">
+{% endblock %}
+
+{# === BLOCO CERTO: DENTRO DO HEADER, SUBSTITUINDO usertools === #}
+{% block usertools %}
+<div id="user-tools" style="color:#0b5394;font-weight:600;">
+  Bem-vindo(a),
+  <strong style="color:#0b5394;">
+    {{ user.get_short_name|default:user.get_username }}
+  </strong>.
+  /
+  <a href="{% url 'admin:password_change' %}" style="color:#0b5394;text-decoration:none;">Alterar senha</a>
+  /
+  <a href="{% url 'admin:logout' %}" style="color:#0b5394;text-decoration:none;">Encerrar sessão</a>
+  /
+  <a href="/" style="color:#0b5394;text-decoration:none;">Ver o site</a>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

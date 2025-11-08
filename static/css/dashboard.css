@@ -1,0 +1,126 @@
+/* Título */
+h2 {
+    text-align: center;
+    margin: 10px 0 20px;
+    color: var(--azul);
+}
+
+/* === DASHBOARD === */
+h2 {
+    text-align: center;
+    color: var(--azul);
+    margin-top: 10px;
+}
+
+/* Cards principais */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 30px 0;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+.card.money {
+    background: #e8f5e9;
+    border-top: 5px solid var(--verde);
+}
+
+.card.money .num { color: #1b5e20; }
+
+.card.success { border-top: 5px solid var(--verde); }
+.card.warning { border-top: 5px solid var(--amarelo); }
+
+.card h3 { color: #444; font-size: 1rem; margin-bottom: 6px; }
+.card .num { font-size: 1.8rem; font-weight: 700; color: var(--azul); }
+
+/* Card de Comissões Totais centralizado */
+.comissoes-card {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.comissoes-card .card {
+    width: 280px;
+}
+
+/* Charts responsivos */
+.charts-wrapper {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin: 20px 0;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    padding: 16px;
+}
+
+.chart-card canvas { width: 100% !important; height: auto !important; }
+
+/* Tabelas */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    padding: 20px;
+    margin: 30px 0;
+}
+
+.table-container h3 { color: var(--azul); margin-bottom: 10px; }
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th {
+    background: var(--azul);
+    color: white;
+    text-align: left;
+    padding: 10px;
+}
+
+.table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.table tr:hover { background: #f4f8fc; }
+
+.status-ok {
+    background: var(--verde);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.status-pendente {
+    background: var(--amarelo);
+    color: #333;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+/* Responsivo */
+@media (max-width: 600px){
+    .charts-wrapper { grid-template-columns: 1fr; }
+    .cards-container { grid-template-columns: 1fr 1fr; }
+}
