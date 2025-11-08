@@ -61,16 +61,24 @@ TEMPLATES = [
 WSGI_APPLICATION = 'odontoia.wsgi.application'
 
 # Banco de dados
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
-        'NAME': os.getenv("DB_NAME", BASE_DIR / "db.sqlite3"),
-        'USER': os.getenv("DB_USER", ""),
-        'PASSWORD': os.getenv("DB_PASSWORD", ""),
-        'HOST': os.getenv("DB_HOST", ""),
-        'PORT': os.getenv("DB_PORT", ""),
+if os.getenv('DB_ENGINE') == 'django.db.backends.postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('PGDATABASE'),
+            'USER': os.getenv('PGUSER'),
+            'PASSWORD': os.getenv('PGPASSWORD'),
+            'HOST': os.getenv('PGHOST'),
+            'PORT': os.getenv('PGPORT'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+            'NAME': BASE_DIR / os.getenv('DB_NAME', 'db.sqlite3'),
+        }
+    }
 
 # Validações de senha
 AUTH_PASSWORD_VALIDATORS = [
@@ -147,5 +155,3 @@ X_FRAME_OPTIONS = 'DENY'
 LOGIN_URL = 'clinic:login'
 LOGOUT_REDIRECT_URL = 'clinic:login'
 LOGIN_REDIRECT_URL = 'clinic:dashboard'
-
-
