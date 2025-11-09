@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 # Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -116,11 +117,9 @@ USE_TZ = True
 # Arquivos estáticos
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Uploads
 MEDIA_URL = '/media/'
@@ -181,3 +180,5 @@ X_FRAME_OPTIONS = 'DENY'
 LOGIN_URL = 'clinic:login'
 LOGOUT_REDIRECT_URL = 'clinic:login'
 LOGIN_REDIRECT_URL = 'clinic:dashboard'
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
