@@ -56,36 +56,50 @@ input[type=submit]:hover {
 
 /* === CORREÇÃO ESPECÍFICA PARA O LINK "ENCERRAR SESSÃO" === */
 
-/* === CORREÇÃO FINAL - LINK "Encerrar sessão" SEM ALTERAR O FUNDO === */
-
-/* Força a cor azul escuro, ignorando o estilo inline do Django */
-#user-tools a[href*="logout"] {
-    color: #0b5394 !important;      /* azul escuro OdontoIA */
+/* Corrige especificamente todos os links do topo */
+#user-tools a,
+#user-tools a:link,
+#user-tools a:visited,
+#user-tools a:active,
+#user-tools strong {
+    color: #0b5394 !important;
     font-weight: 600 !important;
     text-decoration: none !important;
-    background: transparent !important;
 }
 
-/* Hover mais escuro e visível */
-#user-tools a[href*="logout"]:hover {
-    color: #063769 !important;      /* azul mais forte no hover */
+/* Corrige o hover */
+#user-tools a:hover {
+    color: #063769 !important;
     text-decoration: underline !important;
 }
 
-/* Garante que o texto “Bem-vindo(a)” e os demais links fiquem iguais */
-#user-tools,
-#user-tools a,
-#user-tools strong,
+/* Garante que o fundo do header é claro e sem sombras */
+#header, 
+#header #branding {
+    background-color: #E2EFF7 !important;
+    box-shadow: none !important;
+}
+
+/* Remove interferência do tema original (evita sobreposição) */
+#user-tools a:before,
+#user-tools a:after {
+    display: none !important;
+}
+
+/* Corrige texto “Bem-vindo(a)” que às vezes é renderizado como span */
+#user-tools strong, 
 #user-tools span {
     color: #0b5394 !important;
+}
+
+/* Remove qualquer sombra de texto que o Django adiciona no header */
+#header, #user-tools, #user-tools a {
     text-shadow: none !important;
 }
 
-/* Remove qualquer sombra ou gradiente que o admin possa aplicar */
-#header, #user-tools {
-    background-color: #E2EFF7 !important; /* mantém o fundo azul claro */
-    box-shadow: none !important;
-    border: none !important;
+/* Especificamente para o link de logout */
+#user-tools a[href*="logout"] {
+    color: #000080 !important;
+    border-bottom: 1px solid #000080;
 }
-
 
