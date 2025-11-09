@@ -2,7 +2,11 @@
 
 echo "🚀 Iniciando o OdontoIA..."
 
-# Aguarda o PostgreSQL estar pronto (Railway pode demorar 10-15s)
+# Instala o cliente PostgreSQL (pg_isready, psql etc.)
+echo "📦 Instalando cliente PostgreSQL..."
+apt-get update -y && apt-get install -y postgresql-client
+
+# Aguarda o PostgreSQL estar pronto
 echo "⏳ Aguardando banco de dados..."
 until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
   sleep 2
