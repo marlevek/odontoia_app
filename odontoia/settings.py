@@ -21,6 +21,13 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+# Confiança no proxy (Railway) para HTTPS
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Redirecionar para HTTPS em produção
+SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "True").lower() == "true"
+
 
 # Aplicativos instalados
 INSTALLED_APPS = [
@@ -144,6 +151,13 @@ CSRF_COOKIE_HTTPONLY = True
 # (em localhost, mantenha False até ativar HTTPS no servidor)
 SESSION_COOKIE_SECURE = True  # mude para True em produção (HTTPS)
 CSRF_COOKIE_SECURE = True     # idem
+
+
+#CSRF p/ domínios
+CSRF_TRUSTED_ORIGINS = [
+    'https://app.odontoia.codertec.com.br',
+    'https://*.up.railway.app',
+]
 
 # Previne carregamento de conteúdo inseguro em HTTPS
 SECURE_SSL_REDIRECT = True    # True em produção (redireciona http → https)
