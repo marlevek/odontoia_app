@@ -2,14 +2,30 @@
 
 echo "🚀 Iniciando o OdontoIA..."
 
-# Instala o cliente PostgreSQL (pg_isready, psql etc.)
-echo "📦 Instalando cliente PostgreSQL..."
-apt-get update -y && apt-get install -y postgresql-client
+# Função para testar a conexão com o banco via Python puro
+check_db() {
+  python <<END
+import psycopg2, os, sys
+try:
+    conn = psycopg2.connect(
+        dbname=os.getenv("DB_NAME"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        host=os.getenv("DB_HOST"),
+        port=os.getenv("DB_PORT"),
+        connect_timeout=3
+    )
+    conn.close()
+except Exception as e:
+    sys.exit(1)
+END
+}
 
 # Aguarda o PostgreSQL estar pronto
 echo "⏳ Aguardando banco de dados..."
-until pg_isready -h $DB_HOST -p $DB_PORT -U $DB_USER; do
-  sleep 2
+until check_db; do
+  echo "🔄 Banco ainda não está pronto... aguardando 3s"
+  sleep 3
 done
 
 echo "✅ Banco pronto, aplicando migrações..."
