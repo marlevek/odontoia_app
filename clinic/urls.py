@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.views.generic import TemplateView
 
 
 app_name = 'clinic'
@@ -10,6 +11,11 @@ urlpatterns = [
      
     path('', views.dashboard, name='dashboard'),
     path('dashboard/data/', views.dashboard_data, name='dashboard_data'),
+    
+    # Teste
+    path('registrar-teste/', views.registrar_teste, name='registrar_teste'),
+    path('assinatura-expirada/', TemplateView.as_view(template_name='clinic/assinatura_expirada.html')),
+
 
     # Pacientes
     path('pacientes/', views.pacientes_list, name='pacientes_list'),

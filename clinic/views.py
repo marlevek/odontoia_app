@@ -17,7 +17,9 @@ from datetime import timedelta
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from .decorators import require_active_subscription
 
 
 # === LOGIN ===
@@ -79,7 +81,8 @@ def consulta_create_ajax(request):
     return JsonResponse({'success': False, 'error': 'Método inválido'})
 
 
-
+@login_required
+@require_active_subscription
 def dashboard(request):
     hoje = timezone.now().date()
     periodo = int(request.GET.get('periodo', 30))  # filtro de 7 / 30 / 90 dias
@@ -549,3 +552,25 @@ def consulta_create_ajax(request):
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
     return JsonResponse({"success": False, "error": "Método inválido"})
+
+
+def registrar_teste(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Usuário já existe.")
+            return redirect('registrar_teste')
+
+        user = User.objects.create_user(username=username, email=email, password=password)
+        user.date_joined = timezone.now()
+        user.save()
+
+        # Define uma data de expiração do teste
+        request.session['trial_expires'] = (timezone.now() + timedelta(days=7)).isoformat()
+        messages.success(request, "Conta de teste criada com sucesso! Aproveite seus 7 dias gratuitos.")
+        return redirect('clinic:dashboard')
+
+    return render(request, 'clinic/registrar_teste.html')

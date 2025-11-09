@@ -2,6 +2,30 @@
 {% load static %}
 {% block title %}Dashboard - OdontoIA{% endblock %}
 
+{% if trial.status == "expired" %}
+  <div class="alert alert-danger d-flex align-items-center justify-content-between" role="alert">
+    <div>
+      <strong>Assinatura expirada.</strong>
+      Seu período de teste terminou em {{ trial.end|date:"d/m/Y" }}.
+    </div>
+    <div>
+      <a href="{% url 'registrar_plano' %}" class="btn btn-danger btn-sm">Assinar agora</a>
+      <a href="{% url 'assinatura_expirada' %}" class="btn btn-outline-light btn-sm">Saiba mais</a>
+    </div>
+  </div>
+{% elif trial.near_expiry %}
+  <div class="alert alert-warning d-flex align-items-center justify-content-between" role="alert">
+    <div>
+      <strong>Teste quase acabando!</strong>
+      Faltam {{ trial.days_left }} {{ trial.days_left|pluralize:"dia,dias" }} para o fim do seu período de avaliação (até {{ trial.end|date:"d/m/Y" }}).
+    </div>
+    <div>
+      <a href="{% url 'registrar_plano' %}" class="btn btn-warning btn-sm">Assinar com desconto</a>
+    </div>
+  </div>
+{% endif %}
+
+
 {% block content %}
 <h2>📊 Dashboard - OdontoIA</h2>
 
