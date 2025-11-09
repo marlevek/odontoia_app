@@ -75,16 +75,29 @@ TEMPLATES = [
 WSGI_APPLICATION = 'odontoia.wsgi.application'
 
 # Banco de dados
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.getenv('DB_NAME', os.path.join(BASE_DIR, 'db.sqlite3')),
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', ''),
+if os.getenv("PGHOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("PGDATABASE", "railway"),
+            "USER": os.getenv("PGUSER", "postgres"),
+            "PASSWORD": os.getenv("PGPASSWORD", ""),
+            "HOST": os.getenv("PGHOST", ""),
+            "PORT": os.getenv("PGPORT", "5432"),
+        }
     }
-}
+else:
+    # fallback local (ex.: sqlite) – mantenha como estava
+    DATABASES = {
+        "default": {
+            "ENGINE": os.getenv("DB_ENGINE", "django.db.backends.sqlite3"),
+            "NAME": os.getenv("DB_NAME", os.path.join(BASE_DIR, "db.sqlite3")),
+            "USER": os.getenv("DB_USER", ""),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", ""),
+            "PORT": os.getenv("DB_PORT", ""),
+        }
+    }
 
 # Validações de senha
 AUTH_PASSWORD_VALIDATORS = [
