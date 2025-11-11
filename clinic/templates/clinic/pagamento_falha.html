@@ -1,0 +1,52 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Falha no Pagamento - OdontoIA{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5 fade-in">
+
+  <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo" style="width:120px; margin-bottom: 15px;">
+
+  <h2 class="text-danger fw-bold mb-3">❌ Pagamento não concluído</h2>
+  <p class="lead">
+    Houve um problema ao processar seu pagamento.<br>
+    Seu plano <strong>{{ plano|default:"Indefinido" }}</strong> ainda <strong>não foi ativado</strong>.
+  </p>
+
+  <div class="card shadow-sm mx-auto mt-4" style="max-width: 480px; border-radius: 12px;">
+    <div class="card-body">
+      <h5 class="text-danger mb-3">🚨 O que fazer?</h5>
+      <ul class="text-start">
+        <li>Verifique se o pagamento foi concluído no <strong>Mercado Pago</strong>.</li>
+        <li>Se foi recusado, tente outro método (PIX, cartão ou boleto).</li>
+        <li>Em caso de dúvidas, entre em contato com o suporte da <strong>Codertec</strong>.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'clinic:dashboard' %}" class="btn btn-outline-secondary px-4 me-2">Voltar ao Dashboard</a>
+    <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-danger px-4">
+      Tentar novamente
+    </a>
+  </div>
+
+</div>
+
+<style>
+  .fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  h2 {
+    color: #dc3545;
+  }
+  li {
+    margin-bottom: 6px;
+  }
+</style>
+{% endblock %}

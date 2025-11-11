@@ -18,14 +18,6 @@
 </head>
 
 <body>
-    {% if messages %}
-    <div class="container mt-3">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
     <!-- Navbar (tema igual ao admin_custom.css) -->
     <header class="navbar">
         <div class="logo-container">
@@ -41,6 +33,7 @@
         <!-- Links de navegação -->
         <nav class="nav-links" id="navMenu">
             <a href="{% url 'clinic:dashboard' %}">🏠 Dashboard</a>
+            <a href="{% url 'clinic:procedimentos_list' %}">🦷 Procedimentos</a>
             <a href="{% url 'clinic:pacientes_list' %}">👨‍⚕️ Pacientes</a>
             <a href="{% url 'clinic:consultas_list' %}">🗒️ Consultas</a>
             <a href="{% url 'clinic:consultas_calendar' %}">📅 Calendário</a>
@@ -51,29 +44,201 @@
             {% endif %}
         </nav>
     </header>
+    {% if user.is_authenticated and trial %}
+    {% if trial.expirada %}
+    <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3 mx-3" role="alert">
+        <div>
+            🚫 <strong>Assinatura expirada.</strong>
+            Seu período de teste terminou
+            {% if trial.fim_teste %}
+            em {{ trial.fim_teste|date:"d/m/Y" }}
+            {% endif %}.
+        </div>
+        <div>
+            <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-sm btn-light">Ver planos</a>
+        </div>
+    </div>
+
+    {% elif trial.ativo and trial.dias_restantes and trial.dias_restantes <= 3 %} <div
+        class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mx-3" role="alert">
+        <div>
+            ⏳ <strong>Atenção!</strong>
+            Seu período de teste termina em
+            <strong>
+                {{ trial.dias_restantes }} dia{% if trial.dias_restantes != 1 %}s{% endif %}
+            </strong>.
+        </div>
+        <div>
+            <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-sm btn-primary">Assinar Básico</a>
+            <a href="{% url 'clinic:criar_pagamento' 'profissional' %}" class="btn btn-sm btn-warning">Assinar
+                Profissional</a>
+            <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-sm btn-dark">Assinar Premium</a>
+        </div>
+        </div>
+        {% endif %}
+        {% endif %}
 
 
-    <!-- Conteúdo -->
-    <main class="main-content">
-        {% block content %}{% endblock %}
-    </main>
+        <!-- Conteúdo -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
 
-    <!-- Rodapé -->
-    <footer class="footer">
-        <p>© {{ now|date:"Y" }} OdontoIA - Inteligência Odontológica</p>
-    </footer>
+        <!-- Rodapé -->
+        <footer class="footer">
+            <p>© {{ now|date:"Y" }} OdontoIA - Inteligência Odontológica</p>
+        </footer>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const toggle = document.getElementById("menuToggle");
-            const menu = document.getElementById("navMenu");
 
-            toggle.addEventListener("click", () => {
-                menu.classList.toggle("show");
+        <style>
+            #chatbot-container {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 280px;
+                background: #fff;
+                border-radius: 12px;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+                font-family: 'Segoe UI';
+                border: 1px solid #ddd;
+                z-index: 1000;
+            }
+
+            #chatbot-header {
+                background: #0b5394;
+                color: white;
+                padding: 10px;
+                font-weight: bold;
+            }
+
+            #chatbot-messages {
+                height: 200px;
+                overflow-y: auto;
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            #chatbot-input {
+                border: none;
+                border-top: 1px solid #ddd;
+                padding: 8px;
+                outline: none;
+            }
+
+            .toast-container {
+                z-index: 11000;
+                /* acima do chat */
+            }
+        </style>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const toggleBtn = document.getElementById("menuToggle");
+                const navMenu = document.getElementById("navMenu");
+
+                if (toggleBtn && navMenu) {
+                    toggleBtn.addEventListener("click", function () {
+                        navMenu.classList.toggle("active");
+                    });
+                }
             });
-        });
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        </script>
+
+        <style>
+            /* Estilo para menu responsivo */
+            .menu-toggle {
+                display: none;
+                background: none;
+                border: none;
+                font-size: 26px;
+                cursor: pointer;
+                color: #0b5394;
+            }
+
+            @media (max-width: 768px) {
+                .menu-toggle {
+                    display: block;
+                }
+
+                .nav-links {
+                    display: none;
+                    flex-direction: column;
+                    background: #fff;
+                    position: absolute;
+                    top: 60px;
+                    right: 10px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                    padding: 10px;
+                    z-index: 9999;
+                }
+
+                .nav-links.active {
+                    display: flex;
+                }
+
+                .nav-links a {
+                    padding: 8px 12px;
+                    text-decoration: none;
+                    color: #0b5394;
+                    border-radius: 8px;
+                }
+
+                .nav-links a:hover {
+                    background: #e8f0fe;
+                }
+            }
+
+            /* 🔹 Ajusta o layout dos botões de planos */
+            .alert .btn {
+                margin-left: 5px;
+            }
+
+            @media (max-width: 768px) {
+                .alert .d-flex {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 15px;
+                }
+
+                .alert .btn {
+                    width: 100%;
+                    margin: 4px 0;
+                }
+            }
+        </style>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="{% static 'js/chat_odontoia.js' %}"></script>
+
+        <!-- Toasts para mensagens Django -->
+        <div aria-live="polite" aria-atomic="true" class="position-relative">
+            <div class="toast-container position-fixed top-0 end-0 p-3">
+                {% for message in messages %}
+                <div class="toast align-items-center text-bg-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} border-0 mb-2"
+                    role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            {{ message }}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                            aria-label="Fechar"></button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+                toastElList.forEach(toastEl => {
+                    const toast = new bootstrap.Toast(toastEl)
+                    toast.show()
+                })
+            })
+        </script>
 
 </body>
 

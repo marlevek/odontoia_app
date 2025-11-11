@@ -1,9 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'clinic/base.html' %}
 
 {% block content %}
 <div class="container text-center mt-5">
     <div class="alert alert-danger p-5 rounded shadow">
-        <h2>🚫 Sua assinatura expirou!</h2>
+        <h2>🚫 Olá {{ user.first_name|default:user.username }}, sua assinatura expirou!</h2>
         <p class="mt-3">Seu período de teste gratuito terminou. Para continuar usando o OdontoIA, escolha um plano de assinatura.</p>
         <a href="https://odontoia.codertec.com.br" class="btn btn-primary btn-lg mt-3">Ver planos</a>
     </div>

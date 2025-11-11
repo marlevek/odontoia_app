@@ -2,16 +2,14 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Carrega variáveis do .env
-load_dotenv()
 
-# Diretório base
+# ⚙️ Carrega .env manualmente com caminho absoluto (garante que funcione)
 BASE_DIR = Path(__file__).resolve().parent.parent
+env_path = BASE_DIR / ".env"
+load_dotenv(dotenv_path=env_path)
 
-# Segurança
 SECRET_KEY = os.getenv("SECRET_KEY")
-
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = os.getenv("DEBUG", "False").strip().lower() == "true"
 
 ALLOWED_HOSTS = [
     'app.odontoia.codertec.com.br',
@@ -155,8 +153,8 @@ CSRF_COOKIE_HTTPONLY = True
 
 # Garante que cookies de sessão e CSRF só sejam enviados por HTTPS
 # (em localhost, mantenha False até ativar HTTPS no servidor)
-SESSION_COOKIE_SECURE = True  # mude para True em produção (HTTPS)
-CSRF_COOKIE_SECURE = True     # idem
+SESSION_COOKIE_SECURE = not DEBUG  
+CSRF_COOKIE_SECURE = not DEBUG     
 
 
 #CSRF p/ domínios
@@ -166,7 +164,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # Previne carregamento de conteúdo inseguro em HTTPS
-SECURE_SSL_REDIRECT = True    # True em produção (redireciona http → https)
+#SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "False").lower() == "true"    # True em produção (redireciona http → https)
 SECURE_HSTS_SECONDS = 31536000  # 1 ano (ativa HSTS)
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
@@ -184,3 +182,49 @@ LOGOUT_REDIRECT_URL = 'clinic:login'
 LOGIN_REDIRECT_URL = 'clinic:dashboard'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# ============================
+# 📧 CONFIGURAÇÃO DE E-MAIL
+# ============================
+
+from django.core.exceptions import ImproperlyConfigured
+
+def get_env_var(key, default=None, required=False):
+    """Lê variáveis do .env de forma segura"""
+    value = os.getenv(key, default)
+    if required and not value:
+        raise ImproperlyConfigured(f"A variável de ambiente {key} é obrigatória e não foi definida.")
+    return value
+
+
+# 🔐 Configurações principais email
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = get_env_var("EMAIL_HOST", "mail.codertec.com.br")
+EMAIL_PORT = int(get_env_var("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = get_env_var("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_USE_SSL = get_env_var("EMAIL_USE_SSL", "False").lower() == "true"
+EMAIL_HOST_USER = get_env_var("EMAIL_HOST_USER", required=True)
+EMAIL_HOST_PASSWORD = get_env_var("EMAIL_HOST_PASSWORD", required=True)
+DEFAULT_FROM_EMAIL = get_env_var("DEFAULT_FROM_EMAIL", f"OdontoIA <{EMAIL_HOST_USER}>")
+
+
+# 🧩 Fallback seguro (para desenvolvimento)
+# Se DEBUG=True → imprime e-mails no console (não envia de verdade)
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+    print("⚙️ Modo DEBUG ativo → e-mails serão exibidos no console, não enviados.")
+else:
+    print(f"📨 E-mails reais ativados → usando {EMAIL_HOST}:{EMAIL_PORT}")
+
+
+# ======= MERCADO PAGO / PAGAMENTOS =======
+MERCADOPAGO_PUBLIC_KEY = os.getenv("MERCADOPAGO_PUBLIC_KEY")
+MERCADOPAGO_ACCESS_TOKEN = os.getenv("MERCADOPAGO_ACCESS_TOKEN", "")
+CURRENCY_ID = os.getenv("CURRENCY_ID", "BRL")
+
+# Em dev mostramos o e-mail no console (já está configurado no seu projeto)
+# Em prod (Railway), basta definir EMAIL_* no .env que já funciona.
+
+# Para montar URLs absolutas quando necessário (fallback)
+SITE_BASE_URL = os.getenv("SITE_BASE_URL", "").rstrip("/")
+# Se vazio, nas views usaremos request.build_absolute_uri(), que é preferível.

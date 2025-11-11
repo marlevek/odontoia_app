@@ -1,17 +1,19 @@
 from django.shortcuts import redirect
-from django.contrib import messages
-from .utils.subscription import get_trial_info
+from django.conf import settings
+from .utils.subscription import verificar_assinatura
 
 def require_active_subscription(view_func):
-    """
-    Bloqueia acesso de usuários cujo período de teste expirou
-    """
-    def _wrapped(request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect("login")
-        info = get_trial_info(request.user)
-        if info["status"] == "expired":
-            messages.error(request, "Seu período de teste expirou. Ative sua assinatura para continuar.")
-            return redirect("assinatura_expirada")
+    def wrapper(request, *args, **kwargs):
+        # 🚀 Em modo DEBUG, ignora verificação
+        if getattr(settings, "DEBUG", False):
+            return view_func(request, *args, **kwargs)
+
+        # 🔒 Em produção, verifica assinatura normalmente
+        ativo, _ = verificar_assinatura(request.user)
+        if not ativo:
+            return redirect('clinic:assinatura_expirada')
+
         return view_func(request, *args, **kwargs)
-    return _wrapped
+    return wrapper
+
+   

@@ -1,0 +1,4 @@
+{
+    "root": "staticfiles/",
+    "clean_urls": false
+}

@@ -1,8 +1,7 @@
 from django import forms
 from validate_docbr import CPF
-from .models import Paciente
+from .models import Paciente, Procedimento
 from django.conf import settings 
-
 
 
 class PacienteForm(forms.ModelForm):
@@ -45,3 +44,12 @@ class PacienteForm(forms.ModelForm):
             raise forms.ValidationError("CPF inválido. Verifique os dígitos.")
         
         return cpf_value
+
+
+class ProcedimentoForm(forms.ModelForm):
+    class Meta:
+        model = Procedimento
+        fields = ['nome', 'descricao', 'valor_base']
+        widgets = {
+            'descricao': forms.Textarea(attrs={'rows': 3}),
+        }

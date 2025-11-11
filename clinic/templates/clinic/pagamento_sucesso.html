@@ -1,0 +1,82 @@
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Pagamento Confirmado - OdontoIA{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5 fade-in">
+
+  <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo" style="width:120px; margin-bottom: 15px;">
+
+  <h2 class="text-success fw-bold mb-3">✅ Pagamento confirmado!</h2>
+  <p class="lead">
+    Obrigado por assinar o <strong>OdontoIA</strong>! <br>
+    Seu plano <strong>{{ plano }}</strong> foi ativado com sucesso. 🎉
+  </p>
+
+  <div class="card shadow-sm mx-auto mt-4" style="max-width: 480px; border-radius: 12px;">
+    <div class="card-body">
+      <h5 class="text-primary mb-3">📋 Detalhes da Assinatura</h5>
+      <table class="table table-borderless text-start">
+        <tbody>
+          <tr>
+            <th>💎 Plano:</th>
+            <td>{{ plano }}</td>
+          </tr>
+          <tr>
+            <th>💰 Valor:</th>
+            <td>R$ {{ pagamento.valor|floatformat:2 }}</td>
+          </tr>
+          <tr>
+            <th>🧾 Método:</th>
+            <td>
+              {% if pagamento.metodo == "pix" %}
+                PIX
+              {% elif pagamento.metodo == "card" %}
+                Cartão
+              {% elif pagamento.metodo == "boleto" %}
+                Boleto
+              {% else %}
+                {{ pagamento.metodo|default:"Desconhecido" }}
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th>📆 Validade:</th>
+            <td>{{ assinatura.fim_teste|date:"d/m/Y" }}</td>
+          </tr>
+          <tr>
+            <th>🔢 Referência:</th>
+            <td class="text-muted small">{{ pagamento.referencia }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'clinic:dashboard' %}" class="btn btn-primary px-4 me-2">Ir para o Dashboard</a>
+    <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-outline-secondary px-4">
+      Ver Planos
+    </a>
+  </div>
+
+</div>
+
+<style>
+  .fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  th {
+    width: 40%;
+    color: #0b5394;
+  }
+  td {
+    color: #333;
+  }
+</style>
+{% endblock %}
