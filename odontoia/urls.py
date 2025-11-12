@@ -7,7 +7,6 @@ from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views, logout
 
 
-
 def admin_logout_redirect(request):
     """
     Encerra sessão do painel admin e redireciona
