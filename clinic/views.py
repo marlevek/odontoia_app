@@ -863,7 +863,6 @@ def procedimento_delete(request, id):
     return render(request, 'clinic/procedimento_confirm_delete.html', {'procedimento': procedimento})
 
 
-
 def assinatura_expirada(request):
     return render(request, "clinic/assinatura_expirada.html")
 
