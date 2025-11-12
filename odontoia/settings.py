@@ -14,8 +14,7 @@ DEBUG = os.getenv("DEBUG", "False").strip().lower() == "true"
 ALLOWED_HOSTS = [
     'app.odontoia.codertec.com.br',
     'odontoia.codertec.com.br',
-    '04vv6rw3.up.railway.app',
-    '.up.railway.app',
+    '*.up.railway.app',
     'localhost',
     '127.0.0.1'
 ]
