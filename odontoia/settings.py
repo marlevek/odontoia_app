@@ -162,7 +162,7 @@ CSRF_COOKIE_SECURE = not DEBUG
 CSRF_TRUSTED_ORIGINS = [
     'https://app.odontoia.codertec.com.br',
     "https://odontoia.codertec.com.br",
-    '04vv6rw3.up.railway.app',
+    'https://04vv6rw3.up.railway.app',
     'https://*.up.railway.app',
 ]
 
