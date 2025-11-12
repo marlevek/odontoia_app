@@ -50,6 +50,8 @@ urlpatterns = [
          name='procedimento_create'),
     path('procedimentos/<int:id>/editar/',
          views.procedimento_edit, name='procedimento_edit'),
+    path('procedimentos/<int:pk>/excluir/', views.procedimento_delete, name=
+         'procedimento_delete'),
 
     # 📅 Novo calendário
     path("consultas/calendario/", views.consultas_calendar,
