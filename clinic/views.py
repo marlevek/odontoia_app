@@ -1007,16 +1007,33 @@ def criar_pagamento(request, plano: str):
     """
     Cria uma Preference no Mercado Pago e redireciona o usuário ao checkout.
     """
+    import json
+    from django.utils import timezone
+
     plano = plano.lower().strip()
+
+    PLANOS = {
+        "basico": Decimal("49.90"),
+        "profissional": Decimal("79.90"),
+        "premium": Decimal("129.90"),
+    }
+
+    print("🧩 [Checkout] Plano recebido:", plano)
+    print("🧩 [Checkout] PLANOS disponíveis:", list(PLANOS.keys()))
+
     if plano not in PLANOS:
-        messages.error(request, "Plano inválido.")
+        messages.error(request, f"Plano inválido: {plano}")
+        print("❌ [Checkout] Plano inválido:", plano)
         return redirect("clinic:dashboard")
 
-    valor = PLANOS[plano]
-    assinatura, _ = Assinatura.objects.get_or_create(user=request.user)
+    valor = float(PLANOS[plano])
+    print(f"💰 [Checkout] Criando pagamento para {plano} = R$ {valor:.2f}")
 
+    # Obtém ou cria assinatura
+    assinatura, _ = Assinatura.objects.get_or_create(user=request.user)
     referencia = f"odontoia-{request.user.id}-{uuid.uuid4().hex}"
 
+    # Cria registro local de pagamento
     pagamento = Pagamento.objects.create(
         assinatura=assinatura,
         referencia=referencia,
@@ -1024,13 +1041,20 @@ def criar_pagamento(request, plano: str):
         status="pendente",
         metodo="desconhecido",
         plano=plano.capitalize(),  # ✅ salva o nome do plano direto no modelo
+        data_criacao=timezone.now(),
     )
 
     sdk = _get_mp_sdk()
 
-    success_url = request.build_absolute_uri(reverse("clinic:pagamento_sucesso"))
-    failure_url = request.build_absolute_uri(reverse("clinic:pagamento_falha"))
-    webhook_url = request.build_absolute_uri(reverse("clinic:mercadopago_webhook"))
+    base_url = (
+        "https://app.odontoia.codertec.com.br"
+        if not settings.DEBUG
+        else request.build_absolute_uri('/')[:-1]
+    )
+    
+    success_url = f"{base_url}{reverse('cinic:pagamento_sucesso')}"
+    failure_url = f"{base_url}{reverse('cinic:pagamento_falha')}"
+    webhook_url = f"{base_url}{reverse('cinic:mercadopago_webhook')}"
 
     try:
         preference_data = {
@@ -1041,7 +1065,7 @@ def criar_pagamento(request, plano: str):
                     "description": "Assinatura OdontoIA",
                     "quantity": 1,
                     "currency_id": "BRL",
-                    "unit_price": float(valor),
+                    "unit_price": valor,
                 }
             ],
             "payer": {"email": request.user.email or "sem-email@odontoia.local"},
@@ -1050,33 +1074,41 @@ def criar_pagamento(request, plano: str):
                 "failure": failure_url,
                 "pending": success_url,
             },
+            "auto_return": "approved",  # ✅ retorna automaticamente após pagamento
             "external_reference": referencia,
         }
 
         # ⚙️ notification_url apenas em produção
         if not settings.DEBUG:
             preference_data["notification_url"] = webhook_url
+            preference_data["auto_return"] = "approved"
 
-        print("📦 Enviando preference_data:", json.dumps(preference_data, indent=2, ensure_ascii=False))
+        print("📦 [Checkout] Enviando preference_data:")
+        print(json.dumps(preference_data, indent=2, ensure_ascii=False))
 
         pref = sdk.preference().create(preference_data)
         resp = pref.get("response", {})
+
+        print("📬 [Checkout] Resposta Mercado Pago:", json.dumps(resp, indent=2, ensure_ascii=False))
+
         init_point = resp.get("init_point") or resp.get("sandbox_init_point")
 
         if not init_point:
             msg = resp.get("message", "resposta inválida do Mercado Pago")
+            print("⚠️ [Checkout] init_point ausente - resposta:", resp)
             messages.error(request, f"Falha ao iniciar checkout: {msg}")
-            print("⚠️ init_point ausente - resposta:", resp)
             return redirect("clinic:dashboard")
 
+        print(f"✅ [Checkout] Redirecionando para Mercado Pago → {init_point}")
         return redirect(init_point)
 
     except Exception as e:
         import traceback
-        print("❌ ERRO ao criar preferência no Mercado Pago:")
+        print("❌ [Checkout] ERRO ao criar preferência no Mercado Pago:")
         traceback.print_exc()
         messages.error(request, f"Falha ao iniciar checkout no Mercado Pago: {e}")
         return redirect("clinic:dashboard")
+
 
 
 # ===========================
