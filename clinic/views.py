@@ -794,6 +794,17 @@ def registrar_teste(request):
         # Cria assinatura trial automaticamente
         Assinatura.objects.create(user=user, tipo='trial')
 
+        # Envia email de boas vindas
+        nome = user.first_name or user.username
+
+        send_mail(
+            subject="🎉 Bem-vindo ao OdontoIA!",
+            message=f"Olá {nome}, seja bem-vindo ao OdontoIA!\n\Sua conta de teste está ativa por 7 dias.",
+            from_email=None,  # usa o DEFAULT_FROM_EMAIL
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
+        
         # Faz login automático após criar conta
         login(request, user)
 
@@ -1138,6 +1149,15 @@ def pagamento_sucesso(request):
         .first()
     )
 
+    nome = request.user.first_name or request.user.username
+    send_mail(
+    subject="✅ Assinatura confirmada - OdontoIA",
+    message=f"Olá {nome}, seu plano {assinatura.plano} foi ativado com sucesso até {assinatura.data_fim.strftime('%d/%m/%Y')}.",
+    from_email=None,
+    recipient_list=[request.user.email],
+    fail_silently=True,
+)
+        
     if not assinatura or not pagamento:
         messages.warning(request, "Não foi possível carregar os dados do pagamento.")
         return redirect("clinic:dashboard")
@@ -1145,7 +1165,7 @@ def pagamento_sucesso(request):
     return render(
         request,
         "clinic/pagamento_sucesso.html",
-        {"assinatura": assinatura, "pagamento": pagamento, "plano": pagamento.plano},
+        {"assinatura": assinatura, "pagamento": pagamento, "plano": assinatura.plano},
     )
 
 
