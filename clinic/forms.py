@@ -52,4 +52,5 @@ class ProcedimentoForm(forms.ModelForm):
         fields = ['nome', 'descricao', 'valor_base']
         widgets = {
             'descricao': forms.Textarea(attrs={'rows': 3}),
-        }
+            'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})      
+            }

@@ -1,12 +1,35 @@
-{% extends 'clinic/base.html' %}
+{% extends "clinic/base.html" %}
+{% block title %}{{ titulo }} - OdontoIA{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>{{ titulo }}</h2>
-    <form method="post" class="shadow p-4 bg-white rounded">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-success">💾 Salvar</button>
-        <a href="{% url 'clinic:procedimentos_list' %}" class="btn btn-secondary">Voltar</a>
-    </form>
+<div class="container py-4">
+  <h2 class="mb-4">{{ titulo }}</h2>
+  <form method="post" class="card p-4 shadow-sm">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">Nome do Procedimento</label>
+      {{ form.nome }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Descrição (opcional)</label>
+      {{ form.descricao }}
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Valor (R$)</label>
+      {{ form.valor }}
+    </div>
+
+    <div class="text-end">
+      <button type="submit" class="btn btn-primary">
+        💾 Salvar
+      </button>
+      <a href="{% url 'clinic:procedimentos_list' %}" class="btn btn-secondary">
+        ❌ Cancelar
+      </a>
+    </div>
+  </form>
 </div>
 {% endblock %}
+

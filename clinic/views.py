@@ -852,6 +852,18 @@ def procedimento_edit(request, id):
     return render(request, 'clinic/procedimento_form.html', {'form': form, 'titulo': 'Editar Procedimento'})
 
 
+@login_required
+@require_active_subscription
+def procedimento_delete(request, id):
+    procedimento = get_object_or_404(Procedimento, id=id)
+    if request.method == 'POST':
+        procedimento.delete()
+        messages.success(request, "Procedimento excluído com sucesso.")
+        return redirect('clinic:procedimentos_list')
+    return render(request, 'clinic/procedimento_confirm_delete.html', {'procedimento': procedimento})
+
+
+
 def assinatura_expirada(request):
     return render(request, "clinic/assinatura_expirada.html")
 

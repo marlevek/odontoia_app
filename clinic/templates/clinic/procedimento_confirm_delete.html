@@ -1,0 +1,12 @@
+{% extends "clinic/base.html" %}
+{% block content %}
+<div class="container py-5 text-center">
+  <h3>🗑️ Confirmar exclusão</h3>
+  <p>Tem certeza que deseja excluir o procedimento <strong>{{ procedimento.nome }}</strong>?</p>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Excluir</button>
+    <a href="{% url 'clinic:procedimentos_list' %}" class="btn btn-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
