@@ -246,6 +246,181 @@ def consulta_create_ajax(request):
 
 @login_required
 @require_active_subscription
+def consultas_list(request):
+    # Obter filtros via GET
+    search = request.GET.get('search')
+    status = request.GET.get('status')
+    data_filtro = request.GET.get('data')
+
+    consultas = Consulta.objects.select_related(
+        'paciente', 'dentista', 'procedimento').order_by('-data')
+
+    # 🔍 Filtro por nome do paciente ou dentista
+    if search:
+        consultas = consultas.filter(
+            Q(paciente__nome__icontains=search) |
+            Q(dentista__nome__icontains=search)
+        )
+
+    # ✅ Filtro por status
+    if status == 'pendente':
+        consultas = consultas.filter(concluida=False)
+    elif status == 'concluida':
+        consultas = consultas.filter(concluida=True)
+
+    # 📅 Filtro por data específica
+    if data_filtro:
+        try:
+            data_convertida = parse_date(data_filtro)
+            if data_convertida:
+                consultas = consultas.filter(data__date=data_convertida)
+        except Exception:
+            pass
+
+    context = {
+        'consultas': consultas,
+        'search': search or '',
+        'status': status or '',
+        'data_filtro': data_filtro or '',
+    }
+    return render(request, 'clinic/consultas_list.html', context)
+
+
+@login_required
+@require_active_subscription
+def consulta_update(request, pk):
+    consulta = get_object_or_404(Consulta, pk=pk)
+
+    if request.method == 'POST':
+        form = ConsultaForm(request.POST, instance=consulta)
+        if form.is_valid():
+            consulta = form.save(commit=False)
+
+            if consulta.procedimento:
+                consulta.valor = consulta.procedimento.valor_base
+
+            consulta.save()
+            messages.success(request, "Consulta atualizada com sucesso!")
+            return redirect('clinic:consultas_list')
+        else:
+            messages.error(request, "⚠️ Corrija os erros abaixo antes de salvar.")
+    else:
+        form = ConsultaForm(instance=consulta)
+
+    return render(
+        request,
+        'clinic/consulta_form.html',
+        {'form': form, 'titulo': 'Editar Consulta'}
+    )
+
+
+@login_required
+@require_active_subscription
+def consulta_create(request):
+    if request.method == 'POST':
+        form = ConsultaForm(request.POST)
+        if form.is_valid():
+            consulta = form.save(commit=False)
+
+            # Aplica automaticamente o valor do procedimento
+            if consulta.procedimento:
+                consulta.valor = consulta.procedimento.valor_base
+
+            # Recalcula os campos financeiros
+            consulta.save()
+
+            messages.success(request, "✅ Consulta agendada com sucesso!")
+            return redirect('clinic:consultas_list')
+        else:
+            messages.error(request, "⚠️ Corrija os erros abaixo antes de salvar.")
+    else:
+        form = ConsultaForm()
+
+    return render(
+        request,
+        'clinic/consulta_form.html',
+        {'form': form, 'titulo': 'Agendar Consulta'}
+    )
+
+
+@csrf_exempt
+def consulta_update_ajax(request):
+    if request.method == "POST":
+        consulta_id = request.POST.get("id")
+        nova_data = request.POST.get("start")
+
+        try:
+            consulta = Consulta.objects.get(pk=consulta_id)
+            data_convertida = parse_datetime(nova_data)
+            if data_convertida:
+                consulta.data = data_convertida
+                consulta.save()
+                return JsonResponse({"success": True})
+            else:
+                return JsonResponse({"success": False, "error": "Data inválida"})
+        except Consulta.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Consulta não encontrada"})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+
+    return JsonResponse({"success": False, "error": "Método inválido"})
+
+
+@login_required
+@require_active_subscription
+def consulta_delete(request, pk):
+    consulta = get_object_or_404(Consulta, pk=pk)
+    if request.method == 'POST':
+        consulta.delete()
+        messages.success(request, "Consulta excluída com sucesso.")
+        return redirect('clinic:consultas_list')
+    return render(request, 'clinic/consulta_confirm_delete.html', {'consulta': consulta})
+
+
+@login_required
+@require_active_subscription
+def consultas_calendar(request):
+    # 🔍 Se for uma chamada AJAX do FullCalendar (com 'start' e 'end')
+    if request.GET.get('start') and request.GET.get('end'):
+        dentista_id = request.GET.get('dentista')
+        consultas = Consulta.objects.select_related(
+            'paciente', 'dentista', 'procedimento').all()
+
+        if dentista_id:
+            consultas = consultas.filter(dentista_id=dentista_id)
+
+        events = []
+        for consulta in consultas:
+            color = "#0b5394" if not consulta.concluida else "#28a745"
+            events.append({
+                "id": consulta.id,
+                "title": f"{consulta.paciente.nome}",
+                "start": consulta.data.isoformat(),
+                "backgroundColor": color,
+                "borderColor": color,
+                "textColor": "white",
+                "extendedProps": {
+                    "dentista": consulta.dentista.nome if consulta.dentista else "",
+                    "procedimento": consulta.procedimento.nome if consulta.procedimento else "",
+                    "observacoes": consulta.observacoes or ""
+                },
+                "url": f"/consultas/{consulta.id}/editar/"
+            })
+        return JsonResponse(events, safe=False)
+
+    # 👇 Renderiza o template normal
+    return render(request, 'clinic/consultas_calendar.html', {
+        'pacientes': Paciente.objects.all(),
+        'dentistas': Dentista.objects.all(),
+        'procedimentos': Procedimento.objects.all(),
+    })
+
+    # Se não for chamada com start/end → renderiza o template normal
+    return render(request, 'clinic/consultas_calendar.html')
+
+
+@login_required
+@require_active_subscription
 def dashboard(request):
     hoje = timezone.now().date()
     periodo = int(request.GET.get('periodo', 30))  # filtro de 7 / 30 / 90 dias
@@ -495,156 +670,6 @@ def paciente_delete(request, pk):
         return redirect('clinic:pacientes_list')
     return render(request, 'clinic/paciente_confirm_delete.html', {'paciente': paciente})
 
-
-@login_required
-@require_active_subscription
-def consultas_list(request):
-    # Obter filtros via GET
-    search = request.GET.get('search')
-    status = request.GET.get('status')
-    data_filtro = request.GET.get('data')
-
-    consultas = Consulta.objects.select_related(
-        'paciente', 'dentista', 'procedimento').order_by('-data')
-
-    # 🔍 Filtro por nome do paciente ou dentista
-    if search:
-        consultas = consultas.filter(
-            Q(paciente__nome__icontains=search) |
-            Q(dentista__nome__icontains=search)
-        )
-
-    # ✅ Filtro por status
-    if status == 'pendente':
-        consultas = consultas.filter(concluida=False)
-    elif status == 'concluida':
-        consultas = consultas.filter(concluida=True)
-
-    # 📅 Filtro por data específica
-    if data_filtro:
-        try:
-            data_convertida = parse_date(data_filtro)
-            if data_convertida:
-                consultas = consultas.filter(data__date=data_convertida)
-        except Exception:
-            pass
-
-    context = {
-        'consultas': consultas,
-        'search': search or '',
-        'status': status or '',
-        'data_filtro': data_filtro or '',
-    }
-    return render(request, 'clinic/consultas_list.html', context)
-
-
-@login_required
-@require_active_subscription
-def consulta_update(request, pk):
-    consulta = get_object_or_404(Consulta, pk=pk)
-
-    if request.method == 'POST':
-        form = ConsultaForm(request.POST, instance=consulta)
-        if form.is_valid():
-            form.save()
-            return redirect('clinic:consultas_list')
-    else:
-        form = ConsultaForm(instance=consulta)
-
-    return render(request, 'clinic/consulta_form.html', {'form': form, 'consulta': consulta})
-
-
-@login_required
-@require_active_subscription
-def consulta_create(request):
-    if request.method == 'POST':
-        form = ConsultaForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "✅ Consulta agendada com sucesso!")
-            return redirect('clinic:consultas_list')
-        else:
-            messages.error(
-                request, "⚠️ Corrija os erros abaixo antes de salvar.")
-    else:
-        form = ConsultaForm()
-    return render(request, 'clinic/consulta_form.html', {'form': form, 'titulo': 'Nova Consulta'})
-
-
-@csrf_exempt
-def consulta_update_ajax(request):
-    if request.method == "POST":
-        consulta_id = request.POST.get("id")
-        nova_data = request.POST.get("start")
-
-        try:
-            consulta = Consulta.objects.get(pk=consulta_id)
-            data_convertida = parse_datetime(nova_data)
-            if data_convertida:
-                consulta.data = data_convertida
-                consulta.save()
-                return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"success": False, "error": "Data inválida"})
-        except Consulta.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Consulta não encontrada"})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-
-    return JsonResponse({"success": False, "error": "Método inválido"})
-
-
-@login_required
-@require_active_subscription
-def consulta_delete(request, pk):
-    consulta = get_object_or_404(Consulta, pk=pk)
-    if request.method == 'POST':
-        consulta.delete()
-        messages.success(request, "Consulta excluída com sucesso.")
-        return redirect('clinic:consultas_list')
-    return render(request, 'clinic/consulta_confirm_delete.html', {'consulta': consulta})
-
-
-@login_required
-@require_active_subscription
-def consultas_calendar(request):
-    # 🔍 Se for uma chamada AJAX do FullCalendar (com 'start' e 'end')
-    if request.GET.get('start') and request.GET.get('end'):
-        dentista_id = request.GET.get('dentista')
-        consultas = Consulta.objects.select_related(
-            'paciente', 'dentista', 'procedimento').all()
-
-        if dentista_id:
-            consultas = consultas.filter(dentista_id=dentista_id)
-
-        events = []
-        for consulta in consultas:
-            color = "#0b5394" if not consulta.concluida else "#28a745"
-            events.append({
-                "id": consulta.id,
-                "title": f"{consulta.paciente.nome}",
-                "start": consulta.data.isoformat(),
-                "backgroundColor": color,
-                "borderColor": color,
-                "textColor": "white",
-                "extendedProps": {
-                    "dentista": consulta.dentista.nome if consulta.dentista else "",
-                    "procedimento": consulta.procedimento.nome if consulta.procedimento else "",
-                    "observacoes": consulta.observacoes or ""
-                },
-                "url": f"/consultas/{consulta.id}/editar/"
-            })
-        return JsonResponse(events, safe=False)
-
-    # 👇 Renderiza o template normal
-    return render(request, 'clinic/consultas_calendar.html', {
-        'pacientes': Paciente.objects.all(),
-        'dentistas': Dentista.objects.all(),
-        'procedimentos': Procedimento.objects.all(),
-    })
-
-    # Se não for chamada com start/end → renderiza o template normal
-    return render(request, 'clinic/consultas_calendar.html')
 
 
 def dashboard_data(request):

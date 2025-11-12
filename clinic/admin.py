@@ -38,7 +38,7 @@ class DentistaAdmin(admin.ModelAdmin):
     
 @admin.register(Procedimento)
 class ProcedimentoAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'valor')
+    list_display = ('nome', 'valor_base')
     search_fields = ('nome',)
     
 

@@ -49,8 +49,9 @@ class PacienteForm(forms.ModelForm):
 class ProcedimentoForm(forms.ModelForm):
     class Meta:
         model = Procedimento
-        fields = ['nome', 'descricao', 'valor']
+        fields = ['nome', 'descricao', 'valor_base']
         widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
             'descricao': forms.Textarea(attrs={'rows': 3}),
-            'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})      
+            'valor_base': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),   
             }

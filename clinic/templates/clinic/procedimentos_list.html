@@ -24,13 +24,11 @@
         <tr>
           <td>{{ proc.nome }}</td>
           <td>{{ proc.descricao|default:"-" }}</td>
-          <td>{{ proc.valor|floatformat:2 }}</td>
+          <td>{{ proc.valor_base|floatformat:2 }}</td>
           <td class="text-center">
             <a href="{% url 'clinic:procedimento_edit' proc.id %}" class="btn btn-sm btn-outline-primary">
               ✏️ Editar
             </a>
-           
-              {% csrf_token %}
               <a href="{% url 'clinic:procedimento_delete' proc.id %}" class="btn btn-sm btn-outline-primary"
                 onclick="return confirm('Tem certeza que deseja excluir este procedimento?');">🗑️ Excluir</a>
            
