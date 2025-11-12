@@ -15,6 +15,7 @@ ALLOWED_HOSTS = [
     'app.odontoia.codertec.com.br',
     'odontoia.codertec.com.br',
     '04vv6rw3.up.railway.app',
+    '.up.railway.app',
     'localhost',
     '127.0.0.1'
 ]
@@ -161,6 +162,7 @@ CSRF_COOKIE_SECURE = not DEBUG
 CSRF_TRUSTED_ORIGINS = [
     'https://app.odontoia.codertec.com.br',
     "https://odontoia.codertec.com.br",
+    '04vv6rw3.up.railway.app',
     'https://*.up.railway.app',
 ]
 
