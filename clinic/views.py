@@ -1005,58 +1005,52 @@ PLANOS = {
 @login_required
 def criar_pagamento(request, plano: str):
     """
-    Cria uma Preference no Mercado Pago e redireciona o usuário ao checkout.
+    Cria uma preferência no Mercado Pago e redireciona o usuário ao checkout.
+    Funciona tanto localmente (sandbox) quanto em produção (Railway).
     """
-    import json
-    from django.utils import timezone
-
-    plano = plano.lower().strip()
-
-    PLANOS = {
-        "basico": Decimal("49.90"),
-        "profissional": Decimal("79.90"),
-        "premium": Decimal("129.90"),
-    }
-
-    print("🧩 [Checkout] Plano recebido:", plano)
-    print("🧩 [Checkout] PLANOS disponíveis:", list(PLANOS.keys()))
-
-    if plano not in PLANOS:
-        messages.error(request, f"Plano inválido: {plano}")
-        print("❌ [Checkout] Plano inválido:", plano)
-        return redirect("clinic:dashboard")
-
-    valor = float(PLANOS[plano])
-    print(f"💰 [Checkout] Criando pagamento para {plano} = R$ {valor:.2f}")
-
-    # Obtém ou cria assinatura
-    assinatura, _ = Assinatura.objects.get_or_create(user=request.user)
-    referencia = f"odontoia-{request.user.id}-{uuid.uuid4().hex}"
-
-    # Cria registro local de pagamento
-    pagamento = Pagamento.objects.create(
-        assinatura=assinatura,
-        referencia=referencia,
-        valor=valor,
-        status="pendente",
-        metodo="desconhecido",
-        plano=plano.capitalize(),  # ✅ salva o nome do plano direto no modelo
-        data_criacao=timezone.now(),
-    )
-
-    sdk = _get_mp_sdk()
-
-    base_url = (
-        "https://app.odontoia.codertec.com.br"
-        if not settings.DEBUG
-        else request.build_absolute_uri('/')[:-1]
-    )
-    
-    success_url = f"{base_url}{reverse('cinic:pagamento_sucesso')}"
-    failure_url = f"{base_url}{reverse('cinic:pagamento_falha')}"
-    webhook_url = f"{base_url}{reverse('cinic:mercadopago_webhook')}"
-
     try:
+        plano = plano.lower().strip()
+        PLANOS = {
+            "basico": Decimal("49.90"),
+            "profissional": Decimal("79.90"),
+            "premium": Decimal("129.90"),
+        }
+
+        print(f"🧩 [Checkout] Plano solicitado: {plano}")
+        if plano not in PLANOS:
+            messages.error(request, f"Plano inválido: {plano}")
+            return redirect("clinic:dashboard")
+
+        valor = float(PLANOS[plano])
+        assinatura, _ = Assinatura.objects.get_or_create(user=request.user)
+
+        referencia = f"odontoia-{request.user.id}-{uuid.uuid4().hex}"
+        pagamento = Pagamento.objects.create(
+            assinatura=assinatura,
+            referencia=referencia,
+            valor=valor,
+            status="pendente",
+            metodo="desconhecido",
+            data_criacao=timezone.now(),
+        )
+
+        # SDK Mercado Pago
+        access_token = getattr(settings, "MERCADOPAGO_ACCESS_TOKEN", None)
+        if not access_token:
+            raise RuntimeError("❌ MERCADOPAGO_ACCESS_TOKEN ausente nas variáveis de ambiente.")
+        sdk = mercadopago.SDK(access_token)
+
+        # Define URLs corretas (produção usa domínio real)
+        base_url = (
+            "https://app.odontoia.codertec.com.br"
+            if not settings.DEBUG
+            else request.build_absolute_uri("/")[:-1]
+        )
+
+        success_url = f"{base_url}{reverse('clinic:pagamento_sucesso')}"
+        failure_url = f"{base_url}{reverse('clinic:pagamento_falha')}"
+        webhook_url = f"{base_url}{reverse('clinic:mercadopago_webhook')}"
+
         preference_data = {
             "items": [
                 {
@@ -1074,28 +1068,24 @@ def criar_pagamento(request, plano: str):
                 "failure": failure_url,
                 "pending": success_url,
             },
-            "auto_return": "approved",  # ✅ retorna automaticamente após pagamento
             "external_reference": referencia,
         }
 
-        # ⚙️ notification_url apenas em produção
+        # Apenas em produção, adiciona auto_return e webhook
         if not settings.DEBUG:
-            preference_data["notification_url"] = webhook_url
             preference_data["auto_return"] = "approved"
+            preference_data["notification_url"] = webhook_url
 
-        print("📦 [Checkout] Enviando preference_data:")
+        print("📦 [Checkout] Preference enviada para Mercado Pago:")
         print(json.dumps(preference_data, indent=2, ensure_ascii=False))
 
         pref = sdk.preference().create(preference_data)
         resp = pref.get("response", {})
-
-        print("📬 [Checkout] Resposta Mercado Pago:", json.dumps(resp, indent=2, ensure_ascii=False))
-
         init_point = resp.get("init_point") or resp.get("sandbox_init_point")
 
         if not init_point:
-            msg = resp.get("message", "resposta inválida do Mercado Pago")
-            print("⚠️ [Checkout] init_point ausente - resposta:", resp)
+            msg = resp.get("message", "Erro inesperado na criação da preferência")
+            print("⚠️ [Checkout] init_point ausente → resposta MP:", resp)
             messages.error(request, f"Falha ao iniciar checkout: {msg}")
             return redirect("clinic:dashboard")
 
@@ -1104,12 +1094,10 @@ def criar_pagamento(request, plano: str):
 
     except Exception as e:
         import traceback
-        print("❌ [Checkout] ERRO ao criar preferência no Mercado Pago:")
+        print("❌ [Checkout] ERRO FATAL no pagamento:")
         traceback.print_exc()
-        messages.error(request, f"Falha ao iniciar checkout no Mercado Pago: {e}")
+        messages.error(request, f"Ocorreu um erro ao criar o pagamento: {e}")
         return redirect("clinic:dashboard")
-
-
 
 # ===========================
 # 🧾 WEBHOOK DO MERCADO PAGO
