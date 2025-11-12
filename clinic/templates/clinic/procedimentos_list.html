@@ -29,11 +29,11 @@
             <a href="{% url 'clinic:procedimento_edit' proc.id %}" class="btn btn-sm btn-outline-primary">
               ✏️ Editar
             </a>
-            <form action="{% url 'clinic:procedimento_delete' proc.id %}" method="post" class="d-inline">
+           
               {% csrf_token %}
               <a href="{% url 'clinic:procedimento_delete' proc.id %}" class="btn btn-sm btn-outline-primary"
                 onclick="return confirm('Tem certeza que deseja excluir este procedimento?');">🗑️ Excluir</a>
-            </form>
+           
           </td>
         </tr>
         {% endfor %}
