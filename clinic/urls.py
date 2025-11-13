@@ -25,7 +25,7 @@ urlpatterns = [
     path('dashboard/data/', views.dashboard_data, name='dashboard_data'),
     
     # Dentistas
-    path('dentistas/', views.dentista_list, name='dentista_list'),
+    path('dentistas/', views.dentista_list, name='dentistas_list'),
     path('dentistas/novo/', views.dentista_create, name='dentista_create'),
     path("dentistas/<int:id>/editar/", views.dentista_edit, name="dentista_edit"),
     path("dentistas/<int:id>/excluir/", views.dentista_delete, name="dentista_delete"),

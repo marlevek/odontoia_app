@@ -110,7 +110,6 @@
     </div>
 </div>
 
-
 <!-- Próximas Consultas -->
 <div class="table-container">
     <h3>📅 Próximas Consultas (7 dias)</h3>
@@ -228,7 +227,7 @@
     const graficoConsultasMes = new Chart(ctxConsultasMes, {
         type: 'line',
         data: {
-            labels: {{ meses| safe }},
+            labels: {{meses| safe }},
     datasets: [{
         label: 'Consultas por Mês',
         data: {{ dados_consultas| safe }},
