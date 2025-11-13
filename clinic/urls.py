@@ -23,6 +23,9 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/data/', views.dashboard_data, name='dashboard_data'),
+    
+    # Dentistas
+    path('dentista/primeiro', views.dentista_principal, name='dentista_principal'),
 
     # Pacientes
     path('pacientes/', views.pacientes_list, name='pacientes_list'),

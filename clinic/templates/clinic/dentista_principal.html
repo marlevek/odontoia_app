@@ -1,0 +1,30 @@
+{% extends "clinic/base.html" %}
+{% block title %}Cadastrar Dentista{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-3">👨‍⚕️ Cadastrar Dentista Principal</h2>
+    <p>Para usar o sistema corretamente, precisamos do seu CRO.</p>
+
+    <form method="post" class="card p-4 shadow-sm">
+        {% csrf_token %}
+
+        <label class="form-label">Nome</label>
+        <input type="text" name="nome" class="form-control" value="{{ nome_sugerido }}" required>
+
+        <label class="form-label mt-3">CRO</label>
+        <input type="text" name="cro" class="form-control" required>
+
+        <label class="form-label mt-3">Especialidade (opcional)</label>
+        <input type="text" name="especialidade" class="form-control">
+
+        <label class="form-label mt-3">Telefone</label>
+        <input type="text" name="telefone" class="form-control">
+
+        <label class="form-label mt-3">E-mail</label>
+        <input type="email" name="email" class="form-control">
+
+        <button class="btn btn-primary mt-4">Salvar</button>
+    </form>
+</div>
+{% endblock %}

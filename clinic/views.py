@@ -1,4 +1,3 @@
-from .models import Consulta
 from .utils.contexto_dinamico import gerar_contexto_dinamico
 import re
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
@@ -439,6 +438,9 @@ def dashboard(request):
     )
     if not consultas_periodo.exists():
         consultas_periodo = Consulta.objects.all()
+        
+    if not Dentista.objects.exists():
+        return redirect('clinic:dentista_principal')
 
     # === Faturamentos ===
     faturamento_total = consultas_periodo.aggregate(
@@ -610,6 +612,43 @@ def _accent_insensitive_regex(prefix: str) -> str:
 
 @login_required
 @require_active_subscription
+def dentista_principal(request):
+    """Cadastro do dentista principal para contas que ainda não têm dentista."""
+    from .models import Dentista
+
+    if Dentista.objects.exists():
+        return redirect("clinic:dashboard")
+
+    if request.method == "POST":
+        nome = request.POST.get("nome")
+        cro = request.POST.get("cro")
+        esp = request.POST.get("especialidade", "")
+        tel = request.POST.get("telefone", "")
+        email = request.POST.get("email", "")
+
+        if not nome or not cro:
+            messages.error(request, "Nome e CRO são obrigatórios.")
+            return redirect("clinic:dentista_principal")
+
+        Dentista.objects.create(
+            nome=nome,
+            cro=cro,
+            especialidade=esp,
+            telefone=tel,
+            email=email,
+            comissao_percentual=0  # plano básico sem comissão
+        )
+
+        messages.success(request, "Dentista principal cadastrado com sucesso!")
+        return redirect("clinic:dashboard")
+
+    return render(request, "clinic/dentista_principal.html", {
+        "nome_sugerido": request.user.first_name or request.user.username
+    })
+
+
+@login_required
+@require_active_subscription
 def pacientes_list(request):
     search = (request.GET.get('search') or '').strip()
     pacientes = Paciente.objects.all().order_by('-data_cadastro')
@@ -669,7 +708,6 @@ def paciente_delete(request, pk):
         messages.success(request, "Paciente excluído com sucesso.")
         return redirect('clinic:pacientes_list')
     return render(request, 'clinic/paciente_confirm_delete.html', {'paciente': paciente})
-
 
 
 def dashboard_data(request):
@@ -815,6 +853,12 @@ def registrar_teste(request):
         )
         user.date_joined = timezone.now()
         user.save()
+        
+        Dentista.objects.create(
+            nome = user.first_name or user.username,
+            comissao_percentual = 0, 
+            usuario = user
+        )
 
         # Cria assinatura trial automaticamente
         Assinatura.objects.create(user=user, tipo='trial')

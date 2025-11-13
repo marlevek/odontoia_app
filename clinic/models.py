@@ -39,9 +39,20 @@ class Assinatura(models.Model):
         """Verifica se é um plano de teste gratuito."""
         return self.tipo == "trial"
 
-    def __str__(self):
-        return f"{self.user.username} - {self.get_tipo_display()} ({'Ativa' if self.ativa else 'Inativa'})"
+        
+    @property
+    def limite_dentistas(self):
+        '''Retorna o limite de dentistas permitidos conforme o plano'''
+        if self.tipo == 'premium':
+            return None # ilimitado
+        if self.tipo == 'profissional':
+            return 4
+        return 1
 
+
+    def __str__(self):
+            return f"{self.user.username} - {self.get_tipo_display()} ({'Ativa' if self.ativa else 'Inativa'})"
+        
 
 class Paciente(models.Model):
     nome = models.CharField(max_length=100)
@@ -70,6 +81,7 @@ class Dentista(models.Model):
     especialidade = models.CharField(max_length=100, blank=True)
     telefone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True, null=True)
+
 
     # 💸 Comissão automática
     comissao_percentual = models.DecimalField(
