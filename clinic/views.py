@@ -646,6 +646,36 @@ def dentista_create(request):
 
     return render(request, "clinic/dentista_form.html", {"form": form})
 
+@login_required
+@require_active_subscription
+def dentista_edit(request, id):
+    dentista = get_object_or_404(Dentista, id=id)
+
+    from .forms import DentistaForm
+
+    if request.method == "POST":
+        form = DentistaForm(request.POST, instance=dentista)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Dentista atualizado com sucesso!")
+            return redirect("clinic:dentistas_list")
+    else:
+        form = DentistaForm(instance=dentista)
+
+    return render(request, "clinic/dentista_form.html", {
+        "form": form,
+        "titulo": "Editar Dentista"
+    })
+
+
+@login_required
+@require_active_subscription
+def dentista_delete(request, id):
+    dentista = get_object_or_404(Dentista, id=id)
+    dentista.delete()
+    messages.success(request, "Dentista removido.")
+    return redirect("clinic:dentistas_list")
+
 
 @login_required
 @require_active_subscription

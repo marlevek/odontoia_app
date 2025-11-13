@@ -1,1 +1,70 @@
 
+{% extends "clinic/base.html" %}
+{% load static %}
+
+{% block title %}Dentistas - OdontoIA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>🦷 Dentistas</h2>
+
+        {% if dentistas_count < limite_max %}
+            <a href="{% url 'clinic:dentista_create' %}" class="btn btn-primary">
+                ➕ Novo Dentista
+            </a>
+        {% endif %}
+    </div>
+
+    {% if dentistas_count >= limite_max %}
+        <div class="alert alert-warning">
+            ⚠ Seu plano <strong>{{ assinatura.get_tipo_display }}</strong> 
+            permite no máximo <strong>{{ limite_max }}</strong> dentista(s).  
+            <br>Para adicionar mais, faça upgrade de plano.
+        </div>
+    {% endif %}
+
+    {% if dentistas %}
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CRO</th>
+                        <th>Especialidade</th>
+                        <th>E-mail</th>
+                        <th>Comissão (%)</th>
+                        <th class="text-center" style="width: 120px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in dentistas %}
+                    <tr>
+                        <td>{{ d.nome }}</td>
+                        <td>{{ d.cro }}</td>
+                        <td>{{ d.especialidade|default:"-" }}</td>
+                        <td>{{ d.email|default:"-" }}</td>
+                        <td>{{ d.comissao_percentual }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'clinic:dentista_edit' d.id %}"
+                               class="btn btn-sm btn-outline-primary">✏️ Editar</a>
+
+                            <a href="{% url 'clinic:dentista_delete' d.id %}"
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Tem certeza que deseja excluir este dentista?');">
+                                🗑️ Excluir
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            Nenhum dentista cadastrado ainda.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
