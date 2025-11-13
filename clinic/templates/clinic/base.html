@@ -36,8 +36,12 @@
             <a href="{% url 'clinic:consultas_list' %}">🗒️ Consultas</a>
             <a href="{% url 'clinic:consultas_calendar' %}">📅 Calendário</a>
 
-            {% if assinatura and assinatura.tipo in "profissional premium" %}
-            <a href="{% url 'clinic:financeiro_resumo' %}">💰 Financeiro</a>
+            {% if trial and trial.tipo == "profissional" or trial.tipo == "premium" %}
+            <a href="#">💰 Financeiro</a>
+            {% endif %}
+
+            {% if trial and trial.tipo == "premium" %}
+            <a href="#">🧠 IA & Insights</a>
             {% endif %}
 
             {% if user.is_authenticated %}
