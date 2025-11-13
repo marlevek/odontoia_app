@@ -3,7 +3,7 @@ import re
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
 from django.utils import timezone
 from django.utils.dateparse import parse_date
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from .models import Paciente, Consulta, Dentista, Procedimento, Assinatura, Pagamento
@@ -32,11 +32,13 @@ import uuid
 import mercadopago
 from decimal import Decimal
 from django.urls import reverse
+import openpyxl
+from openpyxl.utils import get_column_letter
+
 
 
 # inicializa o client globalmente mas de forma segura
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 
 def _odontoia_system_prompt(user):
     from .utils.contexto_dinamico import gerar_contexto_dinamico
@@ -1378,3 +1380,132 @@ def pagamento_falha(request):
     plano = pagamento.plano if pagamento else "Indefinido"
 
     return render(request, "clinic/pagamento_falha.html", {"plano": plano})
+
+
+# --- FINANCEIRO (apenas Profissional / Premium) ---------------------------
+@login_required
+@require_active_subscription
+def financeiro_resumo(request):
+    """
+    Tela de resumo financeiro (por dentista, receita, comissões, líquido)
+    Disponível apenas para planos Profissional e Premium.
+    """
+    assinatura = Assinatura.objects.filter(user=request.user, ativa=True).first()
+
+    if not assinatura or assinatura.tipo not in ("profissional", "premium"):
+        messages.error(
+            request,
+            "O módulo financeiro completo está disponível apenas para os planos "
+            "Profissional e Premium."
+        )
+        return redirect("clinic:dashboard")
+
+    hoje = timezone.now().date()
+    periodo = int(request.GET.get("periodo", 30))  # dias
+    data_inicial = hoje - timedelta(days=periodo)
+
+    consultas = Consulta.objects.filter(
+        data__date__gte=data_inicial,
+        data__date__lte=hoje
+    )
+
+    # Agrupado por dentista
+    por_dentista = (
+        consultas.exclude(dentista__isnull=True)
+        .values("dentista__nome")
+        .annotate(
+            total_consultas=Count("id"),
+            receita=Sum("valor_final"),
+            comissoes=Sum("comissao_valor"),
+        )
+        .order_by("-receita")
+    )
+
+    totais = consultas.aggregate(
+        total_receita=Sum("valor_final"),
+        total_comissoes=Sum("comissao_valor"),
+    )
+    total_receita = totais["total_receita"] or 0
+    total_comissoes = totais["total_comissoes"] or 0
+    total_liquido = total_receita - total_comissoes
+
+    context = {
+        "por_dentista": por_dentista,
+        "periodo": periodo,
+        "total_receita": total_receita,
+        "total_comissoes": total_comissoes,
+        "total_liquido": total_liquido,
+    }
+    return render(request, "clinic/financeiro_resumo.html", context)
+
+
+@login_required
+@require_active_subscription
+def financeiro_exportar_excel(request):
+    """
+    Exporta o mesmo resumo financeiro para Excel (XLSX).
+    Também restrito a Profissional / Premium.
+    """
+    assinatura = Assinatura.objects.filter(user=request.user, ativa=True).first()
+
+    if not assinatura or assinatura.tipo not in ("profissional", "premium"):
+        messages.error(
+            request,
+            "Exportação disponível apenas para os planos Profissional e Premium."
+        )
+        return redirect("clinic:dashboard")
+
+    hoje = timezone.now().date()
+    periodo = int(request.GET.get("periodo", 30))
+    data_inicial = hoje - timedelta(days=periodo)
+
+    consultas = Consulta.objects.filter(
+        data__date__gte=data_inicial,
+        data__date__lte=hoje
+    )
+
+    por_dentista = (
+        consultas.exclude(dentista__isnull=True)
+        .values("dentista__nome")
+        .annotate(
+            total_consultas=Count("id"),
+            receita=Sum("valor_final"),
+            comissoes=Sum("comissao_valor"),
+        )
+        .order_by("-receita")
+    )
+
+    # --- Monta planilha Excel ---
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Financeiro"
+
+    headers = ["Dentista", "Total Consultas", "Receita (R$)", "Comissões (R$)", "Líquido (R$)"]
+    ws.append(headers)
+
+    for row in por_dentista:
+        receita = row["receita"] or 0
+        comissoes = row["comissoes"] or 0
+        liquido = receita - comissoes
+        ws.append([
+            row["dentista__nome"],
+            row["total_consultas"],
+            float(receita),
+            float(comissoes),
+            float(liquido),
+        ])
+
+    # Ajusta largura das colunas
+    for col_idx, _ in enumerate(headers, start=1):
+        col_letter = get_column_letter(col_idx)
+        ws.column_dimensions[col_letter].width = 20
+
+    # Resposta HTTP
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    filename = f"financeiro_{hoje.strftime('%Y%m%d')}.xlsx"
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+
+    wb.save(response)
+    return response

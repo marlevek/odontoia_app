@@ -99,5 +99,10 @@ urlpatterns = [
     path('pagamento/falha/', views.pagamento_falha, name='pagamento_falha'),
     path('webhook/mercadopago/', views.mercadopago_webhook,
          name='mercadopago_webhook'),
+    
+    
+    # Financeiro
+    path('financeiro/', views.financeiro_resumo, name='financeiro_resumo'),
+    path('financeiro/exportar/', views.financeiro_exportar_excel, name='financeiro_exportar_excel'),
 
 ]
