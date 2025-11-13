@@ -23,7 +23,7 @@
         {% for proc in procedimentos %}
         <tr>
           <td>{{ proc.nome }}</td>
-          <td>{{ proc.descricao|default:"-" }}</td>
+          
           <td>{{ proc.valor_base|floatformat:2 }}</td>
           <td class="text-center">
             <a href="{% url 'clinic:procedimento_edit' proc.id %}" class="btn btn-sm btn-outline-primary">
