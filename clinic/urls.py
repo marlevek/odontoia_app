@@ -25,7 +25,8 @@ urlpatterns = [
     path('dashboard/data/', views.dashboard_data, name='dashboard_data'),
     
     # Dentistas
-    path('dentista/primeiro', views.dentista_principal, name='dentista_principal'),
+    path('dentistas/', views.dentista_list, name='dentista_list'),
+    path('dentistas/novo/', views.dentista_create, name='dentista_create'),
 
     # Pacientes
     path('pacientes/', views.pacientes_list, name='pacientes_list'),

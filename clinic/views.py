@@ -98,7 +98,6 @@ def _get_openai_client():
 
 # ── Endpoint de diagnóstico (opcional, ajuda no debug) ─────────────────────
 
-
 @csrf_exempt
 @login_required
 @require_GET
@@ -609,13 +608,50 @@ def _accent_insensitive_regex(prefix: str) -> str:
         pattern += base.get(ch, ch)
     return '^' + pattern  # começa com
 
+@login_required
+@require_active_subscription
+def dentista_create(request):
+    assinatura = Assinatura.objects.filter(user=request.user).first()
+    plano = assinatura.tipo
+
+    # Limites por plano
+    LIMITE = {
+        "trial": 1,
+        "basico": 1,
+        "profissional": 4,
+        "premium": 9999,
+    }
+
+    limite_max = LIMITE.get(plano, 1)
+    dentistas_atual = Dentista.objects.count()
+
+    # Bloqueia se atingiu o limite
+    if dentistas_atual >= limite_max:
+        messages.error(
+            request,
+            f"❌ Seu plano ({assinatura.get_tipo_display()}) permite no máximo {limite_max} dentista(s)."
+        )
+        return redirect("clinic:dentistas_list")
+
+    from .forms import DentistaForm
+
+    if request.method == "POST":
+        form = DentistaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Dentista cadastrado com sucesso!")
+            return redirect("clinic:dentistas_list")
+    else:
+        form = DentistaForm()
+
+    return render(request, "clinic/dentista_form.html", {"form": form})
+
 
 @login_required
 @require_active_subscription
 def dentista_principal(request):
     """Cadastro do dentista principal para contas que ainda não têm dentista."""
-    from .models import Dentista
-
+   
     if Dentista.objects.exists():
         return redirect("clinic:dashboard")
 
@@ -645,6 +681,35 @@ def dentista_principal(request):
     return render(request, "clinic/dentista_principal.html", {
         "nome_sugerido": request.user.first_name or request.user.username
     })
+
+@login_required
+@require_active_subscription
+def dentistas_list(request):
+    assinatura = Assinatura.objects.filter(user=request.user).first()
+    plano = assinatura.tipo
+
+    LIMITE = {
+        "trial": 1,
+        "basico": 1,
+        "profissional": 4,
+        "premium": 9999,
+    }
+
+    limite_max = LIMITE.get(plano, 1)
+
+    dentistas = Dentista.objects.all()
+    dentistas_count = dentistas.count()
+
+    return render(
+        request,
+        "clinic/dentistas_list.html",
+        {
+            "dentistas": dentistas,
+            "dentistas_count": dentistas_count,
+            "limite_max": limite_max,
+            "assinatura": assinatura,
+        }
+    )
 
 
 @login_required

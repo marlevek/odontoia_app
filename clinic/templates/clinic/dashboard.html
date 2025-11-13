@@ -110,6 +110,43 @@
     </div>
 </div>
 
+
+<!-- Próximas Consultas -->
+<div class="table-container">
+    <h3>📅 Próximas Consultas (7 dias)</h3>
+    {% if proximas_consultas %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Paciente</th>
+                <th>Dentista</th>
+                <th>Data</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in proximas_consultas %}
+            <tr>
+                <td>{{ c.paciente.nome }}</td>
+                <td>{{ c.dentista.nome }}</td>
+                <td>{{ c.data|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if c.concluida %}
+                    <span class="status status-ok">Concluída</span>
+                    {% else %}
+                    <span class="status status-pendente">Pendente</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="vazio">Nenhuma consulta agendada para esta semana.</p>
+    {% endif %}
+</div>
+
+
 <!-- Filtro de período -->
 <div class="filtro-periodo">
     <label>Período:</label>
@@ -182,40 +219,6 @@
     {% endif %}
 </div>
 
-<!-- Próximas Consultas -->
-<div class="table-container">
-    <h3>📅 Próximas Consultas (7 dias)</h3>
-    {% if proximas_consultas %}
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Paciente</th>
-                <th>Dentista</th>
-                <th>Data</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for c in proximas_consultas %}
-            <tr>
-                <td>{{ c.paciente.nome }}</td>
-                <td>{{ c.dentista.nome }}</td>
-                <td>{{ c.data|date:"d/m/Y H:i" }}</td>
-                <td>
-                    {% if c.concluida %}
-                    <span class="status status-ok">Concluída</span>
-                    {% else %}
-                    <span class="status status-pendente">Pendente</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-    <p class="vazio">Nenhuma consulta agendada para esta semana.</p>
-    {% endif %}
-</div>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
