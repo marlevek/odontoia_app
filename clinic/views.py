@@ -963,7 +963,7 @@ def registrar_teste(request):
 
         send_mail(
             subject="🎉 Bem-vindo ao OdontoIA!",
-            message=f"Olá {nome}, seja bem-vindo ao OdontoIA!\n\Sua conta de teste está ativa por 7 dias.",
+            message=f"Olá {nome}, seja bem-vindo ao OdontoIA!\nSua conta de teste está ativa por 7 dias.",
             from_email=None,  # usa o DEFAULT_FROM_EMAIL
             recipient_list=[user.email],
             fail_silently=True,
