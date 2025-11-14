@@ -14,42 +14,28 @@ def trial_status(request):
     """
     if not request.user.is_authenticated:
         return {
-            "trial": None,
+            "assinatura": None,
             "trial_alerta": None,
             "trial_dias": None,
             "trial_ativo": False,
         }
 
+    ativo, dias = verificar_assinatura(request.user)
+    
     assinatura = Assinatura.objects.filter(user=request.user).first()
 
-    if not assinatura:
-        return {
-            "trial": None,
-            "trial_alerta": "Nenhuma assinatura encontrada.",
-            "trial_dias": None,
-            "trial_ativo": False,
-        }
-
-    # Ativo = flag ativa + não expirou pela data
-    agora = timezone.now()
-    ativo = assinatura.ativa and (not assinatura.fim_teste or assinatura.fim_teste >= agora)
-    dias = assinatura.dias_restantes() if hasattr(assinatura, "dias_restantes") else 0
-
     alerta = None
-    if assinatura.tipo == "trial":
-        if ativo and dias <= 3:
-            alerta = f"⚠️ Seu teste gratuito expira em {dias} dia(s)."
-        elif not ativo:
-            alerta = "🚫 Seu teste gratuito expirou. Faça uma assinatura para continuar."
+    if ativo and dias <= 3:
+        alerta = f"⚠️ Seu plano expira em {dias} dia(s)."
+    elif not ativo:
+        alerta = "🚫 Sua assinatura expirou. Renove para continuar."
+    
+    
 
     return {
-        "trial": {
-            "ativo": ativo,
-            "dias_restantes": dias,
-            "expirada": not ativo,
-            "tipo": assinatura.tipo,   # 👈 AGORA TEM TIPO
-        },
+        "assinatura": assinatura,
         "trial_alerta": alerta,
         "trial_dias": dias,
         "trial_ativo": ativo,
+      
     }
