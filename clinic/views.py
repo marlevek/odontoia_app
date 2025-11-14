@@ -423,56 +423,64 @@ def consultas_calendar(request):
 @require_active_subscription
 def dashboard(request):
     hoje = timezone.now().date()
-    periodo = int(request.GET.get('periodo', 30))  # filtro de 7 / 30 / 90 dias
+    periodo = int(request.GET.get('periodo', 30))
     data_inicial = hoje - timedelta(days=periodo)
+
+    # === Filtra apenas consultas PAGAS ===
+    consultas_pagas = Consulta.objects.filter(
+        paga=True,
+        data__date__gte=data_inicial,
+        data__date__lte=hoje + timedelta(days=90)
+    )
+
+    # Se não houver pagas no período, pega todas pagas
+    if not consultas_pagas.exists():
+        consultas_pagas = Consulta.objects.filter(paga=True)
+
+    # Evita erro caso ainda não tenha dentista cadastrado
+    if not Dentista.objects.exists():
+        return redirect('clinic:dentista_principal')
 
     # === Estatísticas gerais ===
     total_pacientes = Paciente.objects.count()
     total_consultas = Consulta.objects.count()
-    consultas_concluidas = Consulta.objects.filter(concluida=True).count()
-    consultas_pendentes = Consulta.objects.filter(concluida=False).count()
+    consultas_concluidas = consultas_pagas.filter(concluida=True).count()
+    consultas_pendentes = consultas_pagas.filter(concluida=False).count()
 
-    # === Consultas do período ===
-    consultas_periodo = Consulta.objects.filter(
-        data__date__gte=data_inicial,
-        data__date__lte=hoje + timedelta(days=90)
-    )
-    if not consultas_periodo.exists():
-        consultas_periodo = Consulta.objects.all()
-        
-    if not Dentista.objects.exists():
-        return redirect('clinic:dentista_principal')
-
-    # === Faturamentos ===
-    faturamento_total = consultas_periodo.aggregate(
+    # === Faturamentos (somente pagas) ===
+    faturamento_total = consultas_pagas.aggregate(
         total=Sum('valor_final')
     )['total'] or 0
 
-    faturamento_medio = consultas_periodo.aggregate(
+    faturamento_medio = consultas_pagas.aggregate(
         media=Avg('valor_final')
     )['media'] or 0
 
-    comissoes_total = consultas_periodo.aggregate(
+    comissoes_total = consultas_pagas.aggregate(
         total=Sum('comissao_valor')
     )['total'] or 0
 
-    # 💰 Faturamento líquido (total - comissões)
     faturamento_liquido = faturamento_total - comissoes_total
 
-    # 💸 Faturamento mensal líquido
-    faturamento_mensal_bruto = Consulta.objects.filter(
-        data__month=hoje.month, data__year=hoje.year
-    ).aggregate(total=Sum('valor_final'))['total'] or 0
+    # === Faturamento mensal (somente pagas do mês) ===
+    consultas_mes = consultas_pagas.filter(
+        data__month=hoje.month,
+        data__year=hoje.year
+    )
 
-    faturamento_mensal_comissoes = Consulta.objects.filter(
-        data__month=hoje.month, data__year=hoje.year
-    ).aggregate(total=Sum('comissao_valor'))['total'] or 0
+    faturamento_mensal_bruto = consultas_mes.aggregate(
+        total=Sum('valor_final')
+    )['total'] or 0
+
+    faturamento_mensal_comissoes = consultas_mes.aggregate(
+        total=Sum('comissao_valor')
+    )['total'] or 0
 
     faturamento_mensal_liquido = faturamento_mensal_bruto - faturamento_mensal_comissoes
 
-    # === Consultas e Receita/Comissão por dentista ===
+    # === Consultas por dentista (somente pagas) ===
     consultas_por_dentista = (
-        consultas_periodo.exclude(dentista__isnull=True)
+        consultas_pagas.exclude(dentista__isnull=True)
         .values('dentista__nome')
         .annotate(
             total_consultas=Count('id'),
@@ -483,22 +491,19 @@ def dashboard(request):
     )
 
     if consultas_por_dentista:
-        dentistas_labels = [c['dentista__nome']
-                            for c in consultas_por_dentista]
+        dentistas_labels = [c['dentista__nome'] for c in consultas_por_dentista]
         dentistas_qtd = [c['total_consultas'] for c in consultas_por_dentista]
-        dentistas_receita = [float(c['receita'] or 0)
-                             for c in consultas_por_dentista]
-        dentistas_comissao = [float(c['comissao'] or 0)
-                              for c in consultas_por_dentista]
+        dentistas_receita = [float(c['receita'] or 0) for c in consultas_por_dentista]
+        dentistas_comissao = [float(c['comissao'] or 0) for c in consultas_por_dentista]
     else:
         dentistas_labels = ['Sem dados']
         dentistas_qtd = [0]
         dentistas_receita = [0]
         dentistas_comissao = [0]
 
-    # === Ranking dos dentistas ===
+    # === Ranking ===
     ranking_dentistas = (
-        consultas_periodo.values('dentista__nome')
+        consultas_pagas.values('dentista__nome')
         .annotate(
             total_consultas=Count('id'),
             receita=Sum('valor_final'),
@@ -507,61 +512,40 @@ def dashboard(request):
         .order_by('-receita')[:5]
     )
 
-    # === Consultas e Receita por mês (últimos 6 meses) ===
+    # === Gráfico últimos 6 meses ===
     meses = []
     dados_consultas = []
     dados_receita = []
+
     for i in range(5, -1, -1):
         mes_ref = hoje - timedelta(days=30 * i)
         nome_mes = calendar.month_abbr[mes_ref.month]
-        consultas_mes = consultas_periodo.filter(
-            data__month=mes_ref.month, data__year=mes_ref.year
+
+        consultas_mes = consultas_pagas.filter(
+            data__month=mes_ref.month,
+            data__year=mes_ref.year
         )
+
         meses.append(nome_mes)
         dados_consultas.append(consultas_mes.count())
-        dados_receita.append(float(consultas_mes.aggregate(
-            total=Sum('valor_final'))['total'] or 0))
+        dados_receita.append(float(
+            consultas_mes.aggregate(total=Sum('valor_final'))['total'] or 0
+        ))
 
-    # === Status das Consultas ===
+    # === Status ===
     status_consultas = {
-        'concluidas': consultas_periodo.filter(concluida=True).count(),
-        'pendentes': consultas_periodo.filter(concluida=False).count(),
+        'concluidas': consultas_pagas.filter(concluida=True).count(),
+        'pendentes': consultas_pagas.filter(concluida=False).count(),
     }
 
-    # === Próximas Consultas ===
+    # === Próximas consultas (não importa se pagas) ===
     inicio_semana = hoje
     fim_semana = hoje + timedelta(days=7)
     proximas_consultas = Consulta.objects.filter(
         data__date__range=[inicio_semana, fim_semana]
     ).select_related('paciente', 'dentista').order_by('data')[:8]
 
-    # === Contexto para o template ===
-    contexto = {
-        'total_pacientes': total_pacientes,
-        'total_consultas': total_consultas,
-        'consultas_concluidas': consultas_concluidas,
-        'consultas_pendentes': consultas_pendentes,
-        'meses': meses,
-        'dados_consultas': dados_consultas,
-        'dados_receita': dados_receita,
-        'proximas_consultas': proximas_consultas,
-        'dentistas_labels': dentistas_labels,
-        'dentistas_qtd': dentistas_qtd,
-        'dentistas_receita': dentistas_receita,
-        'dentistas_comissao': dentistas_comissao,
-        'ranking_dentistas': ranking_dentistas,
-        'periodo': periodo,
-        
-        # === Novos dados financeiros ===
-        'faturamento_total': faturamento_total,
-        'faturamento_liquido': faturamento_liquido,          # 👈 importante
-        'faturamento_mensal': faturamento_mensal_liquido,    # 👈 líquido mensal
-        'faturamento_medio': faturamento_medio,
-        'comissoes_total': comissoes_total,
-        'status_consultas': status_consultas,
-    }
-    
-    # === Assinatura e plano atual ===
+    # === Assinatura ===
     assinatura = Assinatura.objects.filter(user=request.user).first()
     ultimo_pgto = (
         Pagamento.objects.filter(assinatura=assinatura, status='pago')
@@ -569,28 +553,143 @@ def dashboard(request):
         .first()
         if assinatura else None
     )
-    
-    # Inicializa as variáveis de forma segura
+
     plano_atual = None
     validade = None
-    
+
     if assinatura:
         validade = assinatura.fim_teste
         if ultimo_pgto:
-            # Se o modelo Pagamento tiver camplo 'plano'
             plano_atual = getattr(ultimo_pgto, 'plano', None) or 'Assinatura Ativa'
         elif assinatura.ativa:
-            # Pode estar ativo mas sem pagamento registrado (ex: trial)
-            plano_atual = getattr(assinatura, 'tipo', None) or 'Trial'
-    
-    # --- adiciona essas variáveis ao contexto ---
-    contexto.update({
+            plano_atual = assinatura.tipo
+
+    contexto = {
+        # Dados gerais
+        'total_pacientes': total_pacientes,
+        'total_consultas': total_consultas,
+        'consultas_concluidas': consultas_concluidas,
+        'consultas_pendentes': consultas_pendentes,
+
+        # Gráficos
+        'meses': meses,
+        'dados_consultas': dados_consultas,
+        'dados_receita': dados_receita,
+        'dentistas_labels': dentistas_labels,
+        'dentistas_qtd': dentistas_qtd,
+        'dentistas_receita': dentistas_receita,
+        'dentistas_comissao': dentistas_comissao,
+        'ranking_dentistas': ranking_dentistas,
+
+        # Financeiro
+        'faturamento_total': faturamento_total,
+        'faturamento_liquido': faturamento_liquido,
+        'faturamento_mensal': faturamento_mensal_liquido,
+        'faturamento_medio': faturamento_medio,
+        'comissoes_total': comissoes_total,
+
+        # Outros
+        'periodo': periodo,
+        'status_consultas': status_consultas,
+        'proximas_consultas': proximas_consultas,
+
+        # Assinatura
         'plano_atual': plano_atual,
-        'validade': validade,
-    })
-    
-               
+        'validade': validade
+    }
+
     return render(request, 'clinic/dashboard.html', contexto)
+
+
+
+def dashboard_data(request):
+    hoje = timezone.now().date()
+    periodo = int(request.GET.get('periodo', 30))
+    data_inicial = hoje - timedelta(days=periodo)
+
+    consultas_pagas = Consulta.objects.filter(
+        paga=True,
+        data__date__gte=data_inicial,
+        data__date__lte=hoje + timedelta(days=90)
+    )
+
+    faturamento_total = consultas_pagas.aggregate(
+        total=Sum('valor_final')
+    )['total'] or 0
+
+    faturamento_medio = consultas_pagas.aggregate(
+        media=Avg('valor_final')
+    )['media'] or 0
+
+    comissoes_total = consultas_pagas.aggregate(
+        total=Sum('comissao_valor')
+    )['total'] or 0
+
+    faturamento_liquido = faturamento_total - comissoes_total
+
+    consultas_mes = consultas_pagas.filter(
+        data__month=hoje.month,
+        data__year=hoje.year
+    )
+
+    faturamento_mensal_bruto = consultas_mes.aggregate(
+        total=Sum('valor_final')
+    )['total'] or 0
+
+    faturamento_mensal_comissoes = consultas_mes.aggregate(
+        total=Sum('comissao_valor')
+    )['total'] or 0
+
+    faturamento_mensal_liquido = faturamento_mensal_bruto - faturamento_mensal_comissoes
+
+    status_consultas = {
+        'concluidas': consultas_pagas.filter(concluida=True).count(),
+        'pendentes': consultas_pagas.filter(concluida=False).count(),
+    }
+
+    consultas_por_dentista = (
+        consultas_pagas.exclude(dentista__isnull=True)
+        .values('dentista__nome')
+        .annotate(
+            total_consultas=Count('id'),
+            receita=Sum('valor_final'),
+            comissao=Sum('comissao_valor')
+        )
+        .order_by('-receita')
+    )
+
+    meses = []
+    dados_consultas = []
+    dados_receita = []
+
+    for i in range(5, -1, -1):
+        mes_ref = hoje - timedelta(days=30 * i)
+        nome_mes = calendar.month_abbr[mes_ref.month]
+
+        consultas_mes = consultas_pagas.filter(
+            data__month=mes_ref.month,
+            data__year=mes_ref.year
+        )
+
+        meses.append(nome_mes)
+        dados_consultas.append(consultas_mes.count())
+        dados_receita.append(float(
+            consultas_mes.aggregate(total=Sum('valor_final'))['total'] or 0
+        ))
+
+    return JsonResponse({
+        'faturamento_total': float(faturamento_total),
+        'faturamento_liquido': float(faturamento_liquido),
+        'faturamento_mensal': float(faturamento_mensal_liquido),
+        'faturamento_medio': float(faturamento_medio),
+        'comissoes_total': float(comissoes_total),
+        'status_consultas': status_consultas,
+        'dentistas': list(consultas_por_dentista),
+        'meses': meses,
+        'dados_consultas': dados_consultas,
+        'dados_receita': dados_receita,
+    })
+
 
 
 def _accent_insensitive_regex(prefix: str) -> str:
@@ -805,98 +904,6 @@ def paciente_delete(request, pk):
         messages.success(request, "Paciente excluído com sucesso.")
         return redirect('clinic:pacientes_list')
     return render(request, 'clinic/paciente_confirm_delete.html', {'paciente': paciente})
-
-
-def dashboard_data(request):
-    hoje = timezone.now().date()
-    periodo = int(request.GET.get('periodo', 30))
-    data_inicial = hoje - timedelta(days=periodo)
-
-    # 🔍 Consultas dentro do período selecionado
-    consultas_periodo = Consulta.objects.filter(
-        data__date__gte=data_inicial,
-        data__date__lte=hoje + timedelta(days=90)
-    )
-
-    # 💰 Faturamento total (somatório de todos os valores finais)
-    faturamento_total = consultas_periodo.aggregate(
-        total=Sum('valor_final')
-    )['total'] or 0
-
-    # 💳 Ticket médio (média dos valores finais)
-    faturamento_medio = consultas_periodo.aggregate(
-        media=Avg('valor_final')
-    )['media'] or 0
-
-    # 💸 Total de comissões
-    comissoes_total = consultas_periodo.aggregate(
-        total=Sum('comissao_valor')
-    )['total'] or 0
-
-    # 🧾 Faturamento líquido = total - comissões
-    faturamento_liquido = faturamento_total - comissoes_total
-
-    # 🗓️ Faturamento mensal (mês corrente)
-    faturamento_mensal_bruto = Consulta.objects.filter(
-        data__month=hoje.month, data__year=hoje.year
-    ).aggregate(total=Sum('valor_final'))['total'] or 0
-
-    faturamento_mensal_comissoes = Consulta.objects.filter(
-        data__month=hoje.month, data__year=hoje.year
-    ).aggregate(total=Sum('comissao_valor'))['total'] or 0
-
-    faturamento_mensal_liquido = faturamento_mensal_bruto - faturamento_mensal_comissoes
-
-    # 📊 Status das consultas
-    status_consultas = {
-        'concluidas': consultas_periodo.filter(concluida=True).count(),
-        'pendentes': consultas_periodo.filter(concluida=False).count(),
-    }
-
-    # 🦷 Consultas e receita por dentista
-    consultas_por_dentista = (
-        consultas_periodo.exclude(dentista__isnull=True)
-        .values('dentista__nome')
-        .annotate(
-            total_consultas=Count('id'),
-            receita=Sum('valor_final'),
-            comissao=Sum('comissao_valor')
-        )
-        .order_by('-receita')
-    )
-
-    # 📅 Gráficos mensais (últimos 6 meses)
-    meses = []
-    dados_consultas = []
-    dados_receita = []
-
-    for i in range(5, -1, -1):
-        mes_ref = hoje - timedelta(days=30 * i)
-        nome_mes = calendar.month_abbr[mes_ref.month]
-        consultas_mes = consultas_periodo.filter(
-            data__month=mes_ref.month, data__year=mes_ref.year
-        )
-        meses.append(nome_mes)
-        dados_consultas.append(consultas_mes.count())
-        dados_receita.append(float(
-            consultas_mes.aggregate(total=Sum('valor_final'))['total'] or 0
-        ))
-
-    # 📦 Retorno dos dados
-    data = {
-        'faturamento_total': float(faturamento_total),
-        'faturamento_liquido': float(faturamento_liquido),
-        'faturamento_mensal': float(faturamento_mensal_liquido),
-        'faturamento_medio': float(faturamento_medio),
-        'comissoes_total': float(comissoes_total),
-        'status_consultas': status_consultas,
-        'dentistas': list(consultas_por_dentista),
-        'meses': meses,
-        'dados_consultas': dados_consultas,
-        'dados_receita': dados_receita,
-    }
-
-    return JsonResponse(data)
 
 
 @csrf_exempt

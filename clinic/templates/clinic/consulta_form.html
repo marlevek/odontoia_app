@@ -1,28 +1,26 @@
 {% extends "clinic/base.html" %}
 {% load static %}
-{% block title %}Editar Consulta{% endblock %}
+{% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-<h2 class="text-center my-3">🦷 Editar Consulta</h2>
+<h2 class="text-center my-3">🦷 {{ titulo }}</h2>
 
 <form method="post" class="container">
     {% csrf_token %}
-    {{ form.as_p }}
-    <div class="mt-3">
-        <button type="submit" class="btn btn-primary">💾 Salvar</button>
-        <a href="{% url 'clinic:consultas_list' %}" class="btn btn-secondary">Cancelar</a>
+
+    <div style="background:#fff; padding:20px; border-radius:12px; max-width:600px; margin:30px auto;
+                box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+
+        {{ form.as_p }}
+
+        <div class="mt-3 text-end">
+            <button type="submit" class="btn btn-primary">💾 Salvar</button>
+            <a href="{% url 'clinic:consultas_list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
     </div>
 </form>
 
 <style>
-    form {
-        background: #fff;
-        padding: 20px;
-        border-radius: 12px;
-        max-width: 600px;
-        margin: 30px auto;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
     h2 {
         color: #0b5394;
     }
@@ -34,4 +32,5 @@
         background-color: #083b6b;
     }
 </style>
+
 {% endblock %}

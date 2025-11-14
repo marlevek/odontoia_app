@@ -5,7 +5,17 @@ from .models import Consulta
 class ConsultaForm(forms.ModelForm):
     class Meta:
         model = Consulta
-        fields = ['paciente', 'dentista', 'procedimento', 'data', 'observacoes', 'concluida']
+        fields = ['paciente',
+                  'dentista', 
+                  'procedimento', 
+                  'data', 
+                  'concluida',
+                  'paga',
+                  'valor',
+                  'desconto',
+                  'observacoes', 
+                  ]
+        
         widgets = {
             'data': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),

@@ -111,7 +111,9 @@ class Consulta(models.Model):
     procedimento = models.ForeignKey('Procedimento', on_delete=models.CASCADE)
     data = models.DateTimeField()
     concluida = models.BooleanField(default=False)
-
+    paga = models.BooleanField(default=False)
+        
+    
     # 💰 Campos financeiros
     valor = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     desconto = models.DecimalField(
@@ -121,6 +123,9 @@ class Consulta(models.Model):
     comissao_valor = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.00)
 
+    paga = models.BooleanField(default=False)
+    data_pagamento = models.DateTimeField(null=True, blank=True)
+    
     observacoes = models.TextField(blank=True, null=True)
 
     def save(self, *args, **kwargs):
