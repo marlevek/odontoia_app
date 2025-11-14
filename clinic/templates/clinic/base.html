@@ -38,7 +38,7 @@
 
             <!-- 🔥 Financeiro: profissional OU premium -->
             {% if assinatura and assinatura.tipo == 'profissional' or assinatura.tipo == 'premium' %}
-            <a href="{% url 'clinic:financeiro_home'%}">💰 Financeiro</a>
+            <a href="{% url 'clinic:financeiro_resumo'%}">💰 Financeiro</a>
             {% endif %}
 
             <!-- 🔥 IA & Insights: apenas premium -->
