@@ -1,5 +1,6 @@
 # clinic/context_processors.py
 from .utils.subscription import verificar_assinatura
+from .models import Assinatura
 
 def trial_status(request):
     """
