@@ -1,14 +1,18 @@
 # clinic/context_processors.py
 from .utils.subscription import verificar_assinatura
 from .models import Assinatura
+from django.utils import timezone
+
 
 def trial_status(request):
     """
-    Adiciona variáveis de status de assinatura/trial no contexto global.
-    Evita erros em páginas públicas (login, registrar etc).
+    Adiciona a assinatura/trial no contexto global:
+    - trial.ativo
+    - trial.dias_restantes
+    - trial.expirada
+    - trial.tipo  (trial / basico / profissional / premium)
     """
     if not request.user.is_authenticated:
-        # Retorna valores neutros para templates públicos
         return {
             "trial": None,
             "trial_alerta": None,
@@ -16,26 +20,34 @@ def trial_status(request):
             "trial_ativo": False,
         }
 
-    # ✅ Já calcula se está ativo e quantos dias faltam
-    ativo, dias = verificar_assinatura(request.user)
-
-    # ✅ Descobre a assinatura do usuário (para pegar o tipo/plano)
     assinatura = Assinatura.objects.filter(user=request.user).first()
-    tipo = assinatura.tipo if assinatura else "trial"  # fallback seguro
+
+    if not assinatura:
+        return {
+            "trial": None,
+            "trial_alerta": "Nenhuma assinatura encontrada.",
+            "trial_dias": None,
+            "trial_ativo": False,
+        }
+
+    # Ativo = flag ativa + não expirou pela data
+    agora = timezone.now()
+    ativo = assinatura.ativa and (not assinatura.fim_teste or assinatura.fim_teste >= agora)
+    dias = assinatura.dias_restantes() if hasattr(assinatura, "dias_restantes") else 0
 
     alerta = None
-    if ativo and dias <= 3:
-        alerta = f"⚠️ Seu teste gratuito expira em {dias} dia(s)."
-    elif not ativo:
-        alerta = "🚫 Seu teste gratuito expirou. Faça uma assinatura para continuar."
+    if assinatura.tipo == "trial":
+        if ativo and dias <= 3:
+            alerta = f"⚠️ Seu teste gratuito expira em {dias} dia(s)."
+        elif not ativo:
+            alerta = "🚫 Seu teste gratuito expirou. Faça uma assinatura para continuar."
 
-    # 🔥 Agora trial tem também "tipo"
     return {
         "trial": {
             "ativo": ativo,
             "dias_restantes": dias,
             "expirada": not ativo,
-            "tipo": tipo,          # 👈 AQUI que o menu vai usar
+            "tipo": assinatura.tipo,   # 👈 AGORA TEM TIPO
         },
         "trial_alerta": alerta,
         "trial_dias": dias,

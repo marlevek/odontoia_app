@@ -3,10 +3,29 @@
 
 {% block content %}
 <div class="container py-4">
-    <h2 class="mb-4">🧠 IA & Insights</h2>
+  <h2>🧠 IA & Insights</h2>
 
+  {% if trial and trial.tipo == "premium" %}
     <div class="alert alert-info">
-        Este módulo estará disponível apenas para o Plano Premium.
+      👑 Você está no <strong>Plano Premium</strong>.<br>
+      Este módulo de IA & Insights está em desenvolvimento e será liberado em breve.
     </div>
+
+    <p class="mt-3">
+      Aqui você verá no futuro:
+    </p>
+    <ul>
+      <li>📈 Insights automáticos de faturamento e agenda</li>
+      <li>🤖 Sugestões de otimização de horários e produtividade</li>
+      <li>📊 Alertas de pacientes em risco de abandono</li>
+    </ul>
+  {% else %}
+    <div class="alert alert-warning">
+      ⚠️ Este módulo estará disponível apenas para o <strong>Plano Premium</strong>.
+    </div>
+    <p class="mt-3">
+      Para desbloquear IA & Insights, faça upgrade do seu plano na área de assinatura.
+    </p>
+  {% endif %}
 </div>
 {% endblock %}
