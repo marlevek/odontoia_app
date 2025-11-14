@@ -15,19 +15,26 @@ def trial_status(request):
             "trial_ativo": False,
         }
 
+    # ✅ Já calcula se está ativo e quantos dias faltam
     ativo, dias = verificar_assinatura(request.user)
-    alerta = None
 
+    # ✅ Descobre a assinatura do usuário (para pegar o tipo/plano)
+    assinatura = Assinatura.objects.filter(user=request.user).first()
+    tipo = assinatura.tipo if assinatura else "trial"  # fallback seguro
+
+    alerta = None
     if ativo and dias <= 3:
         alerta = f"⚠️ Seu teste gratuito expira em {dias} dia(s)."
     elif not ativo:
         alerta = "🚫 Seu teste gratuito expirou. Faça uma assinatura para continuar."
 
+    # 🔥 Agora trial tem também "tipo"
     return {
         "trial": {
             "ativo": ativo,
             "dias_restantes": dias,
             "expirada": not ativo,
+            "tipo": tipo,          # 👈 AQUI que o menu vai usar
         },
         "trial_alerta": alerta,
         "trial_dias": dias,
