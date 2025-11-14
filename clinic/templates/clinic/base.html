@@ -18,13 +18,6 @@
 </head>
 
 <body>
-
-    <!-- DEBUG TEMPORÁRIO -->
-    <p style="color:red; font-size: 12px;">
-        Plano detectado: {{ trial.tipo }}
-    </p>
-
-
     <!-- Navbar (tema igual ao admin_custom.css) -->
     <header class="navbar">
         <div class="logo-container">
@@ -43,14 +36,14 @@
             <a href="{% url 'clinic:consultas_list' %}">🗒️ Consultas</a>
             <a href="{% url 'clinic:consultas_calendar' %}">📅 Calendário</a>
 
-            {# 💰 Financeiro → Profissional ou Premium #}
-            {% if trial and trial.tipo and (trial.tipo == "profissional" or trial.tipo == "premium") %}
+            <!-- 🔥 Financeiro: profissional OU premium -->
+            {% if trial and trial.tipo == 'profissional' or trial.tipo == 'premium' %}
             <a href="#">💰 Financeiro</a>
             {% endif %}
 
-            {# 🧠 IA & Insights → só Premium #}
+            <!-- 🔥 IA & Insights: apenas premium -->
             {% if trial and trial.tipo == "premium" %}
-            <a href="#">🧠 IA &amp; Insights</a>
+            <a href="#">🧠 IA & Insights</a>
             {% endif %}
 
             {% if user.is_authenticated %}
