@@ -102,7 +102,11 @@ urlpatterns = [
     
     
     # Financeiro
-    path('financeiro/', views.financeiro_resumo, name='financeiro_resumo'),
+    path('financeiro/', views.financeiro_home, name='financeiro_home'),
+    path('financeiro/resumo/', views.financeiro_resumo, name='financeiro_resumo'),
     path('financeiro/exportar/', views.financeiro_exportar_excel, name='financeiro_exportar_excel'),
 
+
+    # IA e Insights
+    path("ia-insights/", views.ia_insights, name="ia_insights"),
 ]

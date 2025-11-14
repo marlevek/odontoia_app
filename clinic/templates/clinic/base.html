@@ -38,12 +38,12 @@
 
             <!-- 🔥 Financeiro: profissional OU premium -->
             {% if trial and trial.tipo == 'profissional' or trial.tipo == 'premium' %}
-            <a href="#">💰 Financeiro</a>
+            <a href="{% url 'clinic:financeiro_home '%}">💰 Financeiro</a>
             {% endif %}
 
             <!-- 🔥 IA & Insights: apenas premium -->
             {% if trial and trial.tipo == "premium" %}
-            <a href="#">🧠 IA & Insights</a>
+            <a href="{% url clinic:ia_insights %}">🧠 IA & Insights</a>
             {% endif %}
 
             {% if user.is_authenticated %}

@@ -1385,6 +1385,19 @@ def pagamento_falha(request):
 # --- FINANCEIRO (apenas Profissional / Premium) ---------------------------
 @login_required
 @require_active_subscription
+def financeiro_home(request):
+    # Permissão: somente profissional ou premium
+    assinatura = Assinatura.objects.filter(user=request.user).first()
+
+    if not assinatura or assinatura.tipo not in ["profissional", "premium"]:
+        messages.error(request, "Seu plano não permite acesso ao Financeiro.")
+        return redirect("clinic:dashboard")
+
+    return render(request, "clinic/financeiro_home.html")
+
+
+@login_required
+@require_active_subscription
 def financeiro_resumo(request):
     """
     Tela de resumo financeiro (por dentista, receita, comissões, líquido)
@@ -1509,3 +1522,17 @@ def financeiro_exportar_excel(request):
 
     wb.save(response)
     return response
+
+
+# IA e Insights (apenas profissional e premium)
+@login_required
+@require_active_subscription
+def ia_insights(request):
+    # Permissão: apenas Premium
+    assinatura = Assinatura.objects.filter(user=request.user).first()
+
+    if not assinatura or assinatura.tipo != "premium":
+        messages.error(request, "Apenas assinantes Premium podem acessar IA & Insights.")
+        return redirect("clinic:dashboard")
+
+    return render(request, "clinic/ia_insights.html")
