@@ -280,85 +280,73 @@ def consultas_list(request):
 
 @login_required
 @require_active_subscription
-def consulta_update(request, pk):
-    consulta = get_object_or_404(Consulta, pk=pk, owner=request.user)
-
-    if request.method == 'POST':
-        form = ConsultaForm(request.POST, instance=consulta)
-        if form.is_valid():
-            consulta = form.save(commit=False)
-
-            if consulta.procedimento:
-                consulta.valor = consulta.procedimento.valor_base
-
-            consulta.save()
-            
-            messages.success(request, "Consulta atualizada com sucesso!")
-            return redirect('clinic:consultas_list')
-        else:
-            messages.error(request, "⚠️ Corrija os erros abaixo antes de salvar.")
-    else:
-        form = ConsultaForm(instance=consulta)
-
-    return render(
-        request,
-        'clinic/consulta_form.html',
-        {'form': form, 'titulo': 'Editar Consulta'}
-    )
-
-
-@login_required
-@require_active_subscription
 def consulta_create(request):
     if request.method == 'POST':
-        form = ConsultaForm(request.POST)
+        form = ConsultaForm(request.POST, user=request.user)
         if form.is_valid():
             consulta = form.save(commit=False)
             consulta.owner = request.user
-            consulta.save()
 
             # Aplica automaticamente o valor do procedimento
             if consulta.procedimento:
                 consulta.valor = consulta.procedimento.valor_base
 
-            # Recalcula os campos financeiros
             consulta.save()
-
-            messages.success(request, "✅ Consulta agendada com sucesso!")
+            messages.success(request, "Consulta criada com sucesso!")
             return redirect('clinic:consultas_list')
         else:
-            messages.error(request, "⚠️ Corrija os erros abaixo antes de salvar.")
+            messages.error(request, "Corrija os erros abaixo.")
     else:
-        form = ConsultaForm()
+        form = ConsultaForm(user=request.user)
 
-    return render(
-        request,
-        'clinic/consulta_form.html',
-        {'form': form, 'titulo': 'Agendar Consulta'}
-    )
+    return render(request, 'clinic/consulta_form.html', {'form': form})
+
+
+@login_required
+@require_active_subscription
+def consulta_update(request, pk):
+    consulta = get_object_or_404(Consulta, pk=pk, owner=request.user)
+
+    if request.method == 'POST':
+        form = ConsultaForm(request.POST, instance=consulta, user=request.user)
+        if form.is_valid():
+            consulta = form.save(commit=False)
+
+            if consulta.procedimento:
+                consulta.valor = consulta.procedimento.valor_base
+
+            consulta.save()
+
+            messages.success(request, "Consulta atualizada!")
+            return redirect('clinic:consultas_list')
+        else:
+            messages.error(request, "Corrija os erros abaixo.")
+    else:
+        form = ConsultaForm(instance=consulta, user=request.user)
+
+    return render(request, 'clinic/consulta_form.html', {'form': form})
 
 
 @csrf_exempt
-def consulta_update_ajax(request):
+@login_required
+@require_active_subscription
+def consulta_create_ajax(request):
     if request.method == "POST":
-        consulta_id = request.POST.get("id")
-        nova_data = request.POST.get("start")
-
         try:
-            consulta = Consulta.objects.get(pk=consulta_id)
-            data_convertida = parse_datetime(nova_data)
-            if data_convertida:
-                consulta.data = data_convertida
-                consulta.save()
-                return JsonResponse({"success": True})
-            else:
-                return JsonResponse({"success": False, "error": "Data inválida"})
-        except Consulta.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Consulta não encontrada"})
+            consulta = Consulta.objects.create(
+                paciente_id=request.POST.get("paciente"),
+                dentista_id=request.POST.get("dentista"),
+                procedimento_id=request.POST.get("procedimento"),
+                data=parse_datetime(request.POST.get("data")),
+                observacoes=request.POST.get("observacoes", ""),
+                owner=request.user,  # 🔥 ESSENCIAL
+            )
+            return JsonResponse({"success": True, "id": consulta.id})
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)})
 
     return JsonResponse({"success": False, "error": "Método inválido"})
+
 
 
 @login_required
@@ -720,6 +708,11 @@ def _accent_insensitive_regex(prefix: str) -> str:
 @require_active_subscription
 def dentista_create(request):
     assinatura = Assinatura.objects.filter(user=request.user).first()
+    
+    if not assinatura:
+        messages.error(request, 'Não foi possível encontrar sua assinatura')
+        return redirect('clinic:dashboard')
+    
     plano = assinatura.tipo
 
     # Limites por plano
@@ -731,7 +724,8 @@ def dentista_create(request):
     }
 
     limite_max = LIMITE.get(plano, 1)
-    dentistas_atual = Dentista.objects.count()
+    
+    dentistas_atual = Dentista.objects.filter(owner=request.user).count()
 
     # Bloqueia se atingiu o limite
     if dentistas_atual >= limite_max:
@@ -751,6 +745,8 @@ def dentista_create(request):
             dentista.save()
             messages.success(request, "Dentista cadastrado com sucesso!")
             return redirect("clinic:dentistas_list")
+        else:
+            messages.error(request, 'Corrija os erros abaixo')
     else:
         form = DentistaForm()
 
@@ -790,9 +786,12 @@ def dentista_delete(request, id):
 @login_required
 @require_active_subscription
 def dentista_principal(request):
-    """Cadastro do dentista principal para contas que ainda não têm dentista."""
-   
-   # Agora verifica apenas dentistas do próprio usuário
+    """
+    Tela especial para cadastrar o dentista principal,
+    chamada no onboarding quando o usuário ainda não tem dentistas.
+    """
+
+    # 🔍 Se o usuário já tem dentista, manda pro dashboard
     if Dentista.objects.filter(owner=request.user).exists():
         return redirect("clinic:dashboard")
 
@@ -807,14 +806,14 @@ def dentista_principal(request):
             messages.error(request, "Nome e CRO são obrigatórios.")
             return redirect("clinic:dentista_principal")
 
-        dentista = Dentista.objects.create(
+        Dentista.objects.create(
             owner=request.user,
             nome=nome,
             cro=cro,
             especialidade=esp,
             telefone=tel,
             email=email,
-            comissao_percentual=0  # plano básico sem comissão
+            comissao_percentual=0  # pode ser 0% por padrão e depois ajusta
         )
 
         messages.success(request, "Dentista principal cadastrado com sucesso!")
@@ -824,11 +823,12 @@ def dentista_principal(request):
         "nome_sugerido": request.user.first_name or request.user.username
     })
 
+
 @login_required
 @require_active_subscription
 def dentistas_list(request):
     assinatura = Assinatura.objects.filter(user=request.user).first()
-    plano = assinatura.tipo
+    plano = assinatura.tipo if assinatura else 'trial'
 
     LIMITE = {
         "trial": 1,
@@ -865,7 +865,7 @@ def pacientes_list(request):
         pacientes = pacientes.filter(
             Q(nome__iregex=regex) | 
             Q(cidade__iregex=regex) |
-            Q(cpf_icontains=search)
+            Q(cpf__icontains=search)
         )
 
     context = {
@@ -974,12 +974,6 @@ def registrar_teste(request):
         user.date_joined = timezone.now()
         user.save()
         
-        Dentista.objects.create(
-            nome = user.first_name or user.username,
-            comissao_percentual = 0, 
-            usuario = user
-        )
-
         # Cria assinatura trial automaticamente
         Assinatura.objects.create(user=user, tipo='trial')
 
@@ -1357,9 +1351,11 @@ def mercadopago_webhook(request):
 @login_required
 def pagamento_sucesso(request):
     assinatura = Assinatura.objects.filter(user=request.user).first()
-    pagamento = Pagamento.objects.filter(
-        assinatura__user=request.user
-    ).order_by("-data_pagamento").first()
+    pagamento = (
+        Pagamento.objects.filter(assinatura__user=request.user)
+        .order_by("-data_pagamento")
+        .first()
+    )
 
     if not assinatura or not pagamento:
         messages.warning(request, "Não foi possível confirmar o pagamento.")
@@ -1370,19 +1366,32 @@ def pagamento_sucesso(request):
     assinatura.fim_teste = timezone.now() + timedelta(days=30)
     assinatura.save()
 
-    # Envia notificação
+    # ---- Email de confirmação (somente para assinatura paga) ----
+    from django.template.loader import render_to_string
+
     nome = request.user.first_name or request.user.username
-    send_mail(
-        "✅ Assinatura confirmada - OdontoIA",
-        f"Olá {nome}, sua assinatura foi ativada com sucesso.",
-        None,
-        [request.user.email],
-        fail_silently=True,
+    plano = pagamento.plano.capitalize()
+    validade = assinatura.fim_teste.strftime("%d/%m/%Y")
+
+    html_email = render_to_string(
+        "clinic/emails/assinatura_ativada.html",
+        {"nome": nome, "plano": plano, "validade": validade}
     )
+
+    msg = EmailMultiAlternatives(
+        subject="🎉 Assinatura ativada - OdontoIA",
+        body=f"Sua assinatura {plano} está ativa até {validade}.",
+        from_email="OdontoIA <no-reply@odontoia.com.br>",
+        to=[request.user.email],
+    )
+    msg.attach_alternative(html_email, "text/html")
+    msg.send(fail_silently=True)
+    # --------------------------------------------------------------
 
     return render(request, "clinic/pagamento_sucesso.html", {
         "assinatura": assinatura,
         "pagamento": pagamento,
+        "plano": plano,
     })
 
     
@@ -1487,6 +1496,7 @@ def financeiro_resumo(request):
     data_inicial = hoje - timedelta(days=periodo)
 
     consultas = Consulta.objects.filter(
+        owner=request.user,
         data__date__gte=data_inicial,
         data__date__lte=hoje
     )
@@ -1560,6 +1570,7 @@ def financeiro_exportar_excel(request):
     data_inicial = hoje - timedelta(days=periodo)
 
     consultas = Consulta.objects.filter(
+        owner = request.user,
         data__date__gte=data_inicial,
         data__date__lte=hoje
     )
