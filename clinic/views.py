@@ -220,28 +220,21 @@ def user_logout(request):
 @login_required
 @require_active_subscription
 def consulta_create_ajax(request):
-    if request.method == 'POST':
-        paciente_id = request.POST.get('paciente')
-        dentista_id = request.POST.get('dentista')
-        procedimento_id = request.POST.get('procedimento')
-        data = request.POST.get('data')
-        observacoes = request.POST.get('observacoes')
-
+    if request.method == "POST":
         try:
-            data_convertida = parse_datetime(data)
             consulta = Consulta.objects.create(
-                paciente_id=paciente_id,
-                dentista_id=dentista_id,
-                procedimento_id=procedimento_id,
-                data=data_convertida,
-                observacoes=observacoes,
-                concluida=False
+                paciente_id=request.POST.get("paciente"),
+                dentista_id=request.POST.get("dentista"),
+                procedimento_id=request.POST.get("procedimento"),
+                data=parse_datetime(request.POST.get("data")),
+                observacoes=request.POST.get("observacoes", ""),
+                owner=request.user  # 🔥 ESSENCIAL
             )
-            return JsonResponse({'success': True, 'id': consulta.id})
+            return JsonResponse({"success": True, "id": consulta.id})
         except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
+            return JsonResponse({"success": False, "error": str(e)})
 
-    return JsonResponse({'success': False, 'error': 'Método inválido'})
+    return JsonResponse({"success": False, "error": "Método inválido"})
 
 
 @login_required
@@ -252,8 +245,7 @@ def consultas_list(request):
     status = request.GET.get('status')
     data_filtro = request.GET.get('data')
 
-    consultas = Consulta.objects.select_related(
-        'paciente', 'dentista', 'procedimento').order_by('-data')
+    consultas = Consulta.objects.objects.filter(owner=request.user).select_related('paciente', 'dentista', 'procedimento').order_by('-data')
 
     # 🔍 Filtro por nome do paciente ou dentista
     if search:
@@ -271,25 +263,25 @@ def consultas_list(request):
     # 📅 Filtro por data específica
     if data_filtro:
         try:
-            data_convertida = parse_date(data_filtro)
-            if data_convertida:
-                consultas = consultas.filter(data__date=data_convertida)
-        except Exception:
+            data_formatada = parse_date(data_filtro)
+            if data_formatada:
+                consultas = consultas.filter(data__date=data_formatada)
+        except:
             pass
+        
 
-    context = {
-        'consultas': consultas,
+    return render(request, 'clinic/consultas_list.html', {
+         'consultas': consultas,
         'search': search or '',
         'status': status or '',
         'data_filtro': data_filtro or '',
-    }
-    return render(request, 'clinic/consultas_list.html', context)
+    })
 
 
 @login_required
 @require_active_subscription
 def consulta_update(request, pk):
-    consulta = get_object_or_404(Consulta, pk=pk)
+    consulta = get_object_or_404(Consulta, pk=pk, owner=request.user)
 
     if request.method == 'POST':
         form = ConsultaForm(request.POST, instance=consulta)
@@ -300,6 +292,7 @@ def consulta_update(request, pk):
                 consulta.valor = consulta.procedimento.valor_base
 
             consulta.save()
+            
             messages.success(request, "Consulta atualizada com sucesso!")
             return redirect('clinic:consultas_list')
         else:
@@ -321,6 +314,8 @@ def consulta_create(request):
         form = ConsultaForm(request.POST)
         if form.is_valid():
             consulta = form.save(commit=False)
+            consulta.owner = request.user
+            consulta.save()
 
             # Aplica automaticamente o valor do procedimento
             if consulta.procedimento:
@@ -369,85 +364,85 @@ def consulta_update_ajax(request):
 @login_required
 @require_active_subscription
 def consulta_delete(request, pk):
-    consulta = get_object_or_404(Consulta, pk=pk)
+    consulta = get_object_or_404(Consulta, pk=pk, owner=request.user)
+    
     if request.method == 'POST':
         consulta.delete()
         messages.success(request, "Consulta excluída com sucesso.")
         return redirect('clinic:consultas_list')
+        
     return render(request, 'clinic/consulta_confirm_delete.html', {'consulta': consulta})
-
 
 @login_required
 @require_active_subscription
 def consultas_calendar(request):
-    # 🔍 Se for uma chamada AJAX do FullCalendar (com 'start' e 'end')
+    # AJAX → retorna eventos
     if request.GET.get('start') and request.GET.get('end'):
         dentista_id = request.GET.get('dentista')
-        consultas = Consulta.objects.select_related(
-            'paciente', 'dentista', 'procedimento').all()
+
+        consultas = Consulta.objects.filter(owner=request.user)
 
         if dentista_id:
             consultas = consultas.filter(dentista_id=dentista_id)
 
-        events = []
-        for consulta in consultas:
-            color = "#0b5394" if not consulta.concluida else "#28a745"
-            events.append({
-                "id": consulta.id,
-                "title": f"{consulta.paciente.nome}",
-                "start": consulta.data.isoformat(),
-                "backgroundColor": color,
-                "borderColor": color,
+        eventos = []
+        for c in consultas:
+            eventos.append({
+                "id": c.id,
+                "title": c.paciente.nome,
+                "start": c.data.isoformat(),
+                "backgroundColor": "#0b5394" if not c.concluida else "#28a745",
+                "borderColor": "#0b5394",
                 "textColor": "white",
                 "extendedProps": {
-                    "dentista": consulta.dentista.nome if consulta.dentista else "",
-                    "procedimento": consulta.procedimento.nome if consulta.procedimento else "",
-                    "observacoes": consulta.observacoes or ""
+                    "dentista": c.dentista.nome if c.dentista else "",
+                    "procedimento": c.procedimento.nome if c.procedimento else "",
+                    "observacoes": c.observacoes or ""
                 },
-                "url": f"/consultas/{consulta.id}/editar/"
+                "url": f"/consultas/{c.id}/editar/"
             })
-        return JsonResponse(events, safe=False)
 
-    # 👇 Renderiza o template normal
+        return JsonResponse(eventos, safe=False)
+
+    # Tela normal
     return render(request, 'clinic/consultas_calendar.html', {
-        'pacientes': Paciente.objects.all(),
-        'dentistas': Dentista.objects.all(),
-        'procedimentos': Procedimento.objects.all(),
+        'pacientes': Paciente.objects.filter(owner=request.user),
+        'dentistas': Dentista.objects.filter(owner=request.user),
+        'procedimentos': Procedimento.objects.filter(owner=request.user),
     })
-
-    # Se não for chamada com start/end → renderiza o template normal
-    return render(request, 'clinic/consultas_calendar.html')
 
 
 @login_required
 @require_active_subscription
 def dashboard(request):
+    user = request.user
     hoje = timezone.now().date()
     periodo = int(request.GET.get('periodo', 30))
     data_inicial = hoje - timedelta(days=periodo)
 
-    # === Filtra apenas consultas PAGAS ===
+    # Garantir que o usuário tenha ao menos 1 dentista
+    if not Dentista.objects.filter(owner=user).exists():
+        return redirect('clinic:dentista_principal')
+
+    # === CONSULTAS PAGAS do usuário ===
     consultas_pagas = Consulta.objects.filter(
+        owner=user,
         paga=True,
         data__date__gte=data_inicial,
         data__date__lte=hoje + timedelta(days=90)
     )
 
-    # Se não houver pagas no período, pega todas pagas
+    # Se não houver pagas no período → pega todas pagas do usuário
     if not consultas_pagas.exists():
-        consultas_pagas = Consulta.objects.filter(paga=True)
+        consultas_pagas = Consulta.objects.filter(owner=user, paga=True)
 
-    # Evita erro caso ainda não tenha dentista cadastrado
-    if not Dentista.objects.exists():
-        return redirect('clinic:dentista_principal')
-
-    # === Estatísticas gerais ===
-    total_pacientes = Paciente.objects.count()
-    total_consultas = Consulta.objects.count()
+    # === Estatísticas Gerais ===
+    total_pacientes = Paciente.objects.filter(owner=user).count()
+    total_consultas = Consulta.objects.filter(owner=user).count()
     consultas_concluidas = consultas_pagas.filter(concluida=True).count()
-    consultas_pendentes = consultas_pagas.filter(concluida=False).count()
+    consultas_pendentes = Consulta.objects.filter(owner=user, concluida=False).count()
 
-    # === Faturamentos (somente pagas) ===
+    # === Faturamento ===
     faturamento_total = consultas_pagas.aggregate(
         total=Sum('valor_final')
     )['total'] or 0
@@ -462,7 +457,7 @@ def dashboard(request):
 
     faturamento_liquido = faturamento_total - comissoes_total
 
-    # === Faturamento mensal (somente pagas do mês) ===
+    # === Faturamento mensal ===
     consultas_mes = consultas_pagas.filter(
         data__month=hoje.month,
         data__year=hoje.year
@@ -478,7 +473,7 @@ def dashboard(request):
 
     faturamento_mensal_liquido = faturamento_mensal_bruto - faturamento_mensal_comissoes
 
-    # === Consultas por dentista (somente pagas) ===
+    # === Estatísticas por dentista (somente do usuário) ===
     consultas_por_dentista = (
         consultas_pagas.exclude(dentista__isnull=True)
         .values('dentista__nome')
@@ -512,7 +507,7 @@ def dashboard(request):
         .order_by('-receita')[:5]
     )
 
-    # === Gráfico últimos 6 meses ===
+    # === Últimos 6 meses ===
     meses = []
     dados_consultas = []
     dados_receita = []
@@ -521,39 +516,33 @@ def dashboard(request):
         mes_ref = hoje - timedelta(days=30 * i)
         nome_mes = calendar.month_abbr[mes_ref.month]
 
-        consultas_mes = consultas_pagas.filter(
+        cons_mes = consultas_pagas.filter(
             data__month=mes_ref.month,
             data__year=mes_ref.year
         )
 
         meses.append(nome_mes)
-        dados_consultas.append(consultas_mes.count())
+        dados_consultas.append(cons_mes.count())
         dados_receita.append(float(
-            consultas_mes.aggregate(total=Sum('valor_final'))['total'] or 0
+            cons_mes.aggregate(total=Sum('valor_final'))['total'] or 0
         ))
 
     # === Status ===
-    
-    # Conluída - apenas pagas
-    concluidas = consultas_pagas.filter(concluida=True).count()
-    
-    # Pendentes - Todas as pendentes independente da data
-    pendentes = Consulta.objects.filter(concluida=False).count()
-    
     status_consultas = {
-        'concluidas': concluidas,
-        'pendentes': pendentes,
+        'concluidas': consultas_concluidas,
+        'pendentes': consultas_pendentes,
     }
 
-    # === Próximas consultas (não importa se pagas) ===
+    # === Próximas consultas (independente de pagas) ===
     inicio_semana = hoje
     fim_semana = hoje + timedelta(days=7)
     proximas_consultas = Consulta.objects.filter(
+        owner=user,
         data__date__range=[inicio_semana, fim_semana]
     ).select_related('paciente', 'dentista').order_by('data')[:8]
 
     # === Assinatura ===
-    assinatura = Assinatura.objects.filter(user=request.user).first()
+    assinatura = Assinatura.objects.filter(user=user).first()
     ultimo_pgto = (
         Pagamento.objects.filter(assinatura=assinatura, status='pago')
         .order_by('-data_pagamento')
@@ -566,13 +555,14 @@ def dashboard(request):
 
     if assinatura:
         validade = assinatura.fim_teste
+
         if ultimo_pgto:
-            plano_atual = getattr(ultimo_pgto, 'plano', None) or 'Assinatura Ativa'
-        elif assinatura.ativa:
+            plano_atual = ultimo_pgto.plano
+        else:
             plano_atual = assinatura.tipo
 
     contexto = {
-        # Dados gerais
+        # Geral
         'total_pacientes': total_pacientes,
         'total_consultas': total_consultas,
         'consultas_concluidas': consultas_concluidas,
@@ -595,7 +585,7 @@ def dashboard(request):
         'faturamento_medio': faturamento_medio,
         'comissoes_total': comissoes_total,
 
-        # Outros
+        # Status / Outras informações
         'periodo': periodo,
         'status_consultas': status_consultas,
         'proximas_consultas': proximas_consultas,
@@ -607,19 +597,26 @@ def dashboard(request):
 
     return render(request, 'clinic/dashboard.html', contexto)
 
-
-
+@login_required
+@require_active_subscription
 def dashboard_data(request):
+    user = request.user
     hoje = timezone.now().date()
     periodo = int(request.GET.get('periodo', 30))
     data_inicial = hoje - timedelta(days=periodo)
 
+    # Consultas pagas do usuário
     consultas_pagas = Consulta.objects.filter(
+        owner=user,
         paga=True,
         data__date__gte=data_inicial,
         data__date__lte=hoje + timedelta(days=90)
     )
 
+    if not consultas_pagas.exists():
+        consultas_pagas = Consulta.objects.filter(owner=user, paga=True)
+
+    # Faturamentos
     faturamento_total = consultas_pagas.aggregate(
         total=Sum('valor_final')
     )['total'] or 0
@@ -634,9 +631,10 @@ def dashboard_data(request):
 
     faturamento_liquido = faturamento_total - comissoes_total
 
+    # Mensal
     consultas_mes = consultas_pagas.filter(
-        data__month=hoje.month,
-        data__year=hoje.year
+        data__year=hoje.year,
+        data__month=hoje.month
     )
 
     faturamento_mensal_bruto = consultas_mes.aggregate(
@@ -649,22 +647,25 @@ def dashboard_data(request):
 
     faturamento_mensal_liquido = faturamento_mensal_bruto - faturamento_mensal_comissoes
 
+    # Status
     status_consultas = {
         'concluidas': consultas_pagas.filter(concluida=True).count(),
-        'pendentes': consultas_pagas.filter(concluida=False).count(),
+        'pendentes': Consulta.objects.filter(owner=user, concluida=False).count(),
     }
 
+    # Consultas por dentista
     consultas_por_dentista = (
         consultas_pagas.exclude(dentista__isnull=True)
         .values('dentista__nome')
         .annotate(
             total_consultas=Count('id'),
             receita=Sum('valor_final'),
-            comissao=Sum('comissao_valor')
+            comissao=Sum('comissao_valor'),
         )
         .order_by('-receita')
     )
 
+    # Gráfico 6 meses
     meses = []
     dados_consultas = []
     dados_receita = []
@@ -673,15 +674,15 @@ def dashboard_data(request):
         mes_ref = hoje - timedelta(days=30 * i)
         nome_mes = calendar.month_abbr[mes_ref.month]
 
-        consultas_mes = consultas_pagas.filter(
+        cons_mes = consultas_pagas.filter(
             data__month=mes_ref.month,
             data__year=mes_ref.year
         )
 
         meses.append(nome_mes)
-        dados_consultas.append(consultas_mes.count())
+        dados_consultas.append(cons_mes.count())
         dados_receita.append(float(
-            consultas_mes.aggregate(total=Sum('valor_final'))['total'] or 0
+            cons_mes.aggregate(total=Sum('valor_final'))['total'] or 0
         ))
 
     return JsonResponse({
@@ -696,7 +697,6 @@ def dashboard_data(request):
         'dados_consultas': dados_consultas,
         'dados_receita': dados_receita,
     })
-
 
 
 def _accent_insensitive_regex(prefix: str) -> str:
@@ -746,7 +746,9 @@ def dentista_create(request):
     if request.method == "POST":
         form = DentistaForm(request.POST)
         if form.is_valid():
-            form.save()
+            dentista = form.save(commit=False)
+            dentista.owner = request.user
+            dentista.save()
             messages.success(request, "Dentista cadastrado com sucesso!")
             return redirect("clinic:dentistas_list")
     else:
@@ -757,7 +759,7 @@ def dentista_create(request):
 @login_required
 @require_active_subscription
 def dentista_edit(request, id):
-    dentista = get_object_or_404(Dentista, id=id)
+    dentista = get_object_or_404(Dentista, id=id, owner=request.user)
 
     from .forms import DentistaForm
 
@@ -779,7 +781,7 @@ def dentista_edit(request, id):
 @login_required
 @require_active_subscription
 def dentista_delete(request, id):
-    dentista = get_object_or_404(Dentista, id=id)
+    dentista = get_object_or_404(Dentista, id=id, owner=request.user)
     dentista.delete()
     messages.success(request, "Dentista removido.")
     return redirect("clinic:dentistas_list")
@@ -837,7 +839,7 @@ def dentistas_list(request):
 
     limite_max = LIMITE.get(plano, 1)
 
-    dentistas = Dentista.objects.all()
+    dentistas = Dentista.objects.filter(owner=request.user)
     dentistas_count = dentistas.count()
 
     return render(
@@ -856,12 +858,14 @@ def dentistas_list(request):
 @require_active_subscription
 def pacientes_list(request):
     search = (request.GET.get('search') or '').strip()
-    pacientes = Paciente.objects.all().order_by('-data_cadastro')
+    pacientes = Paciente.objects.filter(owner=request.user).order_by('-data_cadastro')
 
     if search:
         regex = _accent_insensitive_regex(search)
         pacientes = pacientes.filter(
-            Q(nome__iregex=regex) | Q(cidade__iregex=regex)
+            Q(nome__iregex=regex) | 
+            Q(cidade__iregex=regex) |
+            Q(cpf_icontains=search)
         )
 
     context = {
@@ -877,7 +881,9 @@ def paciente_create(request):
     if request.method == 'POST':
         form = PacienteForm(request.POST)
         if form.is_valid():
-            form.save()
+            paciente = form.save(commit=False)
+            paciente.owner = request.user
+            paciente.save()
             messages.success(request, "✅ Paciente cadastrado com sucesso!")
             return redirect('clinic:pacientes_list')
         else:
@@ -892,7 +898,7 @@ def paciente_create(request):
 @login_required
 @require_active_subscription
 def paciente_update(request, pk):
-    paciente = get_object_or_404(Paciente, pk=pk)
+    paciente = get_object_or_404(Paciente, pk=pk, owner=request.user)
     if request.method == 'POST':
         form = PacienteForm(request.POST, instance=paciente)
         if form.is_valid():
@@ -901,13 +907,14 @@ def paciente_update(request, pk):
             return redirect('clinic:pacientes_list')
     else:
         form = PacienteForm(instance=paciente)
+        
     return render(request, 'clinic/paciente_form.html', {'form': form, 'titulo': 'Editar Paciente'})
 
 
 @login_required
 @require_active_subscription
 def paciente_delete(request, pk):
-    paciente = get_object_or_404(Paciente, pk=pk)
+    paciente = get_object_or_404(Paciente, pk=pk, owner=request.user)
     if request.method == 'POST':
         paciente.delete()
         messages.success(request, "Paciente excluído com sucesso.")
@@ -1003,7 +1010,7 @@ def registrar_teste(request):
 @login_required
 @require_active_subscription
 def procedimentos_list(request):
-    procedimentos = Procedimento.objects.all().order_by('nome')
+    procedimentos = Procedimento.objects.filter(owner=request.user).order_by('nome')
     return render(request, 'clinic/procedimentos_list.html', {'procedimentos': procedimentos})
 
 
@@ -1012,36 +1019,50 @@ def procedimentos_list(request):
 def procedimento_create(request):
     if request.method == 'POST':
         form = ProcedimentoForm(request.POST)
+        
         if form.is_valid():
-            form.save()
+            procedimento = form.save(commit=False)
+            procedimento.owner = request.user
+            procedimento.save()
+            messages.succes(request, 'Procedimento criado com sucesso!')
             return redirect('clinic:procedimentos_list')
-    else:
+        else:
+            messages.error(request, 'Corrija os erros antes de salvar')
+    else:        
         form = ProcedimentoForm()
+        
     return render(request, 'clinic/procedimento_form.html', {'form': form, 'titulo': 'Novo Procedimento'})
 
 
 @login_required
 @require_active_subscription
 def procedimento_edit(request, id):
-    procedimento = get_object_or_404(Procedimento, id=id)
+    procedimento = get_object_or_404(Procedimento, id=id, owner=request.user)
+    
     if request.method == 'POST':
         form = ProcedimentoForm(request.POST, instance=procedimento)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Procedimento atualizado com sucesso!')
             return redirect('clinic:procedimentos_list')
+        else:
+            messages.error(request, 'Corrija os erros abaixo.')
     else:
         form = ProcedimentoForm(instance=procedimento)
+        
     return render(request, 'clinic/procedimento_form.html', {'form': form, 'titulo': 'Editar Procedimento'})
 
 
 @login_required
 @require_active_subscription
 def procedimento_delete(request, id):
-    procedimento = get_object_or_404(Procedimento, id=id)
+    procedimento = get_object_or_404(Procedimento, id=id, owner=request.user)
+    
     if request.method == 'POST':
         procedimento.delete()
         messages.success(request, "Procedimento excluído com sucesso.")
         return redirect('clinic:procedimentos_list')
+    
     return render(request, 'clinic/procedimento_confirm_delete.html', {'procedimento': procedimento})
 
 

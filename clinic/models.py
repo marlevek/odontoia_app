@@ -60,6 +60,7 @@ class Paciente(models.Model):
     data_nascimento = models.DateField()
     telefone = models.CharField(max_length=20)
     email = models.EmailField()
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
     # Endereço (opcional)
     cep = models.CharField(max_length=9, blank=True, null=True)
@@ -76,14 +77,13 @@ class Paciente(models.Model):
 
 
 class Dentista(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
     nome = models.CharField(max_length=100)
-    cro = models.CharField(max_length=15, unique=True)
+    cro = models.CharField(max_length=15)
     especialidade = models.CharField(max_length=100, blank=True)
     telefone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True, null=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
-
-
+  
     # 💸 Comissão automática
     comissao_percentual = models.DecimalField(
         max_digits=5,
@@ -91,6 +91,15 @@ class Dentista(models.Model):
         default=40.00,
         help_text="Percentual de comissão (%)"
     )
+    
+    
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+            fields=['owner', 'cro'],
+            name='unique_cro_per_owner'
+                )
+            ]
 
     def __str__(self):
         return f'{self.nome} - CRO: {self.cro}'
@@ -100,6 +109,8 @@ class Procedimento(models.Model):
     nome = models.CharField(max_length=255)
     descricao = models.TextField(blank=True, null=True)
     valor_base = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+
 
     def __str__(self):
         return f"{self.nome} - R$ {self.valor_base}"
@@ -113,6 +124,7 @@ class Consulta(models.Model):
     data = models.DateTimeField()
     concluida = models.BooleanField(default=False)
     paga = models.BooleanField(default=False)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
         
     
     # 💰 Campos financeiros
