@@ -1,0 +1,82 @@
+{% load static %}
+
+<header class="navbar">
+    <div class="logo-container">
+        <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo OdontoIA" class="logo">
+    </div>
+
+    <!-- Botão mobile -->
+    <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+
+    <!-- MENU -->
+    <nav class="nav-links" id="navMenu">
+
+        <a href="{% url 'clinic:dashboard' %}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        <a href="{% url 'clinic:procedimentos_list' %}">
+            <i class="bi bi-tools"></i> Procedimentos
+        </a>
+
+        <a href="{% url 'clinic:pacientes_list' %}">
+            <i class="bi bi-people"></i> Pacientes
+        </a>
+
+        <a href="{% url 'clinic:consultas_list' %}">
+            <i class="bi bi-journal-text"></i> Consultas
+        </a>
+
+        <a href="{% url 'clinic:consultas_calendar' %}">
+            <i class="bi bi-calendar-event"></i> Calendário
+        </a>
+
+        <!-- DENTISTAS – apenas planos Profissional/Premium -->
+        {% if assinatura and assinatura.tipo in 'profissional premium' %}
+        <a href="{% url 'clinic:dentistas_list' %}">
+            <i class="bi bi-person-badge"></i> Dentistas
+        </a>
+        {% endif %}
+
+        <!-- Financeiro -->
+        {% if assinatura and assinatura.tipo in 'profissional premium' %}
+        <a href="{% url 'clinic:financeiro_resumo' %}">
+            <i class="bi bi-cash-coin"></i> Financeiro
+        </a>
+        {% endif %}
+
+        <!-- IA & Insights – apenas Premium -->
+        {% if assinatura and assinatura.tipo == 'premium' %}
+        <a href="{% url 'clinic:ia_insights' %}">
+            <i class="bi bi-lightbulb"></i> IA & Insights
+        </a>
+        {% endif %}
+
+        <!-- Logout -->
+        <a href="{% url 'clinic:logout' %}" class="logout-link">
+            <i class="bi bi-box-arrow-right"></i> Sair
+        </a>
+    </nav>
+</header>
+
+<style>
+    /* Remover bullets em qualquer caso */
+    nav a, nav li { list-style: none !important; }
+
+    nav a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggleBtn = document.getElementById("menuToggle");
+        const navMenu = document.getElementById("navMenu");
+
+        toggleBtn.addEventListener("click", () => {
+            navMenu.classList.toggle("active");
+        });
+    });
+</script>

@@ -1,6 +1,10 @@
 {% extends "clinic/base.html" %}
 {% load static %}
+
 {% block title %}Dashboard - OdontoIA{% endblock %}
+
+
+{% block content %}
 
 {% if user.is_authenticated %}
 
@@ -99,7 +103,7 @@
 {% endif %}
 
 
-{% block content %}
+
 <h2>📊 Dashboard - OdontoIA</h2>
 
 <!-- Cards Financeiros -->
