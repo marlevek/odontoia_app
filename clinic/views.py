@@ -327,28 +327,6 @@ def consulta_update(request, pk):
     return render(request, 'clinic/consulta_form.html', {'form': form})
 
 
-@csrf_exempt
-@login_required
-@require_active_subscription
-def consulta_create_ajax(request):
-    if request.method == "POST":
-        try:
-            consulta = Consulta.objects.create(
-                paciente_id=request.POST.get("paciente"),
-                dentista_id=request.POST.get("dentista"),
-                procedimento_id=request.POST.get("procedimento"),
-                data=parse_datetime(request.POST.get("data")),
-                observacoes=request.POST.get("observacoes", ""),
-                owner=request.user,  # 🔥 ESSENCIAL
-            )
-            return JsonResponse({"success": True, "id": consulta.id})
-        except Exception as e:
-            return JsonResponse({"success": False, "error": str(e)})
-
-    return JsonResponse({"success": False, "error": "Método inválido"})
-
-
-
 @login_required
 @require_active_subscription
 def consulta_delete(request, pk):
@@ -398,6 +376,39 @@ def consultas_calendar(request):
         'dentistas': Dentista.objects.filter(owner=request.user),
         'procedimentos': Procedimento.objects.filter(owner=request.user),
     })
+    
+@csrf_exempt
+@login_required
+@require_active_subscription
+def consulta_update_ajax(request):
+    """
+    Atualiza a data/hora de uma consulta arrastada no calendário (FullCalendar).
+    """
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método inválido"})
+
+    consulta_id = request.POST.get("id")
+    nova_data = request.POST.get("start")
+
+    if not consulta_id or not nova_data:
+        return JsonResponse({"success": False, "error": "Dados incompletos"})
+
+    try:
+        data_convertida = parse_datetime(nova_data)
+        if not data_convertida:
+            return JsonResponse({"success": False, "error": "Data inválida"})
+
+        consulta = Consulta.objects.get(pk=consulta_id, owner=request.user)
+        consulta.data = data_convertida
+        consulta.save()
+
+        return JsonResponse({"success": True})
+
+    except Consulta.DoesNotExist:
+        return JsonResponse({"success": False, "error": "Consulta não encontrada"})
+
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})
 
 
 @login_required
