@@ -791,7 +791,7 @@ def dentista_principal(request):
     """Cadastro do dentista principal para contas que ainda não têm dentista."""
    
    # Agora verifica apenas dentistas do próprio usuário
-    if Dentista.objects.filter(owner=request.user).exist():
+    if Dentista.objects.filter(owner=request.user).exists():
         return redirect("clinic:dashboard")
 
     if request.method == "POST":
