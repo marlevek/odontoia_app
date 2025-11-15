@@ -101,6 +101,8 @@ urlpatterns = [
     path('webhook/mercadopago/', views.mercadopago_webhook,
          name='mercadopago_webhook'),
     
+    # Checkout
+    path('checkout/<str:plano>/', views.checkout_publico, name='checkout_publico'),
     
     # Financeiro
     path('financeiro/', views.financeiro_home, name='financeiro_home'),

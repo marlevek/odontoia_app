@@ -1401,6 +1401,54 @@ def pagamento_sucesso(request):
         "clinic/pagamento_sucesso.html",
         {"assinatura": assinatura, "pagamento": pagamento, "plano": assinatura.plano},
     )
+    
+
+# Checkout publico
+def checkout_publico(request, plano):
+    plano = plano.lower()
+
+    PLANOS = {
+        "basico": 49.90,
+        "profissional": 79.90,
+        "premium": 129.90,
+    }
+
+    if plano not in PLANOS:
+        messages.error(request, "Plano inválido.")
+        return redirect("https://odontoia.codertec.com.br")
+
+    valor = PLANOS[plano]
+
+    # GET → mostra o formulário
+    if request.method == "GET":
+        return render(request, "clinic/checkout_publico.html", {
+            "plano": plano.capitalize(),
+            "valor": valor
+        })
+
+    # POST → o usuário enviou nome e email, vamos criar uma conta trial
+    nome = request.POST.get("nome")
+    email = request.POST.get("email")
+
+    if not email:
+        messages.error(request, "E-mail é obrigatório.")
+        return redirect(request.path)
+
+    # Cria usuário temporário (ou pega existente)
+    user, created = User.objects.get_or_create(
+        username=email,
+        defaults={"email": email, "first_name": nome or email}
+    )
+
+    if created:
+        # cria assinatura trial automática
+        Assinatura.objects.create(user=user, tipo=plano)
+
+    # Faz login automático
+    login(request, user)
+
+    # Redireciona para o checkout interno
+    return redirect(f"/pagamento/checkout/{plano}/")
 
 
 # ===========================
