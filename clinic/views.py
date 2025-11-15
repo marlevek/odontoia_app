@@ -1440,7 +1440,15 @@ def financeiro_resumo(request):
         )
         .order_by("-receita")
     )
-
+    
+    # Cálculo líquido por dentista
+    lista_dentistas = []
+    for d in por_dentista:
+        receita = d['receita'] or 0
+        comissoes = d['comissoes'] or 0
+        d['liquido'] = receita - comissoes 
+        lista_dentistas.append(d)
+        
     totais = consultas.aggregate(
         total_receita=Sum("valor_final"),
         total_comissoes=Sum("comissao_valor"),
@@ -1448,14 +1456,24 @@ def financeiro_resumo(request):
     total_receita = totais["total_receita"] or 0
     total_comissoes = totais["total_comissoes"] or 0
     total_liquido = total_receita - total_comissoes
+    
+    # Adiciona valor líquido por dentista
+    lista_dentistas = []
+    for dent in por_dentista:
+        receita = dent['receita'] or 0
+        comissao = dent['comissoes'] or 0
+        dent['liquido'] = receita - comissao 
+        lista_dentistas.append(dent)
 
     context = {
-        "por_dentista": por_dentista,
+        "por_dentista": lista_dentistas,
         "periodo": periodo,
         "total_receita": total_receita,
         "total_comissoes": total_comissoes,
         "total_liquido": total_liquido,
     }
+    
+    
     return render(request, "clinic/financeiro_resumo.html", context)
 
 

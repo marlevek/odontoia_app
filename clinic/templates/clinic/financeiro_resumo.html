@@ -1,83 +1,58 @@
 {% extends "clinic/base.html" %}
-{% block title %}Financeiro - OdontoIA{% endblock %}
+{% load static %}
+
+{% block title %}Financeiro{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2>💰 Financeiro</h2>
-    <div>
-      <form method="get" class="d-inline">
-        <select name="periodo" class="form-select d-inline w-auto" onchange="this.form.submit()">
-          <option value="7" {% if periodo == 7 %}selected{% endif %}>Últimos 7 dias</option>
-          <option value="30" {% if periodo == 30 %}selected{% endif %}>Últimos 30 dias</option>
-          <option value="90" {% if periodo == 90 %}selected{% endif %}>Últimos 90 dias</option>
-        </select>
-      </form>
-      <a href="{% url 'clinic:financeiro_exportar_excel' %}?periodo={{ periodo }}"
-         class="btn btn-outline-success ms-2">
-        📥 Exportar Excel
-      </a>
-    </div>
-  </div>
 
-  <div class="row mb-4">
-    <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Faturamento bruto</h6>
-          <h3>R$ {{ total_receita|floatformat:2 }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Comissões</h6>
-          <h3>R$ {{ total_comissoes|floatformat:2 }}</h3>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6 class="text-muted">Faturamento líquido</h6>
-          <h3>R$ {{ total_liquido|floatformat:2 }}</h3>
-        </div>
-      </div>
-    </div>
-  </div>
+<h2 class="mt-3">💰 Resumo Financeiro</h2>
 
-  {% if por_dentista %}
-  <div class="table-responsive">
-    <table class="table table-striped align-middle">
-      <thead>
-        <tr>
-          <th>Dentista</th>
-          <th class="text-center">Consultas</th>
-          <th class="text-end">Receita (R$)</th>
-          <th class="text-end">Comissões (R$)</th>
-          <th class="text-end">Líquido (R$)</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for linha in por_dentista %}
-        <tr>
-          <td>{{ linha.dentista__nome }}</td>
-          <td class="text-center">{{ linha.total_consultas }}</td>
-          <td class="text-end">{{ linha.receita|default:0|floatformat:2 }}</td>
-          <td class="text-end">{{ linha.comissoes|default:0|floatformat:2 }}</td>
-          <td class="text-end">
-            {{ linha.receita|default:0|add:-linha.comissoes|default:0|floatformat:2 }}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-  <div class="alert alert-info text-center">
-    Nenhuma consulta encontrada no período selecionado.
-  </div>
-  {% endif %}
+<!-- Resumo geral -->
+<div class="cards-container finance">
+    <div class="card money">
+        <h3>💵 Receita Total</h3>
+        <p class="num">R$ {{ total_receita|floatformat:2 }}</p>
+    </div>
+    <div class="card money">
+        <h3>💼 Comissões</h3>
+        <p class="num">R$ {{ total_comissoes|floatformat:2 }}</p>
+    </div>
+    <div class="card money">
+        <h3>📌 Líquido</h3>
+        <p class="num">R$ {{ total_liquido|floatformat:2 }}</p>
+    </div>
 </div>
+
+<!-- Lista por dentista -->
+<div class="table-container">
+    <h3>📈 Resultado por Dentista</h3>
+
+    {% if por_dentista %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Dentista</th>
+                    <th>Consultas</th>
+                    <th>Receita (R$)</th>
+                    <th>Comissões (R$)</th>
+                    <th>Líquido (R$)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linha in por_dentista %}
+                <tr>
+                    <td>{{ linha.dentista__nome }}</td>
+                    <td>{{ linha.total_consultas }}</td>
+                    <td>{{ linha.receita|floatformat:2 }}</td>
+                    <td>{{ linha.comissoes|floatformat:2 }}</td>
+                    <td>{{ linha.liquido|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="vazio">Nenhum dado disponível no período.</p>
+    {% endif %}
+</div>
+
 {% endblock %}

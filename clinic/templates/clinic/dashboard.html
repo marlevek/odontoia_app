@@ -3,69 +3,78 @@
 {% block title %}Dashboard - OdontoIA{% endblock %}
 
 {% if user.is_authenticated %}
-  {% if plano_atual and validade %}
-    <div class="shadow-md rounded-3 mt-4 p-3 border-0 text-white" 
-         style="background: linear-gradient(90deg, #007bff, #00c6ff); position: relative; overflow: hidden;">
-      <div class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-          <span class="fs-3 me-3">💎</span>
-          <div>
-            <h5 class="mb-0 fw-bold">Plano {{ plano_atual|capfirst }}</h5>
-            <p class="mb-0 small">Ativo até <strong>{{ validade|date:"d/m/Y" }}</strong></p>
-          </div>
-        </div>
-        <a href="{% url 'clinic:criar_pagamento' plano_atual|lower %}" 
-           class="btn btn-light btn-sm fw-semibold shadow-sm">
-          Renovar plano
-        </a>
-      </div>
-      <div style="position: absolute; right: 10px; bottom: -10px; opacity: 0.15; font-size: 80px;">💎</div>
-    </div>
 
-  {% elif trial and trial.dias_restantes > 0 %}
-    <div class="shadow-md rounded-3 mt-4 p-3 border-0 text-dark" 
-         style="background: linear-gradient(90deg, #fff3cd, #ffecb3); position: relative; overflow: hidden;">
-      <div class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-          <span class="fs-3 me-3">⏳</span>
-          <div>
-            <h5 class="mb-0 fw-bold">Período de teste ativo</h5>
-            <p class="mb-0 small">
-              Seu teste termina em <strong>{{ trial.dias_restantes }} dia{% if trial.dias_restantes != 1 %}s{% endif %}</strong>.
-            </p>
-          </div>
+    {# Se há assinatura ativa (profissional ou premium) #}
+    {% if assinatura and assinatura.ativa and assinatura.tipo != 'trial' %}
+        <div class="shadow-md rounded-3 mt-4 p-3 border-0 text-white"
+             style="background: linear-gradient(90deg, #007bff, #00c6ff); position: relative; overflow: hidden;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <span class="fs-3 me-3">💎</span>
+                    <div>
+                        <h5 class="mb-0 fw-bold">Plano {{ assinatura.tipo|capfirst }}</h5>
+                        <p class="mb-0 small">
+                            Ativo até <strong>{{ assinatura.fim_teste|date:"d/m/Y" }}</strong>
+                        </p>
+                    </div>
+                </div>
+                <a href="{% url 'clinic:criar_pagamento' assinatura.tipo %}"
+                   class="btn btn-light btn-sm fw-semibold shadow-sm">
+                    Renovar plano
+                </a>
+            </div>
+            <div style="position: absolute; right: 10px; bottom: -10px; opacity: 0.15; font-size: 80px;">💎</div>
         </div>
-        <a href="https://odontoia.codertec.com.br" target="_blank" 
-           class="btn btn-outline-dark btn-sm fw-semibold shadow-sm">
-          Assinar agora
-        </a>
-      </div>
-      <div style="position: absolute; right: 15px; bottom: -10px; opacity: 0.1; font-size: 80px;">⏳</div>
-    </div>
 
-  {% elif trial and trial.expirada %}
-    <div class="shadow-md rounded-3 mt-4 p-3 border-0 text-white" 
-         style="background: linear-gradient(90deg, #dc3545, #ff6b6b); position: relative; overflow: hidden;">
-      <div class="d-flex align-items-center justify-content-between">
-        <div class="d-flex align-items-center">
-          <span class="fs-3 me-3">🚫</span>
-          <div>
-            <h5 class="mb-0 fw-bold">Assinatura expirada</h5>
-            <p class="mb-0 small">
-              Seu período de teste terminou 
-              {% if trial.fim_teste %}em <strong>{{ trial.fim_teste|date:"d/m/Y" }}</strong>{% endif %}.
-            </p>
-          </div>
+    {# Trial ativo #}
+    {% elif assinatura and assinatura.tipo == 'trial' and trial_ativo %}
+        <div class="shadow-md rounded-3 mt-4 p-3 border-0 text-dark"
+             style="background: linear-gradient(90deg, #fff3cd, #ffecb3); position: relative; overflow: hidden;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <span class="fs-3 me-3">⏳</span>
+                    <div>
+                        <h5 class="mb-0 fw-bold">Período de teste ativo</h5>
+                        <p class="mb-0 small">
+                            Seu teste termina em 
+                            <strong>{{ trial_dias }} dia{% if trial_dias != 1 %}s{% endif %}</strong>.
+                        </p>
+                    </div>
+                </div>
+                <a href="https://odontoia.codertec.com.br" target="_blank"
+                   class="btn btn-outline-dark btn-sm fw-semibold shadow-sm">
+                    Assinar agora
+                </a>
+            </div>
+            <div style="position: absolute; right: 15px; bottom: -10px; opacity: 0.1; font-size: 80px;">⏳</div>
         </div>
-        <a href="{% url 'clinic:assinatura_expirada' %}" 
-           class="btn btn-light btn-sm fw-semibold shadow-sm">
-          Ver planos
-        </a>
-      </div>
-      <div style="position: absolute; right: 15px; bottom: -10px; opacity: 0.15; font-size: 80px;">🚫</div>
-    </div>
-  {% endif %}
+
+    {# Trial expirado #}
+    {% elif assinatura and assinatura.tipo == 'trial' and not trial_ativo %}
+        <div class="shadow-md rounded-3 mt-4 p-3 border-0 text-white"
+             style="background: linear-gradient(90deg, #dc3545, #ff6b6b); position: relative; overflow: hidden;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center">
+                    <span class="fs-3 me-3">🚫</span>
+                    <div>
+                        <h5 class="mb-0 fw-bold">Assinatura expirada</h5>
+                        <p class="mb-0 small">
+                            Seu teste terminou em 
+                            <strong>{{ assinatura.fim_teste|date:"d/m/Y" }}</strong>.
+                        </p>
+                    </div>
+                </div>
+                <a href="{% url 'clinic:assinatura_expirada' %}"
+                   class="btn btn-light btn-sm fw-semibold shadow-sm">
+                    Ver planos
+                </a>
+            </div>
+            <div style="position: absolute; right: 15px; bottom: -10px; opacity: 0.15; font-size: 80px;">🚫</div>
+        </div>
+
+    {% endif %}
 {% endif %}
+
 
 {% block content %}
 <h2>📊 Dashboard - OdontoIA</h2>

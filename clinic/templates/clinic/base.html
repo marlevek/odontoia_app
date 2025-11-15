@@ -37,12 +37,12 @@
             <a href="{% url 'clinic:consultas_calendar' %}">📅 Calendário</a>
 
             <!-- 🔥 Financeiro: profissional OU premium -->
-            {% if assinatura and assinatura.tipo == 'profissional' or assinatura.tipo == 'premium' %}
-            <a href="{% url 'clinic:financeiro_resumo'%}">💰 Financeiro</a>
+            {% if assinatura and (assinatura.tipo == 'profissional' or assinatura.tipo == 'premium') %}
+            <a href="{% url 'clinic:financeiro_resumo' %}">💰 Financeiro</a>
             {% endif %}
 
             <!-- 🔥 IA & Insights: apenas premium -->
-            {% if assinatura and assinatura.tipo == "premium" %}
+            {% if assinatura and assinatura.tipo == 'premium' %}
             <a href="{% url 'clinic:ia_insights' %}">🧠 IA & Insights</a>
             {% endif %}
 
