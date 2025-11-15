@@ -41,6 +41,11 @@
             <a href="{% url 'clinic:financeiro_resumo' %}">💰 Financeiro</a>
             {% endif %}
 
+            <!-- Aparece campo Dentistas para profissional ou premium -->
+            {% if request.user.assinatura.tipo == "profissional" or request.user.assinatura.tipo == "premium" %}
+            <li><a href="{% url 'clinic:dentistas_list' %}">Dentistas</a></li>
+            {% endif %}
+
             <!-- 🔥 IA & Insights: apenas premium -->
             {% if assinatura and assinatura.tipo == 'premium' %}
             <a href="{% url 'clinic:ia_insights' %}">🧠 IA & Insights</a>
