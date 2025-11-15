@@ -1024,7 +1024,7 @@ def procedimento_create(request):
             procedimento = form.save(commit=False)
             procedimento.owner = request.user
             procedimento.save()
-            messages.succes(request, 'Procedimento criado com sucesso!')
+            messages.success(request, 'Procedimento criado com sucesso!')
             return redirect('clinic:procedimentos_list')
         else:
             messages.error(request, 'Corrija os erros antes de salvar')
