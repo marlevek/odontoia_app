@@ -533,9 +533,17 @@ def dashboard(request):
         ))
 
     # === Status ===
+    
+    # Conluída - apenas pagas
+    
+    concluidas = consultas_pagas.filter(concluida=True).count()
+    
+    # Pendentes - Todas as pendentes independente da data
+    pendentes = Consultas.objects.filter(concluida=False).count()
+    
     status_consultas = {
-        'concluidas': consultas_pagas.filter(concluida=True).count(),
-        'pendentes': consultas_pagas.filter(concluida=False).count(),
+        'concluidas': concluidas,
+        'pendentes': pendentes,
     }
 
     # === Próximas consultas (não importa se pagas) ===
