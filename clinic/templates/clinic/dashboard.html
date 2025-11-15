@@ -7,7 +7,6 @@
 {# Se há assinatura ativa (profissional ou premium) #}
 {% if assinatura and assinatura.ativa and assinatura.tipo != 'trial' %}
     <!-- ⭐ Assinatura ativa -->
-
     {% if assinatura.tipo == 'premium' %}
         <div class="plano-banner plano-premium">
             <div class="d-flex align-items-center justify-content-between">

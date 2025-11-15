@@ -37,7 +37,7 @@
             <a href="{% url 'clinic:consultas_calendar' %}">📅 Calendário</a>
 
             <!-- 🔥 Financeiro: profissional OU premium -->
-            {% if assinatura and (assinatura.tipo == 'profissional' or assinatura.tipo == 'premium') %}
+            {% if assinatura and assinatura.tipo in 'profissional,premium' %}
             <a href="{% url 'clinic:financeiro_resumo' %}">💰 Financeiro</a>
             {% endif %}
 
