@@ -29,6 +29,7 @@ urlpatterns = [
     path('dentistas/novo/', views.dentista_create, name='dentista_create'),
     path("dentistas/<int:id>/editar/", views.dentista_edit, name="dentista_edit"),
     path("dentistas/<int:id>/excluir/", views.dentista_delete, name="dentista_delete"),
+    path('dentista/principal/', views.dentista_principal, name='dentista_principal'),
 
     # Pacientes
     path('pacientes/', views.pacientes_list, name='pacientes_list'),
