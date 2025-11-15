@@ -245,7 +245,7 @@ def consultas_list(request):
     status = request.GET.get('status')
     data_filtro = request.GET.get('data')
 
-    consultas = Consulta.objects.objects.filter(owner=request.user).select_related('paciente', 'dentista', 'procedimento').order_by('-data')
+    consultas = Consulta.objects.filter(owner=request.user).select_related('paciente', 'dentista', 'procedimento').order_by('-data')
 
     # 🔍 Filtro por nome do paciente ou dentista
     if search:
@@ -421,7 +421,7 @@ def dashboard(request):
     data_inicial = hoje - timedelta(days=periodo)
 
     # Garantir que o usuário tenha ao menos 1 dentista
-    if not Dentista.objects.filter(owner=user).exists():
+    if not Dentista.objects.filter(owner=request.user).exists():
         return redirect('clinic:dentista_principal')
 
     # === CONSULTAS PAGAS do usuário ===
@@ -1218,100 +1218,80 @@ PLANOS = {
 
 @login_required
 def criar_pagamento(request, plano: str):
-    """
-    Cria uma preferência no Mercado Pago e redireciona o usuário ao checkout.
-    Funciona tanto localmente (sandbox) quanto em produção (Railway).
-    """
-    try:
-        plano = plano.lower().strip()
-        PLANOS = {
-            "basico": Decimal("49.90"),
-            "profissional": Decimal("79.90"),
-            "premium": Decimal("129.90"),
-        }
 
-        print(f"🧩 [Checkout] Plano solicitado: {plano}")
-        if plano not in PLANOS:
-            messages.error(request, f"Plano inválido: {plano}")
-            return redirect("clinic:dashboard")
+    plano = plano.lower().strip()
+    PLANOS = {
+        "basico": Decimal("49.90"),
+        "profissional": Decimal("79.90"),
+        "premium": Decimal("129.90"),
+    }
 
-        valor = float(PLANOS[plano])
-        assinatura, _ = Assinatura.objects.get_or_create(user=request.user)
-
-        referencia = f"odontoia-{request.user.id}-{uuid.uuid4().hex}"
-        pagamento = Pagamento.objects.create(
-            assinatura=assinatura,
-            referencia=referencia,
-            valor=valor,
-            status="pendente",
-            metodo="desconhecido",
-            data_criacao=timezone.now(),
-        )
-
-        # SDK Mercado Pago
-        access_token = getattr(settings, "MERCADOPAGO_ACCESS_TOKEN", None)
-        if not access_token:
-            raise RuntimeError("❌ MERCADOPAGO_ACCESS_TOKEN ausente nas variáveis de ambiente.")
-        sdk = mercadopago.SDK(access_token)
-
-        # Define URLs corretas (produção usa domínio real)
-        base_url = (
-            "https://app.odontoia.codertec.com.br"
-            if not settings.DEBUG
-            else request.build_absolute_uri("/")[:-1]
-        )
-
-        success_url = f"{base_url}{reverse('clinic:pagamento_sucesso')}"
-        failure_url = f"{base_url}{reverse('clinic:pagamento_falha')}"
-        webhook_url = f"{base_url}{reverse('clinic:mercadopago_webhook')}"
-
-        preference_data = {
-            "items": [
-                {
-                    "id": referencia,
-                    "title": f"Plano {plano.capitalize()} - OdontoIA",
-                    "description": "Assinatura OdontoIA",
-                    "quantity": 1,
-                    "currency_id": "BRL",
-                    "unit_price": valor,
-                }
-            ],
-            "payer": {"email": request.user.email or "sem-email@odontoia.local"},
-            "back_urls": {
-                "success": success_url,
-                "failure": failure_url,
-                "pending": success_url,
-            },
-            "external_reference": referencia,
-        }
-
-        # Apenas em produção, adiciona auto_return e webhook
-        if not settings.DEBUG:
-            preference_data["auto_return"] = "approved"
-            preference_data["notification_url"] = webhook_url
-
-        print("📦 [Checkout] Preference enviada para Mercado Pago:")
-        print(json.dumps(preference_data, indent=2, ensure_ascii=False))
-
-        pref = sdk.preference().create(preference_data)
-        resp = pref.get("response", {})
-        init_point = resp.get("init_point") or resp.get("sandbox_init_point")
-
-        if not init_point:
-            msg = resp.get("message", "Erro inesperado na criação da preferência")
-            print("⚠️ [Checkout] init_point ausente → resposta MP:", resp)
-            messages.error(request, f"Falha ao iniciar checkout: {msg}")
-            return redirect("clinic:dashboard")
-
-        print(f"✅ [Checkout] Redirecionando para Mercado Pago → {init_point}")
-        return redirect(init_point)
-
-    except Exception as e:
-        import traceback
-        print("❌ [Checkout] ERRO FATAL no pagamento:")
-        traceback.print_exc()
-        messages.error(request, f"Ocorreu um erro ao criar o pagamento: {e}")
+    if plano not in PLANOS:
+        messages.error(request, "Plano inválido.")
         return redirect("clinic:dashboard")
+
+    valor = float(PLANOS[plano])
+
+    # Assinatura do usuário
+    assinatura, _ = Assinatura.objects.get_or_create(user=request.user)
+
+    # Registrar pagamento
+    referencia = f"odontoia-{request.user.id}-{uuid.uuid4().hex}"
+    pagamento = Pagamento.objects.create(
+        assinatura=assinatura,
+        referencia=referencia,
+        valor=valor,
+        status="pendente",
+        metodo="desconhecido",
+    )
+
+    # Mercado Pago
+    access_token = getattr(settings, "MERCADOPAGO_ACCESS_TOKEN", None)
+    if not access_token:
+        messages.error(request, "Token Mercado Pago não configurado.")
+        return redirect("clinic:dashboard")
+
+    sdk = mercadopago.SDK(access_token)
+
+    base_url = (
+        "https://app.odontoia.codertec.com.br"
+        if not settings.DEBUG
+        else request.build_absolute_uri("/")[:-1]
+    )
+
+    preference_data = {
+        "items": [
+            {
+                "id": referencia,
+                "title": f"Plano {plano.capitalize()} - OdontoIA",
+                "quantity": 1,
+                "currency_id": "BRL",
+                "unit_price": valor,
+            }
+        ],
+        "payer": {"email": request.user.email},
+        "back_urls": {
+            "success": f"{base_url}/pagamento/sucesso/",
+            "failure": f"{base_url}/pagamento/falha/",
+            "pending": f"{base_url}/pagamento/sucesso/",
+        },
+        "external_reference": referencia,
+    }
+
+    if not settings.DEBUG:
+        preference_data["notification_url"] = f"{base_url}/mp/webhook/"
+        preference_data["auto_return"] = "approved"
+
+    pref = sdk.preference().create(preference_data)
+    resp = pref.get("response", {})
+    init_point = resp.get("init_point") or resp.get("sandbox_init_point")
+
+    if not init_point:
+        messages.error(request, "Erro ao iniciar pagamento.")
+        return redirect("clinic:dashboard")
+
+    return redirect(init_point)
+
 
 # ===========================
 # 🧾 WEBHOOK DO MERCADO PAGO
@@ -1377,30 +1357,34 @@ def mercadopago_webhook(request):
 @login_required
 def pagamento_sucesso(request):
     assinatura = Assinatura.objects.filter(user=request.user).first()
-    pagamento = (
-        Pagamento.objects.filter(assinatura__user=request.user)
-        .order_by("-data_pagamento")
-        .first()
-    )
+    pagamento = Pagamento.objects.filter(
+        assinatura__user=request.user
+    ).order_by("-data_pagamento").first()
 
-    nome = request.user.first_name or request.user.username
-    send_mail(
-    subject="✅ Assinatura confirmada - OdontoIA",
-    message=f"Olá {nome}, seu plano {assinatura.plano} foi ativado com sucesso até {assinatura.data_fim.strftime('%d/%m/%Y')}.",
-    from_email=None,
-    recipient_list=[request.user.email],
-    fail_silently=True,
-)
-        
     if not assinatura or not pagamento:
-        messages.warning(request, "Não foi possível carregar os dados do pagamento.")
+        messages.warning(request, "Não foi possível confirmar o pagamento.")
         return redirect("clinic:dashboard")
 
-    return render(
-        request,
-        "clinic/pagamento_sucesso.html",
-        {"assinatura": assinatura, "pagamento": pagamento, "plano": assinatura.plano},
+    # Ativa assinatura por 30 dias
+    assinatura.ativa = True
+    assinatura.fim_teste = timezone.now() + timedelta(days=30)
+    assinatura.save()
+
+    # Envia notificação
+    nome = request.user.first_name or request.user.username
+    send_mail(
+        "✅ Assinatura confirmada - OdontoIA",
+        f"Olá {nome}, sua assinatura foi ativada com sucesso.",
+        None,
+        [request.user.email],
+        fail_silently=True,
     )
+
+    return render(request, "clinic/pagamento_sucesso.html", {
+        "assinatura": assinatura,
+        "pagamento": pagamento,
+    })
+
     
 
 # Checkout publico
