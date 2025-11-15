@@ -790,7 +790,8 @@ def dentista_delete(request, id):
 def dentista_principal(request):
     """Cadastro do dentista principal para contas que ainda não têm dentista."""
    
-    if Dentista.objects.exists():
+   # Agora verifica apenas dentistas do próprio usuário
+    if Dentista.objects.filter(owner=request.user).exist():
         return redirect("clinic:dashboard")
 
     if request.method == "POST":
@@ -804,7 +805,8 @@ def dentista_principal(request):
             messages.error(request, "Nome e CRO são obrigatórios.")
             return redirect("clinic:dentista_principal")
 
-        Dentista.objects.create(
+        dentista = Dentista.objects.create(
+            owner=request.user,
             nome=nome,
             cro=cro,
             especialidade=esp,

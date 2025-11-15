@@ -81,6 +81,7 @@ class Dentista(models.Model):
     especialidade = models.CharField(max_length=100, blank=True)
     telefone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True, null=True)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
     # 💸 Comissão automática
