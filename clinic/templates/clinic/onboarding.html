@@ -45,16 +45,33 @@
     ul li {
       margin-bottom: 8px;
     }
+    a.btn-principal {
+      background: #0b5394;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      text-decoration: none;
+      display: block;
+      width: 100%;
+      font-weight: 600;
+      transition: .3s;
+    }
+    a.btn-principal:hover {
+      background: #063769;
+    }
   </style>
 </head>
 <body>
   <div class="card mx d-block">
     <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo OdontoIA" style="width:110px;margin-bottom:10px;">
+
     {% if tipo_assinatura == "trial" %}
       <h2>Bem-vindo(a) ao OdontoIA 🎉</h2>
       <p>Seu <strong>teste gratuito</strong> começou!</p>
       {% if dias_restantes %}
-        <p class="text-muted">Você tem <strong>{{ dias_restantes }} dia{{ dias_restantes|pluralize:"s" }}</strong> restantes.</p>
+        <p class="text-muted">
+          Você tem <strong>{{ dias_restantes }} dia{{ dias_restantes|pluralize:"s" }}</strong> restantes.
+        </p>
       {% endif %}
     {% else %}
       <h2>Bem-vindo(a) de volta, assinante OdontoIA 💙</h2>
@@ -62,17 +79,17 @@
     {% endif %}
 
     <ul>
-      <li>🦷 <strong>Cadastre o dentista principal</strong> acessando o painel administrativo:  
-        <a href="/admin" target="_blank">/admin</a>
-      </li>
-      <li>👨‍⚕️ Depois, registre pacientes e procedimentos no menu principal.</li>
-      <li>📅 Use o módulo <strong>Agenda</strong> para marcar consultas.</li>
-      <li>💬 Se tiver dúvidas, o <strong>Assistente OdontoIA</strong> está sempre no canto da tela.</li>
+      <li>🦷 <strong>Cadastre o dentista principal</strong> clicando no botão abaixo.</li>
+      <li>👨‍⚕️ Depois, registre pacientes e procedimentos no menu lateral.</li>
+      <li>📅 Use a <strong>Agenda</strong> para marcar e organizar suas consultas.</li>
+      <li>💬 O <strong>Assistente OdontoIA</strong> está sempre no canto da tela para ajudar.</li>
     </ul>
 
-    <form method="post">
+    <a href="{% url 'clinic:dentista_principal' %}" class="btn-principal mt-3">Cadastrar Dentista Principal</a>
+
+    <form method="post" class="mt-3">
       {% csrf_token %}
-      <button type="submit" class="btn-odonto mt-3">Começar agora</button>
+      <button type="submit" class="btn-odonto">Começar agora</button>
     </form>
   </div>
 </body>

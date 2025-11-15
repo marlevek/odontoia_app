@@ -1160,7 +1160,7 @@ def onboarding(request):
 
     if request.method == 'POST':
         request.session['onboarding_done'] = True
-        return redirect('clinic:dashboard')
+        return redirect('clinic:dentista_principal')
 
     return render(request, 'clinic/onboarding.html')
 
