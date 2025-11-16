@@ -109,23 +109,20 @@ class ProcedimentoForm(forms.ModelForm):
 
 
 class ConsultaForm(forms.ModelForm):
+    class Meta:
+        model = Consulta
+        fields = "__all__"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
-        # Garantir IDs e classes
+
+        # Garante IDs necessários para o JS
         self.fields["valor"].widget.attrs.update({
             "id": "id_valor",
             "class": "form-control"
         })
-        self.fields["desconto"].widget.attrs.update({
-            "id": "id_desconto",
-            "class": "form-control"
-        })
+
         self.fields["procedimento"].widget.attrs.update({
             "id": "id_procedimento",
             "class": "form-select"
         })
-
-    class Meta:
-        model = Consulta
-        fields = "__all__"
