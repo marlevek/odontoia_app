@@ -114,42 +114,50 @@
         </div>
 
         <!-- Benefícios reforçando valor -->
-        <ul class="benefits-box">
+       <ul class="benefits-box">
 
-            <!-- Benefícios comuns a TODOS os planos -->
-            <li>✔ Acesso completo ao sistema OdontoIA</li>
-            <li>✔ Dashboard inteligente com indicadores</li>
-            <li>✔ Agenda integrada e gestão de consultas</li>
-            <li>✔ Cadastro de pacientes e procedimentos</li>
+    <!-- Funcionalidades comuns -->
+    <li>✔ Cadastro de pacientes e consultas</li>
+    <li>✔ Dashboard financeiro completo</li>
+    <li>✔ Filtro por dentista e período</li>
+    <li>✔ Faturamento e lucros detalhados</li>
 
-            <!-- PLANO BÁSICO (apenas o essencial) -->
-            {% if plano_slug == "basico" %}
-            <li>✔ 1 dentista incluso</li>
-            <li>✔ Financeiro básico</li>
-            <li>✔ Cadastro simples de procedimentos</li>
-            {% endif %}
+    <!-- Benefícios por plano -->
 
-            <!-- PLANO PROFISSIONAL (mais recursos) -->
-            {% if plano_slug == "profissional" %}
-            <li>✔ Até 4 dentistas</li>
-            <li>✔ Financeiro completo</li>
-            <li>✔ Relatórios avançados</li>
-            <li>✔ Suporte via WhatsApp</li>
-            {% endif %}
+    {% if plano_slug == "basico" %}
+        <li>❌ Comissões automáticas por dentista</li>
+        <li>❌ Relatórios e exportações (Excel/PDF)</li>
+        <li>❌ Prontuário odontológico digital</li>
+        <li>❌ Lembretes automáticos (WhatsApp)</li>
+        <li>❌ Multiusuário (secretária/dentista/admin)</li>
+        <li>❌ IA preditiva e insights automáticos</li>
+        <li>❌ Suporte prioritário</li>
+        <li>👨‍⚕️ 1 cirurgião-dentista incluído</li>
+    {% endif %}
 
-            <!-- PLANO PREMIUM (tudo incluso) -->
-            {% if plano_slug == "premium" %}
-            <li>✔ Dentistas ilimitados</li>
-            <li>✔ Financeiro avançado + relatórios completos</li>
-            <li>✔ Inteligência Odontológica (IA & Insights)</li>
-            <li>✔ Multiusuário avançado</li>
-            <li>✔ Suporte prioritário VIP</li>
-            {% endif %}
+    {% if plano_slug == "profissional" %}
+        <li>✔ Comissões automáticas por dentista</li>
+        <li>✔ Relatórios e exportações (Excel/PDF)</li>
+        <li>✔ Prontuário odontológico digital</li>
+        <li>✔ Lembretes automáticos (WhatsApp)</li>
+        <li>✔ Multiusuário (secretária/dentista/admin)</li>
+        <li>❌ IA preditiva e insights automáticos</li>
+        <li>✔ Suporte prioritário</li>
+        <li>👨‍⚕️ Até 3 cirurgiões-dentistas incluídos</li>
+    {% endif %}
 
-            <!-- Benefícios finais (para todos os planos) -->
-            <li>✔ Cancelamento simples, sem burocracia</li>
-        </ul>
+    {% if plano_slug == "premium" %}
+        <li>✔ Comissões automáticas por dentista</li>
+        <li>✔ Relatórios e exportações (Excel/PDF)</li>
+        <li>✔ Prontuário odontológico digital</li>
+        <li>✔ Lembretes automáticos (WhatsApp)</li>
+        <li>✔ Multiusuário (secretária/dentista/admin)</li>
+        <li>✔ IA preditiva e insights automáticos</li>
+        <li>✔ Suporte prioritário</li>
+        <li>👨‍⚕️ Dentistas ilimitados</li>
+    {% endif %}
 
+</ul>
 
         <form method="POST">
             {% csrf_token %}
