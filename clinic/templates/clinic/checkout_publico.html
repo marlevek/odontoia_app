@@ -1,22 +1,158 @@
-{% extends "clinic/public_base.html" %}
-{% block title %}Assinar {{ plano }} - OdontoIA{% endblock %}
+{% load static %}
 
-{% block content %}
-<div class="container py-5 text-center">
-  <h2>🦷 Assinatura OdontoIA - {{ plano }}</h2>
-  <p class="lead mb-4">Valor: <strong>R$ {{ valor|floatformat:2 }}</strong>/mês</p>
+<!DOCTYPE html>
+<html lang="pt-br">
 
-  <form method="post" class="mx-auto" style="max-width:400px;">
-    {% csrf_token %}
-    <div class="mb-3 text-start">
-      <label class="form-label">Nome completo</label>
-      <input type="text" name="nome" class="form-control" placeholder="Ex: Dra. Maria Silva">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assinatura OdontoIA - {{ plano|title }}</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background: #eef4fb;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .checkout-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: #fff;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .plan-header img {
+            width: 70px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .plan-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0b5394;
+        }
+
+        .plan-price {
+            font-size: 1.4rem;
+            margin-top: 5px;
+            font-weight: 600;
+            color: #27ae60;
+        }
+
+        .benefits-box {
+            background: #f7fbff;
+            padding: 18px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            border-left: 4px solid #0b5394;
+        }
+
+        .benefits-box li {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            height: 45px;
+            border-radius: 10px;
+            border: 1px solid #dcdcdc;
+        }
+
+        .btn-primary {
+            height: 50px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: #0b5394;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: #083b6b;
+        }
+
+        .security-box {
+            text-align: center;
+            margin-top: 25px;
+            opacity: 0.85;
+        }
+
+        .security-box img {
+            width: 150px;
+        }
+
+        .security-text {
+            font-size: 0.85rem;
+            margin-top: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+
+<div class="checkout-container">
+
+    <div class="plan-header">
+        <img src="{% static 'img/logo_odontoIA.png' %}">
+        <h2 class="plan-title">Assinatura OdontoIA – {{ plano|title }}</h2>
+
+        <p class="plan-price">
+            Valor: <span class="text-success">R$ {{ valor }}</span>/mês
+        </p>
     </div>
-    <div class="mb-3 text-start">
-      <label class="form-label">E-mail</label>
-      <input type="email" name="email" class="form-control" required placeholder="exemplo@clinica.com.br">
+
+    <!-- Benefícios reforçando valor -->
+    <ul class="benefits-box">
+        <li>✔ Acesso completo ao sistema OdontoIA</li>
+        <li>✔ Dashboard inteligente com indicadores</li>
+        <li>✔ Agenda integrada e gestão de consultas</li>
+        <li>✔ Pacientes, procedimentos e financeiro</li>
+        {% if plano != "basico" %}
+        <li>✔ Cadastro de dentistas adicionais</li>
+        {% endif %}
+        {% if plano == "premium" %}
+        <li>✔ Inteligência Odontológica (IA & Insights)</li>
+        {% endif %}
+        <li>✔ Suporte prioritário</li>
+        <li>✔ Cancelamento simples, sem burocracia</li>
+    </ul>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <label>Nome completo</label>
+        <input type="text" name="nome" class="form-control mb-3" placeholder="Ex: Dra. Maria Silva" required>
+
+        <label>E-mail</label>
+        <input type="email" name="email" class="form-control mb-4" placeholder="exemplo@clinica.com.br" required>
+
+        <button type="submit" class="btn btn-primary w-100">
+            Ir para pagamento <i class="bi bi-credit-card"></i>
+        </button>
+    </form>
+
+    <div class="security-box">
+        <img src="https://logodownload.org/wp-content/uploads/2019/09/mercado-pago-logo.png">
+        <div class="security-text">
+            Pagamento seguro via Mercado Pago<br>
+            Ambiente protegido por SSL 🔒
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary w-100">Ir para pagamento 💳</button>
-  </form>
+
 </div>
-{% endblock %}
+
+</body>
+
+</html>
