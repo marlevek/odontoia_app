@@ -40,13 +40,11 @@ Nova Consulta - OdontoIA
             <!-- Procedimento -->
             <div class="col-md-6">
                 <label for="id_procedimento" class="form-label">Procedimento</label>
-
                 <select name="{{ form.procedimento.name }}" id="id_procedimento" class="form-select">
                     <option value="">---------</option>
-
                     {% for proc in form.fields.procedimento.queryset %}
                     <option value="{{ proc.id }}" data-valor="{{ proc.valor }}" {% if form.instance.pk and
-                        form.instance.procedimento.id==proc.id %}selected{% endif %}>
+                        form.instance.procedimento and form.instance.procedimento.id==proc.id %} selected {% endif %}>
                         {{ proc.nome }} - R$ {{ proc.valor|floatformat:2 }}
                     </option>
                     {% endfor %}
