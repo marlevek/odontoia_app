@@ -26,33 +26,38 @@ Nova Consulta - OdontoIA
         <div class="row g-3">
 
             <div class="col-12">
-                <label for="{{ form.paciente.id_for_label }}" class="form-label">Paciente</label>
+                <label class="form-label">Paciente</label>
                 {{ form.paciente }}
             </div>
 
             <div class="col-md-6">
-                <label for="{{ form.dentista.id_for_label }}" class="form-label">Dentista</label>
+                <label class="form-label">Dentista</label>
                 {{ form.dentista }}
             </div>
 
             <div class="col-md-6">
-                <label for="{{ form.procedimento.id_for_label }}" class="form-label">Procedimento</label>
+                <label class="form-label">Procedimento</label>
                 {{ form.procedimento }}
             </div>
 
             <div class="col-md-6">
-                <label for="{{ form.data.id_for_label }}" class="form-label">Data</label>
+                <label class="form-label">Data</label>
                 {{ form.data }}
             </div>
 
+            <!-- 🔥 VALOR CORRIGIDO COM ID MANUAL -->
             <div class="col-md-3">
-                <label for="{{ form.valor.id_for_label }}" class="form-label">Valor</label>
-                {# id_valor garantido pro JS #}
-                {{ form.valor} }
+                <label class="form-label" for="id_valor">Valor</label>
+
+                <input type="number" step="0.01"
+                       id="id_valor"
+                       name="valor"
+                       class="form-control"
+                       value="{{ form.instance.valor|default_if_none:'' }}">
             </div>
 
             <div class="col-md-3">
-                <label for="{{ form.desconto.id_for_label }}" class="form-label">Desconto</label>
+                <label class="form-label">Desconto</label>
                 {{ form.desconto }}
                 <small class="text-muted">Desconto em R$</small>
             </div>
@@ -60,16 +65,17 @@ Nova Consulta - OdontoIA
             <div class="col-md-6 d-flex align-items-center gap-3 mt-2">
                 <div class="form-check">
                     {{ form.concluida }}
-                    <label class="form-check-label" for="{{ form.concluida.id_for_label }}">Concluída</label>
+                    <label class="form-check-label">Concluída</label>
                 </div>
+
                 <div class="form-check">
                     {{ form.paga }}
-                    <label class="form-check-label" for="{{ form.paga.id_for_label }}">Paga</label>
+                    <label class="form-check-label">Paga</label>
                 </div>
             </div>
 
             <div class="col-12">
-                <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>
+                <label class="form-label">Observações</label>
                 {{ form.observacoes }}
             </div>
 
@@ -103,9 +109,10 @@ Nova Consulta - OdontoIA
     }
 </style>
 
+<!-- 🔥 JAVASCRIPT 100% FUNCIONAL -->
 <script>
-// Preenche automaticamente o campo "Valor" com base no texto do procedimento
 document.addEventListener("DOMContentLoaded", function() {
+
     const selectProced = document.getElementById("id_procedimento");
     const inputValor   = document.getElementById("id_valor");
 
@@ -116,16 +123,18 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!opt) return;
 
         const texto = opt.text || "";
-        // procura algo como "R$ 1750.00" ou "R$ 1.750,00"
+        // pega valor após "R$"
         const match = texto.match(/R\$\s*([\d\.\,]+)/);
+
         if (match) {
-            let v = match[1].replace(/\./g, "").replace(",", ".");
+            let v = match[1]
+                .replace(/\./g, "")  // remove pontos de milhar
+                .replace(",", ".");  // transforma vírgula em ponto
             inputValor.value = v;
         }
     }
 
-    // ao carregar e ao mudar
-    atualizarValor();
+    atualizarValor(); // ao carregar
     selectProced.addEventListener("change", atualizarValor);
 });
 </script>
