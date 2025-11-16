@@ -7,70 +7,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}OdontoIA{% endblock %}</title>
 
-    <!-- CSS global -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'clinic/css/clinic.css' %}">
     <link rel="stylesheet" href="{% static 'clinic/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="icon" href="{% static 'img/logo_odontoIA.png' %}" type="image/png">
 </head>
 
 <body>
 
-    {% if user.is_authenticated %}
-    <!-- BOTÃO MOBILE -->
-    <button id="menuToggle" class="menu-toggle d-block d-md-none">☰</button>
-
-    <!-- SIDEBAR (APENAS 1 VEZ) -->
+{% if user.is_authenticated %}
     {% include "clinic/partials/sidebar.html" %}
-    {% endif %}
+{% endif %}
 
-    <!-- WRAPPER -->
-    <div class="main-wrapper">
+<div class="main-wrapper {% if user.is_authenticated %}with-sidebar{% endif %}">
 
-        <!-- CONTEÚDO -->
-        <main class="main-content">
+    <main class="main-content">
 
-            <!-- 🔔 Avisos Trial / Expirada -->
-            {% if user.is_authenticated and trial %}
-                {% if trial.expirada %}
-                    <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3" role="alert">
-                        <div>
-                            🚫 <strong>Assinatura expirada.</strong> Seu teste terminou 
-                            {% if trial.fim_teste %} em {{ trial.fim_teste|date:"d/m/Y" }} {% endif %}.
-                        </div>
-                        <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-sm btn-light">Ver planos</a>
+        {% if user.is_authenticated and trial %}
+
+            {% if trial.expirada %}
+                <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3 mx-1">
+                    <div>
+                        🚫 <strong>Assinatura expirada.</strong>
+                        Seu período de teste terminou
+                        {% if trial.fim_teste %} em {{ trial.fim_teste|date:"d/m/Y" }} {% endif %}
                     </div>
-                {% elif trial.ativo and trial.dias_restantes and trial.dias_restantes <= 3 %}
-                    <div class="alert alert-warning d-flex align-items-center justify-content-between mt-3" role="alert">
-                        <div>
-                            ⏳ <strong>Atenção!</strong> Faltam 
-                            <strong>{{ trial.dias_restantes }} dia{% if trial.dias_restantes != 1 %}s{% endif %}</strong>.
-                        </div>
-                        <div>
-                            <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-primary btn-sm">Assinar Básico</a>
-                            <a href="{% url 'clinic:criar_pagamento' 'profissional' %}" class="btn btn-warning btn-sm">Profissional</a>
-                            <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-dark btn-sm">Premium</a>
-                        </div>
+                    <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-light btn-sm">
+                        Ver planos
+                    </a>
+                </div>
+
+            {% elif trial.ativo and trial.dias_restantes <= 3 %}
+                <div class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mx-1">
+                    <div>
+                        ⏳ Seu teste termina em <strong>{{ trial.dias_restantes }} dias</strong>
                     </div>
-                {% endif %}
+
+                    <div class="btn-group">
+                        <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-primary btn-sm">Básico</a>
+                        <a href="{% url 'clinic:criar_pagamento' 'profissional' %}" class="btn btn-warning btn-sm">Profissional</a>
+                        <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-dark btn-sm">Premium</a>
+                    </div>
+                </div>
             {% endif %}
+        {% endif %}
 
-            {% block content %}{% endblock %}
-        </main>
+        {% block content %}{% endblock %}
+    </main>
+</div>
+
+<footer class="footer">
+    <p>© {{ now|date:"Y" }} OdontoIA - Inteligência Odontológica</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/chat_odontoia.js' %}"></script>
+
+<div class="toast-container position-fixed top-0 end-0 p-3">
+    {% for message in messages %}
+    <div class="toast text-bg-info border-0 mb-2" data-bs-delay="4000">
+        <div class="d-flex">
+            <div class="toast-body">{{ message }}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
     </div>
+    {% endfor %}
+</div>
 
-    <!-- Rodapé -->
-    <footer class="footer">
-        <p>© {{ now|date:"Y" }} OdontoIA - Inteligência Odontológica</p>
-    </footer>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t).show());
+});
+</script>
 
-    <!-- Chatbot -->
-    <script src="{% static 'js/chat_odontoia.js' %}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Toasts Django -->
-    <div aria-live="polite" aria-atomic="true" class="position-relative">
-        <div class="toast
+</body>
+</html>

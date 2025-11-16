@@ -84,33 +84,22 @@
 
 /* ---- LAYOUT PRINCIPAL ---- */
 .main-wrapper {
-    margin-left: 240px;
     padding: 25px;
 }
 
+.with-sidebar {
+    margin-left: 240px !important;
+}
+
 .main-content {
-    padding: 10px 20px;
-    width: 100%;
+    padding: 20px;
+
 }
 
 /* ---- MOBILE ---- */
 @media (max-width: 900px) {
 
-    .sidebar {
-        left: -260px;
-        transition: left 0.3s ease-in-out;
-    }
-
-    .sidebar.open {
-        left: 0;
-    }
-
-    .sidebar-toggle {
-        display: block;
-    }
-
-    .main-wrapper {
+    .with-sidebar {
         margin-left: 0 !important;
-        padding: 20px;
     }
 }
