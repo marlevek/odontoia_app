@@ -18,100 +18,91 @@
 
 <body>
 
-{% if user.is_authenticated %}
+    {% if user.is_authenticated %}
     {% include "clinic/partials/sidebar.html" %}
     <div id="sidebarBackdrop" class="sidebar-backdropp"></div>
     <button id="menuToggleMobile" class="menu-toggle-mobile d-md-none">
-    ☰
-</button>
-{% endif %}
+        ☰
+    </button>
+    {% endif %}
 
-<div class="main-wrapper {% if user.is_authenticated %}with-sidebar{% endif %}">
+    <div class="main-wrapper {% if user.is_authenticated %}with-sidebar{% endif %}">
 
-    <main class="main-content">
+        <main class="main-content">
 
-        {% if user.is_authenticated and trial %}
+            {% if user.is_authenticated and trial %}
 
             {% if trial.expirada %}
-                <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3 mx-1">
-                    <div>
-                        🚫 <strong>Assinatura expirada.</strong>
-                        Seu período de teste terminou
-                        {% if trial.fim_teste %} em {{ trial.fim_teste|date:"d/m/Y" }} {% endif %}
-                    </div>
-                    <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-light btn-sm">
-                        Ver planos
-                    </a>
+            <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3 mx-1">
+                <div>
+                    🚫 <strong>Assinatura expirada.</strong>
+                    Seu período de teste terminou
+                    {% if trial.fim_teste %} em {{ trial.fim_teste|date:"d/m/Y" }} {% endif %}
+                </div>
+                <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-light btn-sm">
+                    Ver planos
+                </a>
+            </div>
+
+            {% elif trial.ativo and trial.dias_restantes <= 3 %} <div
+                class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mx-1">
+                <div>
+                    ⏳ Seu teste termina em <strong>{{ trial.dias_restantes }} dias</strong>
                 </div>
 
-            {% elif trial.ativo and trial.dias_restantes <= 3 %}
-                <div class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mx-1">
-                    <div>
-                        ⏳ Seu teste termina em <strong>{{ trial.dias_restantes }} dias</strong>
-                    </div>
-
-                    <div class="btn-group">
-                        <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-primary btn-sm">Básico</a>
-                        <a href="{% url 'clinic:criar_pagamento' 'profissional' %}" class="btn btn-warning btn-sm">Profissional</a>
-                        <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-dark btn-sm">Premium</a>
-                    </div>
+                <div class="btn-group">
+                    <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-primary btn-sm">Básico</a>
+                    <a href="{% url 'clinic:criar_pagamento' 'profissional' %}"
+                        class="btn btn-warning btn-sm">Profissional</a>
+                    <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-dark btn-sm">Premium</a>
                 </div>
-            {% endif %}
-        {% endif %}
-
-        {% block content %}{% endblock %}
-    </main>
-</div>
-
-<footer class="footer">
-    <p>© {{ now|date:"Y" }} OdontoIA - Inteligência Odontológica</p>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{% static 'js/chat_odontoia.js' %}"></script>
-
-<div class="toast-container position-fixed top-0 end-0 p-3">
-    {% for message in messages %}
-    <div class="toast text-bg-info border-0 mb-2" data-bs-delay="4000">
-        <div class="d-flex">
-            <div class="toast-body">{{ message }}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                    data-bs-dismiss="toast"></button>
-        </div>
     </div>
-    {% endfor %}
-</div>
+    {% endif %}
+    {% endif %}
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t).show());
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const sidebar = document.getElementById("sidebar");
-    const toggleMobile = document.getElementById("menuToggleMobile");
+    {% block content %}{% endblock %}
+    </main>
+    </div>
 
-    if (toggleMobile) {
-        toggleMobile.addEventListener("click", function () {
-            sidebar.classList.toggle("open");
+    <footer class="footer">
+        <p>© {{ now|date:"Y" }} OdontoIA - Inteligência Odontológica</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/chat_odontoia.js' %}"></script>
+
+    <div class="toast-container position-fixed top-0 end-0 p-3">
+        {% for message in messages %}
+        <div class="toast text-bg-info border-0 mb-2" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body">{{ message }}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t).show());
         });
-    }
-});
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const sidebar = document.getElementById("sidebar");
-    const toggleMobile = document.getElementById("menuToggleMobile");
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
 
-    if (toggleMobile) {
-        toggleMobile.addEventListener("click", function () {
-            sidebar.classList.toggle("open");
+            const sidebar = document.getElementById("sidebar");
+            const toggleMobile = document.getElementById("menuToggleMobile");
+
+            if (toggleMobile) {
+                toggleMobile.addEventListener("click", function () {
+                    sidebar.classList.toggle("open");
+                });
+            }
+
         });
-    }
-});
-</script>
+    </script>
 
 
 </body>
+
 </html>

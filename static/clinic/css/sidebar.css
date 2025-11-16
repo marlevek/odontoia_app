@@ -125,12 +125,35 @@
     .sidebar-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0, 0, 0, 0.5);
         z-index: 1500;
         display: none;
     }
 
     .sidebar-backdrop.show {
+        display: block;
+    }
+}
+
+/* === Botão Mobile para abrir o Sidebar === */
+.menu-toggle-mobile {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    background: #0b5394;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 22px;
+    z-index: 3000;
+    display: none;
+    /* oculto no desktop */
+}
+
+/* Mostrar botão apenas em telas pequenas */
+@media (max-width: 900px) {
+    .menu-toggle-mobile {
         display: block;
     }
 }
