@@ -143,7 +143,8 @@ class ConsultaForm(forms.ModelForm):
             }),
             'data': forms.DateTimeInput(attrs={
                 'class': 'form-control',
-                'type': 'datetime-local'
+                'type': 'text',
+                'autocomplete': 'off'
             }),
             'observacoes': forms.Textarea(attrs={
                 'class': 'form-control',

@@ -11,6 +11,7 @@ Nova Consulta - OdontoIA
 
 {% block content %}
 
+
 <h2 class="page-title text-center my-3">
     {% if form.instance.pk %}
     ✏️ Editar Consulta
@@ -224,6 +225,27 @@ Nova Consulta - OdontoIA
             atualizarValor();
         }
     });
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    flatpickr("#id_data", {
+        enableTime: true,
+        time_24hr: true,
+        dateFormat: "d/m/Y H:i",
+        locale: "pt",
+        minuteIncrement: 5,
+
+        plugins: [new confirmDatePlugin({
+            confirmText: "OK",
+            showAlways: false,
+            theme: "material_blue"
+        })]
+    });
+
+});
 </script>
 
 
