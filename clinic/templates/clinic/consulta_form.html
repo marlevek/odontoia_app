@@ -40,15 +40,20 @@ Nova Consulta - OdontoIA
             <!-- Procedimento -->
             <div class="col-md-6">
                 <label for="id_procedimento" class="form-label">Procedimento</label>
-                <select name="procedimento" id="id_procedimento" class="form-select">
+                <select name="{{ form.procedimento.name }}" id="id_procedimento" class="form-select">
     <option value="">---------</option>
 
     {% for proc in form.fields.procedimento.queryset %}
-        <option value="{{ proc.id }}" data-valor="{{ proc.valor_base }}" {% if form.instance.pk and form.instance.procedimento and form.instance.procedimento.id == proc.id %}selected{% endif %}>
+        <option value="{{ proc.id }}"
+                data-valor="{{ proc.valor_base }}"
+                {% if form.instance.procedimento and form.instance.procedimento.id == proc.id %}
+                    selected
+                {% endif %}>
             {{ proc.nome }} - R$ {{ proc.valor_base|floatformat:2 }}
         </option>
     {% endfor %}
 </select>
+
             </div>
 
             <!-- Data -->
@@ -60,7 +65,7 @@ Nova Consulta - OdontoIA
             <!-- Valor -->
             <div class="col-md-3">
                 <label for="{{ form.valor.id_for_label }}" class="form-label">Valor (R$)</label>
-               {{ form.valor.}}
+               {{ form.valor }}
             </div>
 
             <!-- Desconto -->
