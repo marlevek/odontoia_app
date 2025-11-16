@@ -49,7 +49,7 @@ Nova Consulta - OdontoIA
                 {% if form.instance.procedimento and form.instance.procedimento.id == proc.id %}
                     selected
                 {% endif %}>
-            {{ proc.nome }} - R$ {{ proc.valor_base|floatformat:2 }}
+            {{ proc.nome }} 
         </option>
     {% endfor %}
 </select>
@@ -171,38 +171,57 @@ Nova Consulta - OdontoIA
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    
         const selectProced = document.getElementById("id_procedimento");
         const inputValor = document.getElementById("id_valor");
         const inputDesconto = document.getElementById("id_desconto");
         const spanValorFinal = document.getElementById("valor-final-label");
-    
+
         function formatarBR(num) {
-            return num.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+            return num.toLocaleString("pt-BR", { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
         }
-    
+
+        function parseBR(valor) {
+            if (!valor) return 0;
+            // Remove pontos de milhar e converte vírgula decimal para ponto
+            return parseFloat(valor.toString().replace(/\./g, '').replace(',', '.'));
+        }
+
         function atualizarValor() {
             const opt = selectProced.options[selectProced.selectedIndex];
-            if (!opt) return;
-    
-            const valor = parseFloat(opt.dataset.valor || 0);
-            inputValor.value = formatarBR(valor);
-    
+            
+            if (!opt || !opt.value) {
+                // Se nenhum procedimento selecionado, limpa o valor
+                inputValor.value = "0,00";
+                atualizarValorFinal();
+                return;
+            }
+
+            // Pega o valor do data-valor (que vem do valor_base do procedimento)
+            const valorProcedimento = parseFloat(opt.dataset.valor || 0);
+            
+            // Preenche automaticamente o campo valor
+            inputValor.value = formatarBR(valorProcedimento);
+            
             atualizarValorFinal();
         }
-    
+
         function atualizarValorFinal() {
-            const v = parseFloat(inputValor.value.replace(/\./g, "").replace(",", ".") || 0);
-            const d = parseFloat(inputDesconto.value.replace(/\./g, "").replace(",", ".") || 0);
-            const total = Math.max(v - d, 0);
-    
+            const valor = parseBR(inputValor.value);
+            const desconto = parseBR(inputDesconto.value);
+            const total = Math.max(valor - desconto, 0);
+
             spanValorFinal.textContent = formatarBR(total);
         }
-    
+
+        // Event listeners
         selectProced.addEventListener("change", atualizarValor);
         inputValor.addEventListener("input", atualizarValorFinal);
         inputDesconto.addEventListener("input", atualizarValorFinal);
-    
+
+        // Inicializar valores quando a página carrega
         atualizarValor();
     });
 </script>

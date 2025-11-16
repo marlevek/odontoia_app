@@ -109,6 +109,16 @@ class ProcedimentoForm(forms.ModelForm):
 
 
 class ConsultaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        # Filtra os querysets pelo usuário logado
+        if user:
+            self.fields['paciente'].queryset = Paciente.objects.filter(owner=user)
+            self.fields['dentista'].queryset = Dentista.objects.filter(owner=user)
+            self.fields['procedimento'].queryset = Procedimento.objects.filter(owner=user)
+
     class Meta:
         model = Consulta
         fields = '__all__'
@@ -121,13 +131,16 @@ class ConsultaForm(forms.ModelForm):
             }),
             'desconto': forms.NumberInput(attrs={
                 'class': 'form-control',
-                'id': 'id_desconto',
+                'id': 'id_desconto', 
                 'step': '0.01',
                 'placeholder': '0,00'
             }),
             'paciente': forms.Select(attrs={'class': 'form-select'}),
             'dentista': forms.Select(attrs={'class': 'form-select'}),
-            'procedimento': forms.Select(attrs={'class': 'form-select', 'id': 'id_procedimento'}),
+            'procedimento': forms.Select(attrs={
+                'class': 'form-select', 
+                'id': 'id_procedimento'
+            }),
             'data': forms.DateTimeInput(attrs={
                 'class': 'form-control',
                 'type': 'datetime-local'
@@ -136,4 +149,18 @@ class ConsultaForm(forms.ModelForm):
                 'class': 'form-control',
                 'rows': 3
             }),
+            'concluida': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'paga': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+        
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Se um procedimento foi selecionado, usa o valor_base automaticamente
+        if instance.procedimento and (not instance.valor or instance.valor == 0):
+            instance.valor = instance.procedimento.valor_base
+            
+        if commit:
+            instance.save()
+            
+        return instance
