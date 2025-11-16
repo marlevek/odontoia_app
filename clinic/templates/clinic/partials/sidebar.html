@@ -24,7 +24,8 @@
         <a href="{% url 'clinic:procedimentos_list' %}" class="menu-item">
             <i class="bi bi-tools"></i> Procedimentos
         </a>
-
+        {% endif %}
+        
         {% if assinatura and assinatura.tipo in 'profissional premium' %}
         <a href="{% url 'clinic:dentistas_list' %}" class="menu-item">
             <i class="bi bi-person-badge"></i> Dentistas
