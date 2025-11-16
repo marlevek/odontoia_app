@@ -49,8 +49,6 @@ Nova Consulta - OdontoIA
         </option>
     {% endfor %}
 </select>
-
-
             </div>
 
             <!-- Data -->
@@ -62,8 +60,7 @@ Nova Consulta - OdontoIA
             <!-- Valor -->
             <div class="col-md-3">
                 <label for="{{ form.valor.id_for_label }}" class="form-label">Valor (R$)</label>
-                {{ form.valor }}
-
+               {{ form.valor.as_widget(attrs={"id": "id_valor", "class": "form-control"}) }}
             </div>
 
             <!-- Desconto -->
@@ -168,57 +165,42 @@ Nova Consulta - OdontoIA
 </style>
 
 <script>
-    // ------- Auto preencher VALOR a partir do texto do procedimento -------
-    // Ex: "Aparelho ortodôntico invisível - R$ 1750,00"
-
     document.addEventListener("DOMContentLoaded", function () {
-
+    
         const selectProced = document.getElementById("id_procedimento");
         const inputValor = document.getElementById("id_valor");
         const inputDesconto = document.getElementById("id_desconto");
         const spanValorFinal = document.getElementById("valor-final-label");
-
-        if (!selectProced || !inputValor || !inputDesconto || !spanValorFinal) {
-            return;
-        }
-
+    
         function formatarBR(num) {
-            return num.toLocaleString("pt-BR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            return num.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
         }
-
-        function parseBR(valor) {
-            if (!valor) return 0;
-            return parseFloat(valor.replace(/\./g, "").replace(",", "."));
-        }
-
+    
         function atualizarValor() {
             const opt = selectProced.options[selectProced.selectedIndex];
             if (!opt) return;
-
-            const valorProced = parseFloat(opt.dataset.valor || 0);
-            inputValor.value = formatarBR(valorProced);
-
+    
+            const valor = parseFloat(opt.dataset.valor || 0);
+            inputValor.value = formatarBR(valor);
+    
             atualizarValorFinal();
         }
-
+    
         function atualizarValorFinal() {
-            const v = parseBR(inputValor.value);
-            const d = parseBR(inputDesconto.value);
+            const v = parseFloat(inputValor.value.replace(/\./g, "").replace(",", ".") || 0);
+            const d = parseFloat(inputDesconto.value.replace(/\./g, "").replace(",", ".") || 0);
             const total = Math.max(v - d, 0);
-
+    
             spanValorFinal.textContent = formatarBR(total);
         }
-
+    
         selectProced.addEventListener("change", atualizarValor);
         inputValor.addEventListener("input", atualizarValorFinal);
         inputDesconto.addEventListener("input", atualizarValorFinal);
-
+    
         atualizarValor();
-        atualizarValorFinal();
     });
 </script>
+
 
 {% endblock %}
