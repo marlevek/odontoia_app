@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assinatura OdontoIA - {{ plano|title }}</title>
+    <title>Assinatura OdontoIA - {{ plano_nome }}</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
 
@@ -102,56 +102,78 @@
 <body>
 
 
-<div class="checkout-container">
+    <div class="checkout-container">
 
-    <div class="plan-header">
-        <img src="{% static 'img/logo_odontoIA.png' %}">
-        <h2 class="plan-title">Assinatura OdontoIA – {{ plano|title }}</h2>
+        <div class="plan-header">
+            <img src="{% static 'img/logo_odontoIA.png' %}">
+            <h2 class="plan-title">Assinatura OdontoIA – {{ plano|title }}</h2>
 
-        <p class="plan-price">
-            Valor: <span class="text-success">R$ {{ valor }}</span>/mês
-        </p>
-    </div>
-
-    <!-- Benefícios reforçando valor -->
-    <ul class="benefits-box">
-        <li>✔ Acesso completo ao sistema OdontoIA</li>
-        <li>✔ Dashboard inteligente com indicadores</li>
-        <li>✔ Agenda integrada e gestão de consultas</li>
-        <li>✔ Pacientes, procedimentos e financeiro</li>
-        {% if plano != "basico" %}
-        <li>✔ Cadastro de dentistas adicionais</li>
-        {% endif %}
-        {% if plano == "premium" %}
-        <li>✔ Inteligência Odontológica (IA & Insights)</li>
-        {% endif %}
-        <li>✔ Suporte prioritário</li>
-        <li>✔ Cancelamento simples, sem burocracia</li>
-    </ul>
-
-    <form method="POST">
-        {% csrf_token %}
-
-        <label>Nome completo</label>
-        <input type="text" name="nome" class="form-control mb-3" placeholder="Ex: Dra. Maria Silva" required>
-
-        <label>E-mail</label>
-        <input type="email" name="email" class="form-control mb-4" placeholder="exemplo@clinica.com.br" required>
-
-        <button type="submit" class="btn btn-primary w-100">
-            Ir para pagamento <i class="bi bi-credit-card"></i>
-        </button>
-    </form>
-
-    <div class="security-box">
-        <img src="{% static 'img/mercado-pago-logo.png' %}" alt="Mercado Pago">
-        <div class="security-text">
-            Pagamento seguro via Mercado Pago<br>
-            Ambiente protegido por SSL 🔒
+            <p class="plan-price">
+                Valor: <span class="text-success">R$ {{ valor }}</span>/mês
+            </p>
         </div>
-    </div>
 
-</div>
+        <!-- Benefícios reforçando valor -->
+        <ul class="benefits-box">
+
+            <!-- Benefícios comuns a TODOS os planos -->
+            <li>✔ Acesso completo ao sistema OdontoIA</li>
+            <li>✔ Dashboard inteligente com indicadores</li>
+            <li>✔ Agenda integrada e gestão de consultas</li>
+            <li>✔ Cadastro de pacientes e procedimentos</li>
+
+            <!-- PLANO BÁSICO (apenas o essencial) -->
+            {% if plano_slug == "basico" %}
+            <li>✔ 1 dentista incluso</li>
+            <li>✔ Financeiro básico</li>
+            <li>✔ Cadastro simples de procedimentos</li>
+            {% endif %}
+
+            <!-- PLANO PROFISSIONAL (mais recursos) -->
+            {% if plano_slug == "profissional" %}
+            <li>✔ Até 4 dentistas</li>
+            <li>✔ Financeiro completo</li>
+            <li>✔ Relatórios avançados</li>
+            <li>✔ Suporte via WhatsApp</li>
+            {% endif %}
+
+            <!-- PLANO PREMIUM (tudo incluso) -->
+            {% if plano_slug == "premium" %}
+            <li>✔ Dentistas ilimitados</li>
+            <li>✔ Financeiro avançado + relatórios completos</li>
+            <li>✔ Inteligência Odontológica (IA & Insights)</li>
+            <li>✔ Multiusuário avançado</li>
+            <li>✔ Suporte prioritário VIP</li>
+            {% endif %}
+
+            <!-- Benefícios finais (para todos os planos) -->
+            <li>✔ Cancelamento simples, sem burocracia</li>
+        </ul>
+
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <label>Nome completo</label>
+            <input type="text" name="nome" class="form-control mb-3" placeholder="Ex: Dra. Maria Silva" required>
+
+            <label>E-mail</label>
+            <input type="email" name="email" class="form-control mb-4" placeholder="exemplo@clinica.com.br" required>
+
+            <button type="submit" class="btn btn-primary w-100">
+                Ir para pagamento <i class="bi bi-credit-card"></i>
+            </button>
+        </form>
+
+        <div class="security-box">
+            <img src="{% static 'img/mercado-pago-logo.png' %}" alt="Mercado Pago">
+            <div class="security-text">
+                Pagamento seguro via Mercado Pago<br>
+                Ambiente protegido por SSL 🔒
+            </div>
+        </div>
+
+    </div>
 
 </body>
 

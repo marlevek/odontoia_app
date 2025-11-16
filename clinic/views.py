@@ -1431,7 +1431,8 @@ def checkout_publico(request, plano):
     # GET → mostra o formulário
     if request.method == "GET":
         return render(request, "clinic/checkout_publico.html", {
-            "plano": plano.capitalize(),
+            "plano_nome": plano.capitalize(),
+            "plano_slug": plano,
             "valor": valor
         })
 
