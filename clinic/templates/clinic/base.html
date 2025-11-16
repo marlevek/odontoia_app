@@ -20,6 +20,7 @@
 
 {% if user.is_authenticated %}
     {% include "clinic/partials/sidebar.html" %}
+    <div id="sidebarBackdrop" class="sidebar-backdropp"></div>
 {% endif %}
 
 <div class="main-wrapper {% if user.is_authenticated %}with-sidebar{% endif %}">
@@ -81,6 +82,37 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t).show());
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const sidebar = document.getElementById("sidebar");
+    const toggle = document.getElementById("sidebarToggle");
+    const backdrop = document.getElementById("sidebarBackdrop");
+
+    function openSidebar() {
+        sidebar.classList.add("open");
+        if (backdrop) backdrop.classList.add("show");
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove("open");
+        if (backdrop) backdrop.classList.remove("show");
+    }
+
+    toggle?.addEventListener("click", () => {
+        if (sidebar.classList.contains("open")) {
+            closeSidebar();
+        } else {
+            openSidebar();
+        }
+    });
+
+    backdrop?.addEventListener("click", () => {
+        closeSidebar();
+    });
+
 });
 </script>
 
