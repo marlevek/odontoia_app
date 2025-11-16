@@ -10,6 +10,7 @@ Nova Consulta - OdontoIA
 {% endblock %}
 
 {% block content %}
+
 <h2 class="page-title text-center my-3">
     {% if form.instance.pk %}
         ✏️ Editar Consulta
@@ -21,12 +22,60 @@ Nova Consulta - OdontoIA
 <form method="post" class="container">
     {% csrf_token %}
 
-    <div style="background:#fff; padding:20px; border-radius:12px; max-width:600px; margin:30px auto;
-                box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+    <div class="consulta-card">
+        <div class="row g-3">
 
-        {{ form.as_p }}
+            <div class="col-12">
+                <label for="{{ form.paciente.id_for_label }}" class="form-label">Paciente</label>
+                {{ form.paciente }}
+            </div>
 
-        <div class="mt-3 text-end">
+            <div class="col-md-6">
+                <label for="{{ form.dentista.id_for_label }}" class="form-label">Dentista</label>
+                {{ form.dentista }}
+            </div>
+
+            <div class="col-md-6">
+                <label for="{{ form.procedimento.id_for_label }}" class="form-label">Procedimento</label>
+                {{ form.procedimento }}
+            </div>
+
+            <div class="col-md-6">
+                <label for="{{ form.data.id_for_label }}" class="form-label">Data</label>
+                {{ form.data }}
+            </div>
+
+            <div class="col-md-3">
+                <label for="{{ form.valor.id_for_label }}" class="form-label">Valor</label>
+                {# id_valor garantido pro JS #}
+                {{ form.valor.as_widget(attrs={'id': 'id_valor', 'class': 'form-control'}) }}
+            </div>
+
+            <div class="col-md-3">
+                <label for="{{ form.desconto.id_for_label }}" class="form-label">Desconto</label>
+                {{ form.desconto }}
+                <small class="text-muted">Desconto em R$</small>
+            </div>
+
+            <div class="col-md-6 d-flex align-items-center gap-3 mt-2">
+                <div class="form-check">
+                    {{ form.concluida }}
+                    <label class="form-check-label" for="{{ form.concluida.id_for_label }}">Concluída</label>
+                </div>
+                <div class="form-check">
+                    {{ form.paga }}
+                    <label class="form-check-label" for="{{ form.paga.id_for_label }}">Paga</label>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>
+                {{ form.observacoes }}
+            </div>
+
+        </div>
+
+        <div class="mt-4 text-end">
             <button type="submit" class="btn btn-primary">💾 Salvar</button>
             <a href="{% url 'clinic:consultas_list' %}" class="btn btn-secondary">Cancelar</a>
         </div>
@@ -34,62 +83,51 @@ Nova Consulta - OdontoIA
 </form>
 
 <style>
-    h2 {
-        color: #0b5394;
+    .consulta-card {
+        background:#fff;
+        padding:20px;
+        border-radius:12px;
+        max-width:700px;
+        margin:30px auto;
+        box-shadow:0 2px 6px rgba(0,0,0,0.1);
     }
-
+    .page-title {
+        color:#0b5394;
+    }
     .btn-primary {
-        background-color: #0b5394;
-        border: none;
+        background-color:#0b5394;
+        border:none;
     }
-
     .btn-primary:hover {
-        background-color: #083b6b;
+        background-color:#083b6b;
     }
 </style>
 
-<!-- AUTO-PREENCHER VALOR DO PROCEDIMENTO -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+// Preenche automaticamente o campo "Valor" com base no texto do procedimento
+document.addEventListener("DOMContentLoaded", function() {
+    const selectProced = document.getElementById("id_procedimento");
+    const inputValor   = document.getElementById("id_valor");
 
-    const procedimentoSelect = document.querySelector("select[name='procedimento']");
-    const valorInput = document.querySelector("input[name='valor']");
+    if (!selectProced || !inputValor) return;
 
-    if (!procedimentoSelect || !valorInput) return;
+    function atualizarValor() {
+        const opt = selectProced.options[selectProced.selectedIndex];
+        if (!opt) return;
 
-    procedimentoSelect.addEventListener("change", () => {
-        const procedimentoId = procedimentoSelect.value;
-
-        if (!procedimentoId) {
-            valorInput.value = "";
-            return;
+        const texto = opt.text || "";
+        // procura algo como "R$ 1750.00" ou "R$ 1.750,00"
+        const match = texto.match(/R\$\s*([\d\.\,]+)/);
+        if (match) {
+            let v = match[1].replace(/\./g, "").replace(",", ".");
+            inputValor.value = v;
         }
+    }
 
-        fetch(`/procedimentos/${procedimentoId}/valor/`)
-            .then(response => response.json())
-            .then(data => {
-                valorInput.value = data.valor;
-            });
-    });
-
+    // ao carregar e ao mudar
+    atualizarValor();
+    selectProced.addEventListener("change", atualizarValor);
 });
 </script>
-
-{% endblock %}
-
-<style>
-    h2 {
-        color: #0b5394;
-    }
-
-    .btn-primary {
-        background-color: #0b5394;
-        border: none;
-    }
-
-    .btn-primary:hover {
-        background-color: #083b6b;
-    }
-</style>
 
 {% endblock %}

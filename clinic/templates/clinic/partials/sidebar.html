@@ -1,17 +1,16 @@
 {% load static %}
 
-{% if user.is_authenticated %}
 <aside id="sidebar" class="sidebar">
 
     <div class="sidebar-header">
         <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo" class="sidebar-logo">
         <span class="sidebar-title">OdontoIA</span>
-        <button class="sidebar-toggle d-md-none" id="sidebarToggle">☰</button>
     </div>
 
     <nav class="sidebar-menu">
 
-        <a href="{% url 'clinic:dashboard' %}" class="menu-item {% if request.path == '/dashboard/' %}active{% endif %}">
+        <a href="{% url 'clinic:dashboard' %}"
+           class="menu-item {% if request.path == '/dashboard/' %}active{% endif %}">
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
 
@@ -43,7 +42,6 @@
 
         {% if assinatura and assinatura.tipo in 'profissional premium' %}
         <div class="menu-group-title">Financeiro</div>
-
         <a href="{% url 'clinic:financeiro_resumo' %}" class="menu-item">
             <i class="bi bi-cash-coin"></i> Financeiro
         </a>
@@ -57,7 +55,6 @@
         {% endif %}
 
         <div class="menu-group-title">Conta</div>
-
         <a href="{% url 'clinic:logout' %}" class="menu-item logout">
             <i class="bi bi-box-arrow-right"></i> Sair
         </a>
@@ -65,4 +62,3 @@
     </nav>
 
 </aside>
-{% endif %}

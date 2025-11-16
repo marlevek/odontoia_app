@@ -54,11 +54,11 @@
     <tbody>
       {% for p in pacientes %}
       <tr>
-        <td>{{ p.nome }}</td>
-        <td>{{ p.cpf }}</td>
-        <td>{{ p.telefone }}</td>
-        <td>{{ p.cidade }}</td>
-        <td>
+        <td data-label="Nome">{{ p.nome }}</td>
+        <td data-label="CPF">{{ p.cpf }}</td>
+        <td data-label="Telefone">{{ p.telefone }}</td>
+        <td data-label="Cidade">{{ p.cidade }}</td>
+        <td data-label="Ações">
           <a href="{% url 'clinic:paciente_update' p.id %}" class="acao editar">✏️ Editar</a>
           <a href="{% url 'clinic:paciente_delete' p.id %}" class="acao excluir">🗑️ Excluir</a>
         </td>
