@@ -55,6 +55,7 @@ urlpatterns = [
     path('procedimentos/', views.procedimentos_list, name='procedimentos_list'),
     path('procedimentos/novo/', views.procedimento_create,
          name='procedimento_create'),
+    path('procedimentos/<int:id>/valor/', views.procedimentos_valor, name='procedimentos_valor'),
     path('procedimentos/<int:id>/editar/',
          views.procedimento_edit, name='procedimento_edit'),
     path('procedimentos/<int:pk>/excluir/', views.procedimento_delete, name=

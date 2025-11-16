@@ -1019,6 +1019,11 @@ def procedimentos_list(request):
     return render(request, 'clinic/procedimentos_list.html', {'procedimentos': procedimentos})
 
 
+def procedimento_valor(request, id):
+    procedimento = Procedimento.objects.get(id=id)
+    return JsonResponse({'valor': procedimento_valor})
+
+
 @login_required
 @require_active_subscription
 def procedimento_create(request):

@@ -21,6 +21,9 @@
 {% if user.is_authenticated %}
     {% include "clinic/partials/sidebar.html" %}
     <div id="sidebarBackdrop" class="sidebar-backdropp"></div>
+    <button id="menuToggleMobile" class="menu-toggle-mobile d-md-none">
+    ☰
+</button>
 {% endif %}
 
 <div class="main-wrapper {% if user.is_authenticated %}with-sidebar{% endif %}">
@@ -85,36 +88,30 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-
+document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById("sidebar");
-    const toggle = document.getElementById("sidebarToggle");
-    const backdrop = document.getElementById("sidebarBackdrop");
+    const toggleMobile = document.getElementById("menuToggleMobile");
 
-    function openSidebar() {
-        sidebar.classList.add("open");
-        if (backdrop) backdrop.classList.add("show");
+    if (toggleMobile) {
+        toggleMobile.addEventListener("click", function () {
+            sidebar.classList.toggle("open");
+        });
     }
-
-    function closeSidebar() {
-        sidebar.classList.remove("open");
-        if (backdrop) backdrop.classList.remove("show");
-    }
-
-    toggle?.addEventListener("click", () => {
-        if (sidebar.classList.contains("open")) {
-            closeSidebar();
-        } else {
-            openSidebar();
-        }
-    });
-
-    backdrop?.addEventListener("click", () => {
-        closeSidebar();
-    });
-
 });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const sidebar = document.getElementById("sidebar");
+    const toggleMobile = document.getElementById("menuToggleMobile");
+
+    if (toggleMobile) {
+        toggleMobile.addEventListener("click", function () {
+            sidebar.classList.toggle("open");
+        });
+    }
+});
+</script>
+
 
 </body>
 </html>

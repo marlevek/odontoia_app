@@ -1,9 +1,22 @@
 {% extends "clinic/base.html" %}
 {% load static %}
-{% block title %}{{ titulo }}{% endblock %}
+
+{% block title %}
+{% if form.instance.pk %}
+Editar Consulta - OdontoIA
+{% else %}
+Nova Consulta - OdontoIA
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<h2 class="text-center my-3">🦷 {{ titulo }}</h2>
+<h2 class="page-title text-center my-3">
+    {% if form.instance.pk %}
+        ✏️ Editar Consulta
+    {% else %}
+        🦷 Agendar Nova Consulta
+    {% endif %}
+</h2>
 
 <form method="post" class="container">
     {% csrf_token %}
@@ -24,10 +37,56 @@
     h2 {
         color: #0b5394;
     }
+
     .btn-primary {
         background-color: #0b5394;
         border: none;
     }
+
+    .btn-primary:hover {
+        background-color: #083b6b;
+    }
+</style>
+
+<!-- AUTO-PREENCHER VALOR DO PROCEDIMENTO -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const procedimentoSelect = document.querySelector("select[name='procedimento']");
+    const valorInput = document.querySelector("input[name='valor']");
+
+    if (!procedimentoSelect || !valorInput) return;
+
+    procedimentoSelect.addEventListener("change", () => {
+        const procedimentoId = procedimentoSelect.value;
+
+        if (!procedimentoId) {
+            valorInput.value = "";
+            return;
+        }
+
+        fetch(`/procedimentos/${procedimentoId}/valor/`)
+            .then(response => response.json())
+            .then(data => {
+                valorInput.value = data.valor;
+            });
+    });
+
+});
+</script>
+
+{% endblock %}
+
+<style>
+    h2 {
+        color: #0b5394;
+    }
+
+    .btn-primary {
+        background-color: #0b5394;
+        border: none;
+    }
+
     .btn-primary:hover {
         background-color: #083b6b;
     }
