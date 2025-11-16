@@ -281,3 +281,40 @@ textarea {
         width: 100%;
     }
 }
+
+/* 🩺 Tabelas responsivas reais */
+@media (max-width: 768px) {
+
+    table thead {
+        display: none;
+    }
+
+    table.table, 
+    table.table tbody, 
+    table.table tr, 
+    table.table td {
+        display: block;
+        width: 100%;
+    }
+
+    table.table tr {
+        margin-bottom: 0.75rem;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+        padding: 8px 12px;
+    }
+
+    table.table td {
+        border: none;
+        padding: 4px 0;
+    }
+
+    table.table td::before {
+        content: attr(data-label) ": ";
+        font-weight: 600;
+        color: #555;
+        display: inline-block;
+        min-width: 90px;
+    }
+}

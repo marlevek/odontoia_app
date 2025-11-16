@@ -109,16 +109,23 @@ class ProcedimentoForm(forms.ModelForm):
 
 
 class ConsultaForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        # Garantir IDs e classes
+        self.fields["valor"].widget.attrs.update({
+            "id": "id_valor",
+            "class": "form-control"
+        })
+        self.fields["desconto"].widget.attrs.update({
+            "id": "id_desconto",
+            "class": "form-control"
+        })
+        self.fields["procedimento"].widget.attrs.update({
+            "id": "id_procedimento",
+            "class": "form-select"
+        })
+
     class Meta:
         model = Consulta
-        fields = '__all__'
-
-        widgets = {
-            'valor': forms.NumberInput(
-                attrs={
-                    'id': 'id_valor',
-                    'class': 'form-control',
-                    'step': '0.01'
-                }
-            ),
-        }
+        fields = "__all__"

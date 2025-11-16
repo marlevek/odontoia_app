@@ -2,20 +2,20 @@
 {% load static %}
 
 {% block title %}
-    {% if form.instance.pk %}
-        Editar Consulta - OdontoIA
-    {% else %}
-        Nova Consulta - OdontoIA
-    {% endif %}
+{% if form.instance.pk %}
+Editar Consulta - OdontoIA
+{% else %}
+Nova Consulta - OdontoIA
+{% endif %}
 {% endblock %}
 
 {% block content %}
 
 <h2 class="page-title text-center my-3">
     {% if form.instance.pk %}
-        ✏️ Editar Consulta
+    ✏️ Editar Consulta
     {% else %}
-        🦷 Agendar Nova Consulta
+    🦷 Agendar Nova Consulta
     {% endif %}
 </h2>
 
@@ -52,6 +52,7 @@
             <!-- Valor -->
             <div class="col-md-3">
                 <label for="{{ form.valor.id_for_label }}" class="form-label">Valor (R$)</label>
+                {{ form.valor.as_widget.attrs.update({"id": "id_valor"}) }}
                 {{ form.valor }}
             </div>
 
@@ -112,7 +113,7 @@
         border-radius: 12px;
         max-width: 800px;
         margin: 30px auto;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
     }
 
     .page-title {
@@ -157,65 +158,65 @@
 </style>
 
 <script>
-// ------- Auto preencher VALOR a partir do texto do procedimento -------
-// Ex: "Aparelho ortodôntico invisível - R$ 1750,00"
-document.addEventListener("DOMContentLoaded", function() {
-    const selectProced   = document.getElementById("id_procedimento");
-    const inputValor     = document.getElementById("id_valor");
-    const inputDesconto  = document.getElementById("id_desconto");
-    const spanValorFinal = document.getElementById("valor-final-label");
+    // ------- Auto preencher VALOR a partir do texto do procedimento -------
+    // Ex: "Aparelho ortodôntico invisível - R$ 1750,00"
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectProced = document.getElementById("id_procedimento");
+        const inputValor = document.getElementById("id_valor");
+        const inputDesconto = document.getElementById("id_desconto");
+        const spanValorFinal = document.getElementById("valor-final-label");
 
-    if (!selectProced || !inputValor || !inputDesconto || !spanValorFinal) {
-        return;
-    }
-
-    function normalizarNumeroBR(valorStr) {
-        if (!valorStr) return 0;
-        // remove pontos de milhar e troca vírgula por ponto
-        valorStr = valorStr.replace(/\./g, "").replace(",", ".");
-        const n = parseFloat(valorStr);
-        return isNaN(n) ? 0 : n;
-    }
-
-    function formatarBR(numero) {
-        return numero.toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    }
-
-    function atualizarValorPeloProcedimento() {
-        const opt = selectProced.options[selectProced.selectedIndex];
-        if (!opt) return;
-
-        const texto = opt.text || "";
-        // procura "R$ 250", "R$ 1.750,00", etc
-        const match = texto.match(/R\$\s*([\d\.\,]+)/);
-        if (match) {
-            let v = match[1];
-            // preenche o campo de valor já normalizado para o usuário (pt-BR)
-            const num = normalizarNumeroBR(v);
-            inputValor.value = formatarBR(num);
+        if (!selectProced || !inputValor || !inputDesconto || !spanValorFinal) {
+            return;
         }
+
+        function normalizarNumeroBR(valorStr) {
+            if (!valorStr) return 0;
+            // remove pontos de milhar e troca vírgula por ponto
+            valorStr = valorStr.replace(/\./g, "").replace(",", ".");
+            const n = parseFloat(valorStr);
+            return isNaN(n) ? 0 : n;
+        }
+
+        function formatarBR(numero) {
+            return numero.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function atualizarValorPeloProcedimento() {
+            const opt = selectProced.options[selectProced.selectedIndex];
+            if (!opt) return;
+
+            const texto = opt.text || "";
+            // procura "R$ 250", "R$ 1.750,00", etc
+            const match = texto.match(/R\$\s*([\d\.\,]+)/);
+            if (match) {
+                let v = match[1];
+                // preenche o campo de valor já normalizado para o usuário (pt-BR)
+                const num = normalizarNumeroBR(v);
+                inputValor.value = formatarBR(num);
+            }
+            atualizarValorFinal();
+        }
+
+        function atualizarValorFinal() {
+            const v = normalizarNumeroBR(inputValor.value);
+            const d = normalizarNumeroBR(inputDesconto.value);
+            const total = Math.max(v - d, 0);
+            spanValorFinal.textContent = formatarBR(total);
+        }
+
+        // Eventos
+        selectProced.addEventListener("change", atualizarValorPeloProcedimento);
+        inputValor.addEventListener("input", atualizarValorFinal);
+        inputDesconto.addEventListener("input", atualizarValorFinal);
+
+        // Inicialização (carrega valor se já tiver escolhido procedimento ou se estiver editando)
+        atualizarValorPeloProcedimento();
         atualizarValorFinal();
-    }
-
-    function atualizarValorFinal() {
-        const v = normalizarNumeroBR(inputValor.value);
-        const d = normalizarNumeroBR(inputDesconto.value);
-        const total = Math.max(v - d, 0);
-        spanValorFinal.textContent = formatarBR(total);
-    }
-
-    // Eventos
-    selectProced.addEventListener("change", atualizarValorPeloProcedimento);
-    inputValor.addEventListener("input", atualizarValorFinal);
-    inputDesconto.addEventListener("input", atualizarValorFinal);
-
-    // Inicialização (carrega valor se já tiver escolhido procedimento ou se estiver editando)
-    atualizarValorPeloProcedimento();
-    atualizarValorFinal();
-});
+    });
 </script>
 
 {% endblock %}
