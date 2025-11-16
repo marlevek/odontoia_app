@@ -1,5 +1,7 @@
 {% load static %}
 
+{% if user.is_authenticated %}
+<aside id="sidebar" class="sidebar">
 <!-- ===== SIDEBAR ===== -->
 <aside id="sidebar" class="sidebar">
 
@@ -64,6 +66,7 @@
     </nav>
 
 </aside>
+{% endif %}
 
 <!-- ===== CSS DO SIDEBAR ===== -->
 <style>
