@@ -44,9 +44,9 @@ Nova Consulta - OdontoIA
                     <option value="">---------</option>
 
                     {% for proc in form.fields.procedimento.queryset %}
-                    <option value="{{ proc.id }}" data-valor="{{ proc.valor }}" 
-                        {% if form.instance.pk and form.instance.procedimento and form.instance.procedimento.id == proc.id %}selected{% endif %}>
-                        {{ proc.nome }} - R$ {{ proc.valor|floatformat:2 }}
+                    <option value="{{ proc.id }}" data-valor="{{ proc.valor_base }}" {% if form.instance.pk and
+                        form.instance.procedimento and form.instance.procedimento.id==proc.id %}selected{% endif %}>
+                        {{ proc.nome }} - R$ {{ proc.valor_base|floatformat:2 }}
                     </option>
                     {% endfor %}
                 </select>
@@ -178,25 +178,35 @@ Nova Consulta - OdontoIA
         const inputDesconto = document.getElementById("id_desconto");
         const spanValorFinal = document.getElementById("valor-final-label");
 
+        if (!selectProced || !inputValor || !inputDesconto || !spanValorFinal) {
+            return;
+        }
+
         function formatarBR(num) {
-            return num.toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+            return num.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function parseBR(valor) {
+            if (!valor) return 0;
+            return parseFloat(valor.replace(/\./g, "").replace(",", "."));
         }
 
         function atualizarValor() {
             const opt = selectProced.options[selectProced.selectedIndex];
             if (!opt) return;
 
-            const valor = parseFloat(opt.dataset.valor || 0);
-
-            // Preencher automaticamente o input
-            inputValor.value = formatarBR(valor);
+            const valorProced = parseFloat(opt.dataset.valor || 0);
+            inputValor.value = formatarBR(valorProced);
 
             atualizarValorFinal();
         }
 
         function atualizarValorFinal() {
-            const v = parseFloat(inputValor.value.replace(/\./g, "").replace(",", ".") || 0);
-            const d = parseFloat(inputDesconto.value.replace(/\./g, "").replace(",", ".") || 0);
+            const v = parseBR(inputValor.value);
+            const d = parseBR(inputDesconto.value);
             const total = Math.max(v - d, 0);
 
             spanValorFinal.textContent = formatarBR(total);
@@ -207,6 +217,7 @@ Nova Consulta - OdontoIA
         inputDesconto.addEventListener("input", atualizarValorFinal);
 
         atualizarValor();
+        atualizarValorFinal();
     });
 </script>
 
