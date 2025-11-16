@@ -1,6 +1,6 @@
 from django import forms
 from validate_docbr import CPF
-from .models import Paciente, Procedimento, Dentista
+from .models import Paciente, Procedimento, Dentista, Consulta
 from django.conf import settings 
 from django.core.validators import EmailValidator 
 from django.core.exceptions import ValidationError
@@ -106,3 +106,19 @@ class ProcedimentoForm(forms.ModelForm):
             'descricao': forms.Textarea(attrs={'rows': 3}),
             'valor_base': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),   
             }
+
+
+class ConsultaForm(forms.ModelForm):
+    class Meta:
+        model = Consulta
+        fields = '__all__'
+
+        widgets = {
+            'valor': forms.NumberInput(
+                attrs={
+                    'id': 'id_valor',
+                    'class': 'form-control',
+                    'step': '0.01'
+                }
+            ),
+        }

@@ -89,22 +89,40 @@
         {% endfor %}
     </div>
 
-    <script>
-    document.addEventListener("DOMContentLoaded", () => {
-        // Toasts
-        document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t).show());
+   <script>
+document.addEventListener("DOMContentLoaded", () => {
 
-        // Sidebar mobile
-        const sidebar = document.getElementById("sidebar");
-        const toggleBtn = document.getElementById("menuToggle");
+    const sidebar = document.getElementById("sidebar");
+    const toggle = document.getElementById("sidebarToggle");
 
-        if (sidebar && toggleBtn) {
-            toggleBtn.addEventListener("click", () => {
-                sidebar.classList.toggle("open");
-            });
-        }
+    // Criar overlay
+    const overlay = document.createElement("div");
+    overlay.id = "sidebar-overlay";
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "rgba(0,0,0,0.4)";
+    overlay.style.zIndex = "999";
+    overlay.style.display = "none";
+    document.body.appendChild(overlay);
+
+    // Abre
+    toggle.addEventListener("click", () => {
+        sidebar.classList.toggle("open");
+        overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
     });
-    </script>
+
+    // Fecha ao clicar fora
+    overlay.addEventListener("click", () => {
+        sidebar.classList.remove("open");
+        overlay.style.display = "none";
+    });
+
+});
+</script>
+
 
 </body>
 </html>
