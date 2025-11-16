@@ -43,8 +43,8 @@ Nova Consulta - OdontoIA
                     <option value="">---------</option>
 
                     {% for proc in form.fields.procedimento.queryset %}
-                    <option value="{{ proc.id }}" data-valor="{{ proc.valor }}">
-                        {{ proc.nome }} - R$ {{ proc.valor|floatformat:2 }}
+                    <option value="{{ procedminto.id }}" data-valor="{{ procedimnto.valor }}">
+                        {{ procedimento.nome }} - R$ {{ procedimento.valor|floatformat:2 }}
                     </option>
                     {% endfor %}
                 </select>
