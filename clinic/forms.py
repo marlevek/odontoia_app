@@ -111,18 +111,29 @@ class ProcedimentoForm(forms.ModelForm):
 class ConsultaForm(forms.ModelForm):
     class Meta:
         model = Consulta
-        fields = "__all__"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Garante IDs necessários para o JS
-        self.fields["valor"].widget.attrs.update({
-            "id": "id_valor",
-            "class": "form-control"
-        })
-
-        self.fields["procedimento"].widget.attrs.update({
-            "id": "id_procedimento",
-            "class": "form-select"
-        })
+        fields = '__all__'
+        widgets = {
+            'valor': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'id': 'id_valor',
+                'step': '0.01',
+                'placeholder': '0,00'
+            }),
+            'desconto': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'id': 'id_desconto',
+                'step': '0.01',
+                'placeholder': '0,00'
+            }),
+            'paciente': forms.Select(attrs={'class': 'form-select'}),
+            'dentista': forms.Select(attrs={'class': 'form-select'}),
+            'procedimento': forms.Select(attrs={'class': 'form-select', 'id': 'id_procedimento'}),
+            'data': forms.DateTimeInput(attrs={
+                'class': 'form-control',
+                'type': 'datetime-local'
+            }),
+            'observacoes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3
+            }),
+        }
