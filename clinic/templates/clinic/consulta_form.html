@@ -183,18 +183,12 @@ Nova Consulta - OdontoIA
             });
         }
 
-        function parseBR(valor) {
-            if (!valor) return 0;
-            // Remove pontos de milhar e converte vírgula decimal para ponto
-            return parseFloat(valor.toString().replace(/\./g, '').replace(',', '.'));
-        }
-
         function atualizarValor() {
             const opt = selectProced.options[selectProced.selectedIndex];
             
             if (!opt || !opt.value) {
-                // Se nenhum procedimento selecionado, limpa o valor
-                inputValor.value = "0,00";
+                // Se nenhum procedimento selecionado, zera o valor
+                inputValor.value = "0.00";
                 atualizarValorFinal();
                 return;
             }
@@ -202,17 +196,18 @@ Nova Consulta - OdontoIA
             // Pega o valor do data-valor (que vem do valor_base do procedimento)
             const valorProcedimento = parseFloat(opt.dataset.valor || 0);
             
-            // Preenche automaticamente o campo valor
-            inputValor.value = formatarBR(valorProcedimento);
+            // Para campo number, usa ponto decimal
+            inputValor.value = valorProcedimento.toFixed(2);
             
             atualizarValorFinal();
         }
 
         function atualizarValorFinal() {
-            const valor = parseBR(inputValor.value);
-            const desconto = parseBR(inputDesconto.value);
+            const valor = parseFloat(inputValor.value || 0);
+            const desconto = parseFloat(inputDesconto.value || 0);
             const total = Math.max(valor - desconto, 0);
 
+            // Formata apenas para exibição
             spanValorFinal.textContent = formatarBR(total);
         }
 
@@ -223,6 +218,11 @@ Nova Consulta - OdontoIA
 
         // Inicializar valores quando a página carrega
         atualizarValor();
+        
+        // Também inicializa se já tiver um procedimento selecionado (edição)
+        if (selectProced.value) {
+            atualizarValor();
+        }
     });
 </script>
 
