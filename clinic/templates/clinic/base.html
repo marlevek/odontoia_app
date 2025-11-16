@@ -20,13 +20,15 @@
 <body>
 
     {% if user.is_authenticated %}
-        <!-- Botão hamburguer (MOBILE) -->
-        <button id="menuToggle" class="menu-toggle" aria-label="Abrir menu">
-            <i class="bi bi-list"></i>
-        </button>
+    <!-- Botão hamburguer (MOBILE) -->
+    <button id="sidebarToggle" class="menu-toggle" aria-label="Abrir menu">
+        <i class="bi bi-list"></i>
+    </button>
 
-        <!-- Sidebar -->
-        {% include "clinic/partials/sidebar.html" %}
+
+
+    <!-- Sidebar -->
+    {% include "clinic/partials/sidebar.html" %}
     {% endif %}
 
     <!-- Wrapper principal -->
@@ -37,36 +39,37 @@
             {# Avisos de trial / expirada / renovação #}
             {% if user.is_authenticated and trial %}
 
-                {% if trial.expirada %}
-                    <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3 mx-1">
-                        <div>
-                            🚫 <strong>Assinatura expirada.</strong>
-                            Seu período de teste terminou
-                            {% if trial.fim_teste %} em {{ trial.fim_teste|date:"d/m/Y" }} {% endif %}.
-                        </div>
-                        <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-light btn-sm">
-                            Ver planos
-                        </a>
-                    </div>
+            {% if trial.expirada %}
+            <div class="alert alert-danger d-flex align-items-center justify-content-between mt-3 mx-1">
+                <div>
+                    🚫 <strong>Assinatura expirada.</strong>
+                    Seu período de teste terminou
+                    {% if trial.fim_teste %} em {{ trial.fim_teste|date:"d/m/Y" }} {% endif %}.
+                </div>
+                <a href="https://odontoia.codertec.com.br" target="_blank" class="btn btn-light btn-sm">
+                    Ver planos
+                </a>
+            </div>
 
-                {% elif trial.ativo and trial.dias_restantes and trial.dias_restantes <= 3 %}
-                    <div class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mx-1">
-                        <div>
-                            ⏳ Seu teste termina em
-                            <strong>{{ trial.dias_restantes }} dia{% if trial.dias_restantes != 1 %}s{% endif %}</strong>.
-                        </div>
+            {% elif trial.ativo and trial.dias_restantes and trial.dias_restantes <= 3 %} <div
+                class="alert alert-warning d-flex align-items-center justify-content-between mt-3 mx-1">
+                <div>
+                    ⏳ Seu teste termina em
+                    <strong>{{ trial.dias_restantes }} dia{% if trial.dias_restantes != 1 %}s{% endif %}</strong>.
+                </div>
 
-                        <div class="btn-group">
-                            <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-primary btn-sm">Básico</a>
-                            <a href="{% url 'clinic:criar_pagamento' 'profissional' %}" class="btn btn-warning btn-sm">Profissional</a>
-                            <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-dark btn-sm">Premium</a>
-                        </div>
-                    </div>
-                {% endif %}
-            {% endif %}
+                <div class="btn-group">
+                    <a href="{% url 'clinic:criar_pagamento' 'basico' %}" class="btn btn-primary btn-sm">Básico</a>
+                    <a href="{% url 'clinic:criar_pagamento' 'profissional' %}"
+                        class="btn btn-warning btn-sm">Profissional</a>
+                    <a href="{% url 'clinic:criar_pagamento' 'premium' %}" class="btn btn-dark btn-sm">Premium</a>
+                </div>
+    </div>
+    {% endif %}
+    {% endif %}
 
-            {% block content %}{% endblock %}
-        </main>
+    {% block content %}{% endblock %}
+    </main>
     </div>
 
     <footer class="footer">
@@ -79,50 +82,52 @@
     <!-- Toasts Django -->
     <div class="toast-container position-fixed top-0 end-0 p-3">
         {% for message in messages %}
-        <div class="toast text-bg-info border-0 mb-2" data-bs-delay="4000" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast text-bg-info border-0 mb-2" data-bs-delay="4000" role="alert" aria-live="assertive"
+            aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">{{ message }}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast" aria-label="Fechar"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                    aria-label="Fechar"></button>
             </div>
         </div>
         {% endfor %}
     </div>
 
-   <script>
-document.addEventListener("DOMContentLoaded", () => {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
 
-    const sidebar = document.getElementById("sidebar");
-    const toggle = document.getElementById("sidebarToggle");
+            const sidebar = document.getElementById("sidebar");
+            const toggle = document.getElementById("sidebarToggle");
 
-    // Criar overlay
-    const overlay = document.createElement("div");
-    overlay.id = "sidebar-overlay";
-    overlay.style.position = "fixed";
-    overlay.style.top = "0";
-    overlay.style.left = "0";
-    overlay.style.width = "100%";
-    overlay.style.height = "100%";
-    overlay.style.background = "rgba(0,0,0,0.4)";
-    overlay.style.zIndex = "999";
-    overlay.style.display = "none";
-    document.body.appendChild(overlay);
+            // Criar overlay
+            const overlay = document.createElement("div");
+            overlay.id = "sidebar-overlay";
+            overlay.style.position = "fixed";
+            overlay.style.top = "0";
+            overlay.style.left = "0";
+            overlay.style.width = "100%";
+            overlay.style.height = "100%";
+            overlay.style.background = "rgba(0,0,0,0.4)";
+            overlay.style.zIndex = "999";
+            overlay.style.display = "none";
+            document.body.appendChild(overlay);
 
-    // Abre
-    toggle.addEventListener("click", () => {
-        sidebar.classList.toggle("open");
-        overlay.style.display = sidebar.classList.contains("open") ? "block" : "none";
-    });
+            // Abre
+            toggle.addEventListener("click", () => {
+                sidebar.classList.add("open");
+                overlay.style.display = "block";
+            });
 
-    // Fecha ao clicar fora
-    overlay.addEventListener("click", () => {
-        sidebar.classList.remove("open");
-        overlay.style.display = "none";
-    });
+            // Fecha ao clicar fora
+            overlay.addEventListener("click", () => {
+                sidebar.classList.remove("open");
+                overlay.style.display = "none";
+            });
 
-});
-</script>
+        });
+    </script>
 
 
 </body>
+
 </html>
