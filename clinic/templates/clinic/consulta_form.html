@@ -2,11 +2,11 @@
 {% load static %}
 
 {% block title %}
-{% if form.instance.pk %}
-Editar Consulta - OdontoIA
-{% else %}
-Nova Consulta - OdontoIA
-{% endif %}
+    {% if form.instance.pk %}
+        Editar Consulta - OdontoIA
+    {% else %}
+        Nova Consulta - OdontoIA
+    {% endif %}
 {% endblock %}
 
 {% block content %}
@@ -25,62 +25,79 @@ Nova Consulta - OdontoIA
     <div class="consulta-card">
         <div class="row g-3">
 
+            <!-- Paciente -->
             <div class="col-12">
-                <label class="form-label">Paciente</label>
+                <label for="{{ form.paciente.id_for_label }}" class="form-label">Paciente</label>
                 {{ form.paciente }}
             </div>
 
+            <!-- Dentista -->
             <div class="col-md-6">
-                <label class="form-label">Dentista</label>
+                <label for="{{ form.dentista.id_for_label }}" class="form-label">Dentista</label>
                 {{ form.dentista }}
             </div>
 
+            <!-- Procedimento -->
             <div class="col-md-6">
-                <label class="form-label">Procedimento</label>
+                <label for="{{ form.procedimento.id_for_label }}" class="form-label">Procedimento</label>
                 {{ form.procedimento }}
             </div>
 
+            <!-- Data -->
             <div class="col-md-6">
-                <label class="form-label">Data</label>
+                <label for="{{ form.data.id_for_label }}" class="form-label">Data</label>
                 {{ form.data }}
             </div>
 
-            <!-- 🔥 VALOR CORRIGIDO COM ID MANUAL -->
+            <!-- Valor -->
             <div class="col-md-3">
-                <label class="form-label" for="id_valor">Valor</label>
-
-                <input type="number" step="0.01"
-                       id="id_valor"
-                       name="valor"
-                       class="form-control"
-                       value="{{ form.instance.valor|default_if_none:'' }}">
+                <label for="{{ form.valor.id_for_label }}" class="form-label">Valor (R$)</label>
+                {{ form.valor }}
             </div>
 
+            <!-- Desconto -->
             <div class="col-md-3">
-                <label class="form-label">Desconto</label>
+                <label for="{{ form.desconto.id_for_label }}" class="form-label">Desconto (R$)</label>
                 {{ form.desconto }}
-                <small class="text-muted">Desconto em R$</small>
+                <small class="text-muted">Desconto em reais</small>
             </div>
 
+            <!-- Concluída / Paga -->
             <div class="col-md-6 d-flex align-items-center gap-3 mt-2">
                 <div class="form-check">
                     {{ form.concluida }}
-                    <label class="form-check-label">Concluída</label>
+                    <label class="form-check-label" for="{{ form.concluida.id_for_label }}">Concluída</label>
                 </div>
-
                 <div class="form-check">
                     {{ form.paga }}
-                    <label class="form-check-label">Paga</label>
+                    <label class="form-check-label" for="{{ form.paga.id_for_label }}">Paga</label>
                 </div>
             </div>
 
+            <!-- Observações -->
             <div class="col-12">
-                <label class="form-label">Observações</label>
+                <label for="{{ form.observacoes.id_for_label }}" class="form-label">Observações</label>
                 {{ form.observacoes }}
             </div>
 
         </div>
 
+        <!-- CARD DE VALOR FINAL -->
+        <div class="valor-final-card mt-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">Valor final da consulta</h5>
+                    <small class="text-light opacity-75">
+                        Calculado automaticamente: Valor – Desconto
+                    </small>
+                </div>
+                <div class="valor-final-valor">
+                    R$ <span id="valor-final-label">0,00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botões -->
         <div class="mt-4 text-end">
             <button type="submit" class="btn btn-primary">💾 Salvar</button>
             <a href="{% url 'clinic:consultas_list' %}" class="btn btn-secondary">Cancelar</a>
@@ -90,52 +107,114 @@ Nova Consulta - OdontoIA
 
 <style>
     .consulta-card {
-        background:#fff;
-        padding:20px;
-        border-radius:12px;
-        max-width:700px;
-        margin:30px auto;
-        box-shadow:0 2px 6px rgba(0,0,0,0.1);
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 800px;
+        margin: 30px auto;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
+
     .page-title {
-        color:#0b5394;
+        color: #0b5394;
+        font-weight: 600;
     }
+
     .btn-primary {
-        background-color:#0b5394;
-        border:none;
+        background-color: #0b5394;
+        border: none;
     }
+
     .btn-primary:hover {
-        background-color:#083b6b;
+        background-color: #083b6b;
+    }
+
+    /* Card de Valor Final */
+    .valor-final-card {
+        background: linear-gradient(135deg, #2e7d32, #43a047);
+        color: #fff;
+        border-radius: 14px;
+        padding: 16px 20px;
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.35);
+    }
+
+    .valor-final-valor {
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+    }
+
+    @media (max-width: 768px) {
+        .consulta-card {
+            margin: 10px auto 30px auto;
+            padding: 15px;
+        }
+
+        .valor-final-valor {
+            font-size: 1.5rem;
+        }
     }
 </style>
 
-<!-- 🔥 JAVASCRIPT 100% FUNCIONAL -->
 <script>
+// ------- Auto preencher VALOR a partir do texto do procedimento -------
+// Ex: "Aparelho ortodôntico invisível - R$ 1750,00"
 document.addEventListener("DOMContentLoaded", function() {
+    const selectProced   = document.getElementById("id_procedimento");
+    const inputValor     = document.getElementById("id_valor");
+    const inputDesconto  = document.getElementById("id_desconto");
+    const spanValorFinal = document.getElementById("valor-final-label");
 
-    const selectProced = document.getElementById("id_procedimento");
-    const inputValor   = document.getElementById("id_valor");
+    if (!selectProced || !inputValor || !inputDesconto || !spanValorFinal) {
+        return;
+    }
 
-    if (!selectProced || !inputValor) return;
+    function normalizarNumeroBR(valorStr) {
+        if (!valorStr) return 0;
+        // remove pontos de milhar e troca vírgula por ponto
+        valorStr = valorStr.replace(/\./g, "").replace(",", ".");
+        const n = parseFloat(valorStr);
+        return isNaN(n) ? 0 : n;
+    }
 
-    function atualizarValor() {
+    function formatarBR(numero) {
+        return numero.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function atualizarValorPeloProcedimento() {
         const opt = selectProced.options[selectProced.selectedIndex];
         if (!opt) return;
 
         const texto = opt.text || "";
-        // pega valor após "R$"
+        // procura "R$ 250", "R$ 1.750,00", etc
         const match = texto.match(/R\$\s*([\d\.\,]+)/);
-
         if (match) {
-            let v = match[1]
-                .replace(/\./g, "")  // remove pontos de milhar
-                .replace(",", ".");  // transforma vírgula em ponto
-            inputValor.value = v;
+            let v = match[1];
+            // preenche o campo de valor já normalizado para o usuário (pt-BR)
+            const num = normalizarNumeroBR(v);
+            inputValor.value = formatarBR(num);
         }
+        atualizarValorFinal();
     }
 
-    atualizarValor(); // ao carregar
-    selectProced.addEventListener("change", atualizarValor);
+    function atualizarValorFinal() {
+        const v = normalizarNumeroBR(inputValor.value);
+        const d = normalizarNumeroBR(inputDesconto.value);
+        const total = Math.max(v - d, 0);
+        spanValorFinal.textContent = formatarBR(total);
+    }
+
+    // Eventos
+    selectProced.addEventListener("change", atualizarValorPeloProcedimento);
+    inputValor.addEventListener("input", atualizarValorFinal);
+    inputDesconto.addEventListener("input", atualizarValorFinal);
+
+    // Inicialização (carrega valor se já tiver escolhido procedimento ou se estiver editando)
+    atualizarValorPeloProcedimento();
+    atualizarValorFinal();
 });
 </script>
 
