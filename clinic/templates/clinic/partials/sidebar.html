@@ -24,8 +24,7 @@
         <a href="{% url 'clinic:procedimentos_list' %}" class="menu-item">
             <i class="bi bi-tools"></i> Procedimentos
         </a>
-        {% endif %}
-        
+
         {% if assinatura and assinatura.tipo in 'profissional premium' %}
         <a href="{% url 'clinic:dentistas_list' %}" class="menu-item">
             <i class="bi bi-person-badge"></i> Dentistas
@@ -60,4 +59,10 @@
         <div class="menu-group-title">Conta</div>
 
         <a href="{% url 'clinic:logout' %}" class="menu-item logout">
-            <i class="bi bi-box-arrow-right"></i> Sa
+            <i class="bi bi-box-arrow-right"></i> Sair
+        </a>
+
+    </nav>
+
+</aside>
+{% endif %}
