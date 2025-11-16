@@ -78,3 +78,36 @@
         transform: translateX(0);
     }
 }
+
+/* Ajuste do layout principal */
+.main-wrapper-auth {
+    margin-left: 240px;
+    padding: 25px;
+}
+
+/* Sem sidebar (login, registro etc) */
+.main-wrapper {
+    margin-left: 0;
+    padding: 25px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .main-wrapper-auth {
+        margin-left: 0 !important;
+        padding: 15px !important;
+    }
+
+    .menu-toggle {
+        position: fixed;
+        top: 15px;
+        left: 15px;
+        background: #0b5394;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 5px 10px;
+        z-index: 2000;
+        font-size: 22px;
+    }
+}
