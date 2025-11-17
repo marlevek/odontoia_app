@@ -22,13 +22,13 @@
 
     <h2 class="mb-3">📊 Dashboard Financeiro</h2>
     <hr>
-    <form method="GET" class="row g-3 mb-4 mt-3 mx-auto text-center">
+    <form method="GET" class="row g-3 mb-4 mt-3">
 
         <div class="col-md-2">
             <label>Mês:</label>
             <select name="mes" class="form-select">
                 {% for numero, nome in meses %}
-                <option value="{{ numero }}" {% if numero == mes %}selected{% endif %}>{{ nome }}</option>
+                <option value="{{ numero }}" {% if numero==mes %}selected{% endif %}>{{ nome }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -37,7 +37,7 @@
             <label>Ano:</label>
             <select name="ano" class="form-select">
                 {% for a in anos %}
-                <option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>
+                <option value="{{ a }}" {% if a==ano %}selected{% endif %}>{{ a }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -63,6 +63,18 @@
         </div>
 
     </form>
+
+    <div class="d-flex justify-content-end gap-2 mb-3">
+        <a href="{% url 'clinic:financeiro_export_excel' %}?mes={{ mes }}&ano={{ ano }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}"
+            class="btn btn-success">
+            📊 Exportar Excel
+        </a>
+
+        <a href="{% url 'clinic:financeiro_export_pdf' %}?mes={{ mes }}&ano={{ ano }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}"
+            class="btn btn-danger">
+            📄 Exportar PDF
+        </a>
+    </div>
 
 
     <!-- Cards Resumo -->

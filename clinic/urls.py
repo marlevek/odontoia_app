@@ -130,6 +130,8 @@ urlpatterns = [
          views.despesa_update, name="despesa_update"),
     path("financeiro/despesas/<int:pk>/deletar/",
          views.despesa_delete, name="despesa_delete"),
+    path('financeiro/exportar/pdf/', views.financeiro_export_pdf, name='financeiro_export_pdf'),
+    path('financeiro/exportar/excel/', views.financeiro_export_excel, name='financeiro_export_excel'),
 
 
     # IA e Insights

@@ -1,3 +1,5 @@
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from .utils.contexto_dinamico import gerar_contexto_dinamico
 import re
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
@@ -1697,7 +1699,7 @@ def financeiro_dashboard(request):
 
     # se nada selecionado -> mês atual
     hoje = datetime.now()
-    
+
     # Se não tem filtro por data -> usa mes/ano
     if not data_inicio and not data_fim:
         if not mes:
@@ -1732,15 +1734,15 @@ def financeiro_dashboard(request):
 
         incomes = Income.objects.filter(owner=request.user)
         expenses = Expense.objects.filter(owner=request.user)
-        
+
         if data_inicio:
             incomes = incomes.filter(data__gte=data_inicio)
             expenses = expenses.filter(data__get=data_inicio)
-            
+
         if data_fim:
             incomes = incomes.filter(data__lte=data_fim)
             expenses = expenses.filter(data__lte=data_fim)
-        
+
         total_receitas = incomes.aggregate(Sum('valor'))['valor__sum'] or 0
         total_despesas = expenses.aggregate(Sum('valor'))['valor__sum'] or 0
 
@@ -1763,14 +1765,11 @@ def financeiro_dashboard(request):
             (5, 'Maio'), (6, 'Junho'), (7, 'Julho'), (8, 'Agosto'),
             (9, 'Setembro'), (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
         ],
-        'anos': range(2023,2031),
-        
+        'anos': range(2023, 2031),
+
         # Dados para os gráficos
         'graficos': graficos,
     }
-    
-    
-    
 
     return render(request, 'clinic/financeiro_dashboard.html', context)
 
@@ -1878,3 +1877,114 @@ def despesa_delete(request, pk):
     despesa.delete()
     messages.success(request, "Despesa removida!")
     return redirect("clinic:despesas_list")
+
+
+# Exportar Excel
+
+
+@login_required
+@require_active_subscription
+def financeiro_export_excel(request):
+    # Obtém filtros atuais
+    mes = request.GET.get("mes")
+    ano = request.GET.get("ano")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+
+    # Consulta base
+    receitas = Income.objects.filter(owner=request.user)
+    despesas = Expense.objects.filter(owner=request.user)
+
+    # Aplica filtros
+    if mes and ano:
+        receitas = receitas.filter(data__month=mes, data__year=ano)
+        despesas = despesas.filter(data__month=mes, data__year=ano)
+
+    if data_inicio and data_fim:
+        receitas = receitas.filter(data__range=[data_inicio, data_fim])
+        despesas = despesas.filter(data__range=[data_inicio, data_fim])
+
+    # Criar workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Financeiro"
+
+    ws.append(["Descrição", "Valor", "Data", "Origem / Categoria", "Tipo"])
+
+    for r in receitas:
+        ws.append([r.descricao, r.valor, r.data.strftime(
+            "%d/%m/%Y"), r.origem, "Receita"])
+
+    for d in despesas:
+        ws.append([d.descricao, d.valor, d.data.strftime(
+            "%d/%m/%Y"), d.categoria, "Despesa"])
+
+    # Auto-ajuste de colunas
+    for col in ws.columns:
+        tamanho = max(len(str(c.value)) for c in col)
+        ws.column_dimensions[get_column_letter(
+            col[0].column)].width = tamanho + 2
+
+    # Resposta
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="financeiro.xlsx"'
+    wb.save(response)
+
+    return response
+
+
+# Exportar PDF
+
+
+@login_required
+@require_active_subscription
+def financeiro_export_pdf(request):
+
+    mes = request.GET.get("mes")
+    ano = request.GET.get("ano")
+    data_inicio = request.GET.get("data_inicio")
+    data_fim = request.GET.get("data_fim")
+
+    receitas = Income.objects.filter(owner=request.user)
+    despesas = Expense.objects.filter(owner=request.user)
+
+    if mes and ano:
+        receitas = receitas.filter(data__month=mes, data__year=ano)
+        despesas = despesas.filter(data__month=mes, data__year=ano)
+
+    if data_inicio and data_fim:
+        receitas = receitas.filter(data__range=[data_inicio, data_fim])
+        despesas = despesas.filter(data__range=[data_inicio, data_fim])
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="financeiro.pdf"'
+
+    p = canvas.Canvas(response, pagesize=letter)
+    y = 750
+
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(30, y, "Relatório Financeiro")
+    y -= 40
+
+    p.setFont("Helvetica", 10)
+
+    p.drawString(30, y, "Receitas:")
+    y -= 20
+    for r in receitas:
+        p.drawString(
+            40, y, f"{r.data.strftime('%d/%m/%Y')} - {r.descricao} - R$ {r.valor}")
+        y -= 15
+
+    y -= 20
+    p.drawString(30, y, "Despesas:")
+    y -= 20
+    for d in despesas:
+        p.drawString(
+            40, y, f"{d.data.strftime('%d/%m/%Y')} - {d.descricao} - R$ {d.valor}")
+        y -= 15
+
+    p.showPage()
+    p.save()
+    return response
