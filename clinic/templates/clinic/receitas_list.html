@@ -22,9 +22,6 @@
                 <td>{{ r.data|date:"d/m/Y" }}</td>
                 <td>{% if r.pago %}✔️{% else %}❌{% endif %}</td>
                 <td>
-                    <a href="{% url 'clinic:receita_create' %}" class="btn btn-primary mb-3">
-                        + Nova Receita
-                    </a>
                     <a href="{% url 'clinic:receita_update' r.pk %}" class="btn btn-sm btn-warning">Editar</a>
                     <a href="{% url 'clinic:receita_delete' r.pk %}" class="btn btn-sm btn-danger">Excluir</a>
                 </td>
