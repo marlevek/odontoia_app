@@ -23,13 +23,15 @@ urlpatterns = [
     path('', views.dashboard, name='dashboard'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/data/', views.dashboard_data, name='dashboard_data'),
-    
+
     # Dentistas
     path('dentistas/', views.dentistas_list, name='dentistas_list'),
     path('dentistas/novo/', views.dentista_create, name='dentista_create'),
     path("dentistas/<int:id>/editar/", views.dentista_edit, name="dentista_edit"),
-    path("dentistas/<int:id>/excluir/", views.dentista_delete, name="dentista_delete"),
-    path('dentista/principal/', views.dentista_principal, name='dentista_principal'),
+    path("dentistas/<int:id>/excluir/",
+         views.dentista_delete, name="dentista_delete"),
+    path('dentista/principal/', views.dentista_principal,
+         name='dentista_principal'),
 
     # Pacientes
     path('pacientes/', views.pacientes_list, name='pacientes_list'),
@@ -55,11 +57,12 @@ urlpatterns = [
     path('procedimentos/', views.procedimentos_list, name='procedimentos_list'),
     path('procedimentos/novo/', views.procedimento_create,
          name='procedimento_create'),
-    path('procedimentos/<int:id>/valor/', views.procedimento_valor, name='procedimento_valor'),
+    path('procedimentos/<int:id>/valor/',
+         views.procedimento_valor, name='procedimento_valor'),
     path('procedimentos/<int:id>/editar/',
          views.procedimento_edit, name='procedimento_edit'),
-    path('procedimentos/<int:pk>/excluir/', views.procedimento_delete, name=
-         'procedimento_delete'),
+    path('procedimentos/<int:pk>/excluir/',
+         views.procedimento_delete, name='procedimento_delete'),
 
     # 📅 Novo calendário
     path("consultas/calendario/", views.consultas_calendar,
@@ -101,17 +104,32 @@ urlpatterns = [
     path('pagamento/falha/', views.pagamento_falha, name='pagamento_falha'),
     path('webhook/mercadopago/', views.mercadopago_webhook,
          name='mercadopago_webhook'),
-    
+
     # Checkout
     path('checkout/<str:plano>/', views.checkout_publico, name='checkout_publico'),
-    
+
     # Financeiro
     path('financeiro/', views.financeiro_home, name='financeiro_home'),
     path('financeiro/resumo/', views.financeiro_resumo, name='financeiro_resumo'),
-    path('financeiro/exportar/', views.financeiro_exportar_excel, name='financeiro_exportar_excel'),
-    
-    # Dashboard Financeiro
-    path('financeiro/dashboard/', views.financeiro_dashboard, name='financeiro_dashboard'),
+    path('financeiro/exportar/', views.financeiro_exportar_excel,
+         name='financeiro_exportar_excel'),
+
+    # Finanças
+    path('financeiro/dashboard/', views.financeiro_dashboard,
+         name='financeiro_dashboard'),
+    path("financeiro/receitas/", views.receitas_list, name="receitas_list"),
+    path("financeiro/receitas/nova/", views.receita_create, name="receita_create"),
+    path("financeiro/receitas/<int:pk>/editar/",
+         views.receita_update, name="receita_update"),
+    path("financeiro/receitas/<int:pk>/deletar/",
+         views.receita_delete, name="receita_delete"),
+
+    path("financeiro/despesas/", views.despesas_list, name="despesas_list"),
+    path("financeiro/despesas/nova/", views.despesa_create, name="despesa_create"),
+    path("financeiro/despesas/<int:pk>/editar/",
+         views.despesa_update, name="despesa_update"),
+    path("financeiro/despesas/<int:pk>/deletar/",
+         views.despesa_delete, name="despesa_delete"),
 
 
     # IA e Insights

@@ -315,8 +315,26 @@ def consulta_update(request, pk):
             if consulta.procedimento:
                 consulta.valor = consulta.procedimento.valor_base
 
-            form.save_m2m()
             consulta.save()
+            form.save_m2m()
+            
+            # integração financeira
+            if consulta.paga:
+                income_exists = Income.objects.filter(consulta=consulta).exists()
+                
+                if not income_exists:
+                    Income.objects.create(
+                        owner = request.user,
+                        origem = 'consulta',
+                        consulta = consulta,
+                        descricao = f'Consulta - {consulta.paciente.nome}',
+                        valor = consulta.valor,
+                        data = consulta.data.date(),
+                        pago = True,
+                    )
+                else:
+                    Income.objects.filter(consulta=consulta).delete()
+           
 
             messages.success(request, "Consulta atualizada!")
             return redirect('clinic:consultas_list')
@@ -324,6 +342,7 @@ def consulta_update(request, pk):
             messages.error(request, "Corrija os erros abaixo.")
     else:
         form = ConsultaForm(instance=consulta, user=request.user)
+        
 
     return render(request, 'clinic/consulta_form.html', {'form': form})
 
@@ -1679,3 +1698,114 @@ def financeiro_dashboard(request):
     }
 
     return render(request, 'clinic/financeiro_dashboard.html', context)
+
+
+# CRUD Receitas e Despesas
+@login_required
+@require_active_subscription
+def receitas_list(request):
+    receitas = Income.objects.filter(owner = request.user).order_by('-data')
+    return render(request, 'clinic/receitas_list.html', {'receitas': receitas})
+
+
+@login_required
+@require_active_subscription
+def receita_create(request):
+    if request.method == "POST":
+        descricao = request.POST['descricao']
+        valor = request.POST['valor']
+        data = request.POST['data']
+
+        Income.objects.create(
+            owner=request.user,
+            origem="manual",
+            descricao=descricao,
+            valor=valor,
+            data=data,
+            pago=True
+        )
+
+        messages.success(request, "Receita adicionada!")
+        return redirect("clinic:receitas_list")
+
+    return render(request, "clinic/receita_form.html")
+
+
+@login_required
+@require_active_subscription
+def receita_update(request, pk):
+    receita = get_object_or_404(Income, pk=pk, owner=request.user)
+
+    if request.method == "POST":
+        receita.descricao = request.POST['descricao']
+        receita.valor = request.POST['valor']
+        receita.data = request.POST['data']
+        receita.save()
+
+        messages.success(request, "Receita atualizada!")
+        return redirect("clinic:receitas_list")
+
+    return render(request, "clinic/receita_form.html", {"receita": receita})
+
+@login_required
+@require_active_subscription
+def receita_delete(request, pk):
+    receita = get_object_or_404(Income, pk=pk, owner=request.user)
+    receita.delete()
+    messages.success(request, "Receita removida!")
+    return redirect("clinic:receitas_list")
+
+
+@login_required
+@require_active_subscription
+def despesas_list(request):
+    despesas = Expense.objects.filter(owner=request.user).order_by('-data')
+    return render(request, "clinic/despesas_list.html", {"despesas": despesas})
+
+
+@login_required
+@require_active_subscription
+def despesa_create(request):
+    if request.method == "POST":
+        categoria = request.POST['categoria']
+        descricao = request.POST['descricao']
+        valor = request.POST['valor']
+        data = request.POST['data']
+
+        Expense.objects.create(
+            owner=request.user,
+            categoria=categoria,
+            descricao=descricao,
+            valor=valor,
+            data=data
+        )
+
+        messages.success(request, "Despesa adicionada!")
+        return redirect("clinic:despesas_list")
+
+    return render(request, "clinic/despesa_form.html")
+
+@login_required
+@require_active_subscription
+def despesa_update(request, pk):
+    despesa = get_object_or_404(Expense, pk=pk, owner=request.user)
+
+    if request.method == "POST":
+        despesa.categoria = request.POST['categoria']
+        despesa.descricao = request.POST['descricao']
+        despesa.valor = request.POST['valor']
+        despesa.data = request.POST['data']
+        despesa.save()
+
+        messages.success(request, "Despesa atualizada!")
+        return redirect("clinic:despesas_list")
+
+    return render(request, "clinic/despesa_form.html", {"despesa": despesa})
+
+@login_required
+@require_active_subscription
+def despesa_delete(request, pk):
+    despesa = get_object_or_404(Expense, pk=pk, owner=request.user)
+    despesa.delete()
+    messages.success(request, "Despesa removida!")
+    return redirect("clinic:despesas_list")
