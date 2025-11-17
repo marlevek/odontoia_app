@@ -1,14 +1,30 @@
 {% extends 'clinic/base.html' %}
 
 {% block content %}
+
+<style>
+    .chart-container {
+        width: 100%;
+        max-width: 600px;
+        /* ↓ diminui */
+        margin: 0 auto;
+        /* centralizado */
+    }
+
+    canvas {
+        max-height: 250px !important;
+        /* ↓ diminui altura */
+    }
+</style>
+
+
 <div class="container py-4">
 
     <h2 class="mb-3">📊 Dashboard Financeiro</h2>
     <hr>
+    <form method="GET" class="row g-3 mb-4 mt-3 justify-content-center text-center">
 
-    <form method="GET" class="row g-3 mb-4 align-content-center">
-        <!-- Filtro por mês -->
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label>Mês:</label>
             <select name="mes" class="form-select">
                 {% for numero, nome in meses %}
@@ -17,7 +33,6 @@
             </select>
         </div>
 
-        <!-- Filtro por ano -->
         <div class="col-md-2">
             <label>Ano:</label>
             <select name="ano" class="form-select">
@@ -33,13 +48,12 @@
 
         <hr class="mt-4">
 
-        <!-- Filtro por intervalo -->
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label>De:</label>
             <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-2">
             <label>Até:</label>
             <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
         </div>
@@ -49,6 +63,7 @@
         </div>
 
     </form>
+
 
     <!-- Cards Resumo -->
     <div class="row text-center mb-4">
@@ -135,13 +150,21 @@
     </table>
 
     <h4 class="mt-5">📈 Receita x Despesa (Mensal)</h4>
-    <canvas id="graficoLinha"></canvas>
-    <h4 class="mt-5">🥧 Despesas por Categoria</h4>
-    <canvas id="graficoPizza"></canvas>
-    <h4 class="mt-5">📊 Origem das Receitas</h4>
-    <canvas id="graficoBarras"></canvas>
-</div>
 
+    <div class="chart-container">
+        <canvas id="graficoLinha"></canvas>
+    </div>
+
+    <h4 class="mt-5">🥧 Despesas por Categoria</h4>
+    <div class="chart-container">
+        <canvas id="graficoPizza"></canvas>
+    </div>
+
+    <h4 class="mt-5">📊 Origem das Receitas</h4>
+    <div class="chart-container">
+        <canvas id="graficoBarras"></canvas>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
