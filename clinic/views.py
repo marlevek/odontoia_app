@@ -1851,10 +1851,12 @@ def financeiro_export_excel(request):
 
 
 # Exportar PDF
-from django.template.loader import render_to_string
-from xhtml2pdf import pisa
-from io import BytesIO
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 from django.contrib.staticfiles import finders
+
 
 @login_required
 @require_active_subscription
@@ -1878,22 +1880,87 @@ def financeiro_export_pdf(request):
         data__year=ano
     )
 
-    # Caminho do logo
+    # ---- CRIA PDF NA MEMÓRIA ----
+    buffer = io.BytesIO()
+    pdf = SimpleDocTemplate(buffer, pagesize=A4)
+
+    elementos = []
+    styles = getSampleStyleSheet()
+
+    # ---- LOGO ----
     logo_path = finders.find("img/logo_odontoIA.png")
+    if logo_path:
+        img = Image(logo_path, width=120, height=40)
+        elementos.append(img)
+        elementos.append(Spacer(1, 12))
 
-    context = {
-        "mes": mes,
-        "ano": ano,
-        "hoje": hoje,
-        "logo": logo_path,
-        "receitas": receitas,
-        "despesas": despesas,
-    }
+    # ---- TÍTULO ----
+    titulo = f"Relatório Financeiro - {mes:02d}/{ano}"
+    elementos.append(Paragraph(titulo, styles["Title"]))
+    elementos.append(Spacer(1, 20))
 
-    html = render_to_string("clinic/pdf/financeiro_pdf.html", context)
+    # -------------------------------------
+    # TABELA DE RECEITAS
+    # -------------------------------------
+    elementos.append(Paragraph("<b>Receitas</b>", styles["Heading2"]))
+    elementos.append(Spacer(1, 6))
 
-    response = HttpResponse(content_type="application/pdf")
+    dados_receitas = [["Data", "Descrição", "Origem", "Valor (R$)"]]
+
+    for r in receitas:
+        dados_receitas.append([
+            r.data.strftime("%d/%m/%Y"),
+            r.descricao,
+            r.origem or "-",
+            f"{r.valor:.2f}"
+        ])
+
+    tabela_receitas = Table(dados_receitas, colWidths=[80, 200, 100, 80])
+    tabela_receitas.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4A90E2")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (3, 1), (3, -1), "RIGHT"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+    ]))
+
+    elementos.append(tabela_receitas)
+    elementos.append(Spacer(1, 20))
+
+    # -------------------------------------
+    # TABELA DE DESPESAS
+    # -------------------------------------
+    elementos.append(Paragraph("<b>Despesas</b>", styles["Heading2"]))
+    elementos.append(Spacer(1, 6))
+
+    dados_despesas = [["Data", "Categoria", "Descrição", "Valor (R$)"]]
+
+    for d in despesas:
+        dados_despesas.append([
+            d.data.strftime("%d/%m/%Y"),
+            d.categoria.nome if hasattr(d.categoria, "nome") else "-",
+            d.descricao,
+            f"{d.valor:.2f}"
+        ])
+
+    tabela_despesas = Table(dados_despesas, colWidths=[80, 120, 180, 80])
+    tabela_despesas.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D0021B")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("ALIGN", (3, 1), (3, -1), "RIGHT"),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+    ]))
+
+    elementos.append(tabela_despesas)
+
+    # -------------------------------------
+    # FINALIZA
+    # -------------------------------------
+    pdf.build(elementos)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type="application/pdf")
     response['Content-Disposition'] = f'attachment; filename="financeiro_{mes}_{ano}.pdf"'
 
-    pdf = pisa.CreatePDF(html, dest=response)
     return response
