@@ -1748,6 +1748,7 @@ def receita_delete(request, pk):
     return redirect("clinic:receitas_list")
 
 
+# DESPESAS
 @login_required
 @require_active_subscription
 def despesas_list(request):
@@ -1755,6 +1756,8 @@ def despesas_list(request):
     return render(request, "clinic/despesas_list.html", {"despesas": despesas})
 
 
+@login_required
+@require_active_subscription
 def despesa_create(request):
     if request.method == "POST":
         form = ExpenseForm(request.POST)
@@ -1762,6 +1765,7 @@ def despesa_create(request):
             despesa = form.save(commit=False)
             despesa.owner = request.user
             despesa.save()
+            
             messages.success(request, "Despesa adicionada!")
             return redirect("clinic:despesas_list")
     else:
@@ -1770,6 +1774,8 @@ def despesa_create(request):
     return render(request, "clinic/despesa_form.html", {"form": form})
 
 
+@login_required
+@require_active_subscription
 def despesa_update(request, pk):
     despesa = get_object_or_404(Expense, pk=pk, owner=request.user)
 

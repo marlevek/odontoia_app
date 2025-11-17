@@ -1,14 +1,35 @@
 {% extends 'clinic/base.html' %}
+
 {% block content %}
 <div class="container py-4">
-    <h2>{{ receita|default:"Nova Receita" }}</h2>
+
+    <h2>{% if receita %}Editar Receita{% else %}+ Nova Receita{% endif %}</h2>
+    <hr>
 
     <form method="POST">
         {% csrf_token %}
-        {{ form.as_p }}
+        <div class="mb-3">
+            <label>Descrição</label>
+            <input type="text" name="descricao" class="form-control"
+                   value="{{ receita.descricao|default:'' }}" required>
+        </div>
 
-        <button class="btn btn-success mt-3" type="submit">Salvar</button>
-        <a href="{% url 'clinic:receitas_list' %}" class="btn btn-secondary mt-3">Cancelar</a>
+        <div class="mb-3">
+            <label>Valor</label>
+            <input type="number" step="0.01" name="valor" class="form-control"
+                   value="{{ receita.valor|default:'' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label>Data</label>
+            <input type="date" name="data" class="form-control"
+                   value="{{ receita.data|date:'Y-m-d' }}" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a href="{% url 'clinic:receitas_list' %}" class="btn btn-secondary">Cancelar</a>
     </form>
+
 </div>
 {% endblock %}
+

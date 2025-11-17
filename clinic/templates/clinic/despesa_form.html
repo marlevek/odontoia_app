@@ -1,14 +1,17 @@
 {% extends 'clinic/base.html' %}
+
 {% block content %}
 <div class="container py-4">
-    <h2>{{ despesa|default:"Nova Despesa" }}</h2>
+
+    <h2>{% if despesa %}Editar Despesa{% else %}+ Nova Despesa{% endif %}</h2>
+    <hr>
 
     <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}
-
-        <button class="btn btn-success mt-3" type="submit">Salvar</button>
-        <a href="{% url 'clinic:despesas_list' %}" class="btn btn-secondary mt-3">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+        <a href="{% url 'clinic:despesas_list' %}" class="btn btn-secondary">Cancelar</a>
     </form>
+
 </div>
 {% endblock %}
