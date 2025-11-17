@@ -23,7 +23,7 @@
                 <td>{% if r.pago %}✔️{% else %}❌{% endif %}</td>
                 <td>
                     <a href="{% url 'clinic:receita_update' r.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="{% url 'clinic:receita_delete' r.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                    <a href="{% url 'clinic:receita_delete' r.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir esta receita?')">Excluir</a>
                 </td>
             </tr>
             {% empty %}
