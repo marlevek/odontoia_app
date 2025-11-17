@@ -1597,81 +1597,6 @@ def financeiro_resumo(request):
     return render(request, "clinic/financeiro_resumo.html", context)
 
 
-@login_required
-@require_active_subscription
-def financeiro_exportar_excel(request):
-    """
-    Exporta o mesmo resumo financeiro para Excel (XLSX).
-    Também restrito a Profissional / Premium.
-    """
-    assinatura = Assinatura.objects.filter(
-        user=request.user, ativa=True).first()
-
-    if not assinatura or assinatura.tipo not in ("profissional", "premium"):
-        messages.error(
-            request,
-            "Exportação disponível apenas para os planos Profissional e Premium."
-        )
-        return redirect("clinic:dashboard")
-
-    hoje = timezone.now().date()
-    periodo = int(request.GET.get("periodo", 30))
-    data_inicial = hoje - timedelta(days=periodo)
-
-    consultas = Consulta.objects.filter(
-        owner=request.user,
-        data__date__gte=data_inicial,
-        data__date__lte=hoje
-    )
-
-    por_dentista = (
-        consultas.exclude(dentista__isnull=True)
-        .values("dentista__nome")
-        .annotate(
-            total_consultas=Count("id"),
-            receita=Sum("valor_final"),
-            comissoes=Sum("comissao_valor"),
-        )
-        .order_by("-receita")
-    )
-
-    # --- Monta planilha Excel ---
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Financeiro"
-
-    headers = ["Dentista", "Total Consultas",
-               "Receita (R$)", "Comissões (R$)", "Líquido (R$)"]
-    ws.append(headers)
-
-    for row in por_dentista:
-        receita = row["receita"] or 0
-        comissoes = row["comissoes"] or 0
-        liquido = receita - comissoes
-        ws.append([
-            row["dentista__nome"],
-            row["total_consultas"],
-            float(receita),
-            float(comissoes),
-            float(liquido),
-        ])
-
-    # Ajusta largura das colunas
-    for col_idx, _ in enumerate(headers, start=1):
-        col_letter = get_column_letter(col_idx)
-        ws.column_dimensions[col_letter].width = 20
-
-    # Resposta HTTP
-    response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-    filename = f"financeiro_{hoje.strftime('%Y%m%d')}.xlsx"
-    response["Content-Disposition"] = f'attachment; filename="{filename}"'
-
-    wb.save(response)
-    return response
-
-
 # IA e Insights (apenas profissional e premium)
 @login_required
 @require_active_subscription
@@ -1892,7 +1817,7 @@ def financeiro_export_excel(request):
 
     hoje = datetime.now()
     mes = int(mes) if mes else hoje.month
-    ano = int(ano) if ano else hoje.year
+    ano = int(ano_param) if ano_param else hoje.year
 
     receitas = Income.objects.filter(
         owner=request.user,
