@@ -2,9 +2,9 @@
 {% block content %}
 <div class="container py-4">
     <h2>📉 Despesas</h2>
-    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalDespesa">
+    <a href="{% url 'clinic:despesa_create' %}" class="btn btn-danger">
         + Nova Despesa
-    </button>
+    </a>
 
 
     <table class="table table-striped">
@@ -43,28 +43,29 @@
         </tbody>
     </table>
 </div>
-{% endblock %}
 
 <script>
-document.querySelectorAll('.delete-despesa').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        const url = this.getAttribute('href');
+    document.querySelectorAll('.delete-despesa').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
 
-        Swal.fire({
-            title: 'Excluir Despesa?',
-            text: "Esta ação não pode ser desfeita.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Sim, excluir',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = url;
-            }
+            Swal.fire({
+                title: 'Excluir Despesa?',
+                text: "Esta ação não pode ser desfeita.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sim, excluir',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = url;
+                }
+            });
         });
     });
-});
 </script>
+{% endblock %}
+
