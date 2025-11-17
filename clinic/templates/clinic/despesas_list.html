@@ -1,0 +1,37 @@
+{% extends 'clinic/base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h2>📉 Despesas</h2>
+    <a href="{% url 'clinic:despesa_create' %}" class="btn btn-primary mb-3">+ Nova Despesa</a>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Categoria</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Data</th>
+                <th>Pago</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in despesas %}
+            <tr>
+                <td>{{ d.categoria }}</td>
+                <td>{{ d.descricao }}</td>
+                <td>R$ {{ d.valor }}</td>
+                <td>{{ d.data|date:"d/m/Y" }}</td>
+                <td>{% if d.pago %}✔️{% else %}❌{% endif %}</td>
+                <td>
+                    <a href="{% url 'clinic:despesa_update' d.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'clinic:despesa_delete' d.pk %}" class="btn btn-sm btn-danger">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">Nenhuma despesa registrada</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

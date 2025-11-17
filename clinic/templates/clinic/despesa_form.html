@@ -1,14 +1,14 @@
 {% extends 'clinic/base.html' %}
 {% block content %}
 <div class="container py-4">
-    <h2>{{ receita|default:"Nova Receita" }}</h2>
+    <h2>{{ despesa|default:"Nova Despesa" }}</h2>
 
     <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}
 
         <button class="btn btn-success mt-3" type="submit">Salvar</button>
-        <a href="{% url 'clinic:receitas_list' %}" class="btn btn-secondary mt-3">Cancelar</a>
+        <a href="{% url 'clinic:despesas_list' %}" class="btn btn-secondary mt-3">Cancelar</a>
     </form>
 </div>
 {% endblock %}

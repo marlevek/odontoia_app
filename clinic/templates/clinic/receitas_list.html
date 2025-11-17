@@ -1,8 +1,8 @@
 {% extends 'clinic/base.html' %}
 {% block content %}
 <div class="container py-4">
-    <h3>💰 Receitas</h3>
-    <a href="{% url 'clinic:receita_create' %}" class="btn btn-primary mb-3">Nova Receita</a>
+    <h2>💰 Receitas</h2>
+    <a href="{% url 'clinic:receita_create' %}" class="btn btn-primary mb-3">+ Nova Receita</a>
 
     <table class="table table-striped">
         <thead>
@@ -10,7 +10,8 @@
                 <th>Descrição</th>
                 <th>Valor</th>
                 <th>Data</th>
-                <th></th>
+                <th>Pago</th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -19,13 +20,14 @@
                 <td>{{ r.descricao }}</td>
                 <td>R$ {{ r.valor }}</td>
                 <td>{{ r.data|date:"d/m/Y" }}</td>
+                <td>{% if r.pago %}✔️{% else %}❌{% endif %}</td>
                 <td>
-                    <a href="{% url 'clinic:receita_update' r.id %}" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="{% url 'clinic:receita_delete' r.id %}" class="btn btn-sm btn-danger">Excluir</a>
+                    <a href="{% url 'clinic:receita_update' r.pk %}" class="btn btn-sm btn-warning">Editar</a>
+                    <a href="{% url 'clinic:receita_delete' r.pk %}" class="btn btn-sm btn-danger">Excluir</a>
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="4">Nenhuma receita registrada.</td></tr>
+            <tr><td colspan="5" class="text-center">Nenhuma receita registrada</td></tr>
             {% endfor %}
         </tbody>
     </table>

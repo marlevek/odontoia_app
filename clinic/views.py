@@ -7,7 +7,7 @@ from django.db.models import Q, Sum, Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from .models import Paciente, Consulta, Dentista, Procedimento, Assinatura, Pagamento, Income, Expense
-from .forms import PacienteForm, ProcedimentoForm
+from .forms import PacienteForm, ProcedimentoForm, IncomeForm, ExpenseForm
 from .forms_consulta import ConsultaForm
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
@@ -320,22 +320,17 @@ def consulta_update(request, pk):
             
             # integração financeira
             if consulta.paga:
-                income_exists = Income.objects.filter(consulta=consulta).exists()
-                
-                if not income_exists:
-                    Income.objects.create(
-                        owner = request.user,
-                        origem = 'consulta',
-                        consulta = consulta,
-                        descricao = f'Consulta - {consulta.paciente.nome}',
-                        valor = consulta.valor,
-                        data = consulta.data.date(),
-                        pago = True,
+               if not Income.objects.filter(consulta=consulta).exists():
+                   Income.objects.create(
+                       owner = request.user,
+                       origem = 'consulta',
+                       consulta = consulta,
+                       descricao = f'Consulta - {consulta.paciente.nome}',
+                       valor = consulta.valor,
+                       data = consulta.data.date(),
+                       pago = True,
                     )
-                else:
-                    Income.objects.filter(consulta=consulta).delete()
-           
-
+               
             messages.success(request, "Consulta atualizada!")
             return redirect('clinic:consultas_list')
         else:
@@ -1712,23 +1707,19 @@ def receitas_list(request):
 @require_active_subscription
 def receita_create(request):
     if request.method == "POST":
-        descricao = request.POST['descricao']
-        valor = request.POST['valor']
-        data = request.POST['data']
+        form = IncomeForm(request.POST)
+        if form.is_valid():
+            receita = form.save(commit=False)
+            receita.owner = request.user
+            receita.origem = 'manual'
+            receita.save()
+            messages.success(request, 'Receita adicionada!')
+            return redirect('clinic:receitas_list')
 
-        Income.objects.create(
-            owner=request.user,
-            origem="manual",
-            descricao=descricao,
-            valor=valor,
-            data=data,
-            pago=True
-        )
-
-        messages.success(request, "Receita adicionada!")
-        return redirect("clinic:receitas_list")
-
-    return render(request, "clinic/receita_form.html")
+        else:
+            form = IncomeForm()
+            
+    return render(request, "clinic/receita_form.html", {'form': form})
 
 
 @login_required
@@ -1737,15 +1728,16 @@ def receita_update(request, pk):
     receita = get_object_or_404(Income, pk=pk, owner=request.user)
 
     if request.method == "POST":
-        receita.descricao = request.POST['descricao']
-        receita.valor = request.POST['valor']
-        receita.data = request.POST['data']
-        receita.save()
-
-        messages.success(request, "Receita atualizada!")
-        return redirect("clinic:receitas_list")
+        form = IncomeForm(request.POST, instance=receita)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Receita atualizada!")
+            return redirect("clinic:receitas_list")
+    else:
+        form = IncomeForm(instance=receita)
 
     return render(request, "clinic/receita_form.html", {"receita": receita})
+
 
 @login_required
 @require_active_subscription
@@ -1763,44 +1755,35 @@ def despesas_list(request):
     return render(request, "clinic/despesas_list.html", {"despesas": despesas})
 
 
-@login_required
-@require_active_subscription
 def despesa_create(request):
     if request.method == "POST":
-        categoria = request.POST['categoria']
-        descricao = request.POST['descricao']
-        valor = request.POST['valor']
-        data = request.POST['data']
+        form = ExpenseForm(request.POST)
+        if form.is_valid():
+            despesa = form.save(commit=False)
+            despesa.owner = request.user
+            despesa.save()
+            messages.success(request, "Despesa adicionada!")
+            return redirect("clinic:despesas_list")
+    else:
+        form = ExpenseForm()
 
-        Expense.objects.create(
-            owner=request.user,
-            categoria=categoria,
-            descricao=descricao,
-            valor=valor,
-            data=data
-        )
+    return render(request, "clinic/despesa_form.html", {"form": form})
 
-        messages.success(request, "Despesa adicionada!")
-        return redirect("clinic:despesas_list")
 
-    return render(request, "clinic/despesa_form.html")
-
-@login_required
-@require_active_subscription
 def despesa_update(request, pk):
     despesa = get_object_or_404(Expense, pk=pk, owner=request.user)
 
     if request.method == "POST":
-        despesa.categoria = request.POST['categoria']
-        despesa.descricao = request.POST['descricao']
-        despesa.valor = request.POST['valor']
-        despesa.data = request.POST['data']
-        despesa.save()
+        form = ExpenseForm(request.POST, instance=despesa)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Despesa atualizada!")
+            return redirect("clinic:despesas_list")
+    else:
+        form = ExpenseForm(instance=despesa)
 
-        messages.success(request, "Despesa atualizada!")
-        return redirect("clinic:despesas_list")
+    return render(request, "clinic/despesa_form.html", {"form": form})
 
-    return render(request, "clinic/despesa_form.html", {"despesa": despesa})
 
 @login_required
 @require_active_subscription

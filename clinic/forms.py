@@ -1,6 +1,6 @@
 from django import forms
 from validate_docbr import CPF
-from .models import Paciente, Procedimento, Dentista, Consulta
+from .models import Paciente, Procedimento, Dentista, Consulta, Income, Expense
 from django.conf import settings 
 from django.core.validators import EmailValidator 
 from django.core.exceptions import ValidationError
@@ -166,3 +166,27 @@ class ConsultaForm(forms.ModelForm):
             self.save_m2m()
             
         return instance
+    
+    
+class IncomeForm(forms.ModelForm):
+    class Meta:
+        model = Income 
+        fields = ['descricao', 'valor', 'data', 'pago']
+        widgets ={
+            'descricao': forms.TextInput(attrs={'class': 'form-control'}),
+            'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'pago': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+class ExpenseForm(forms.ModelForm):
+    class Meta:
+        model = Expense
+        fields = ['categoria', 'descricao', 'valor', 'data', 'pago']
+        widgets = {
+            'categoria': forms.TextInput(attrs={'class':'form-control'}),
+            'descricao': forms.TextInput(attrs={'class':'form-control'}),
+            'valor': forms.NumberInput(attrs={'class':'form-control','step':'0.01'}),
+            'data': forms.DateInput(attrs={'class':'form-control','type':'date'}),
+            'pago': forms.CheckboxInput(attrs={'class':'form-check-input'}),
+        }
