@@ -1851,20 +1851,21 @@ def financeiro_export_excel(request):
 
 
 # Exportar PDF
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from io import BytesIO
+from django.contrib.staticfiles import finders
+
 @login_required
 @require_active_subscription
 def financeiro_export_pdf(request):
-    # Filtros
     mes = request.GET.get("mes")
     ano_param = request.GET.get("ano")
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
 
     hoje = datetime.now()
     mes = int(mes) if mes else hoje.month
     ano = int(ano_param) if ano_param else hoje.year
 
-    # Query do período
     receitas = Income.objects.filter(
         owner=request.user,
         data__month=mes,
@@ -1877,51 +1878,22 @@ def financeiro_export_pdf(request):
         data__year=ano
     )
 
-    # --- PDF ---
-    response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=financeiro_{mes}_{ano}.pdf'
+    # Caminho do logo
+    logo_path = finders.find("img/logo_odontoIA.png")
 
-    pdf = canvas.Canvas(response, pagesize=A4)
-    largura, altura = A4
+    context = {
+        "mes": mes,
+        "ano": ano,
+        "hoje": hoje,
+        "logo": logo_path,
+        "receitas": receitas,
+        "despesas": despesas,
+    }
 
-    y = altura - 2*cm
+    html = render_to_string("clinic/pdf/financeiro_pdf.html", context)
 
-    # Título
-    pdf.setFont("Helvetica-Bold", 16)
-    pdf.drawString(2*cm, y, f"Relatório Financeiro - {mes}/{ano}")
-    y -= 1.2*cm
+    response = HttpResponse(content_type="application/pdf")
+    response['Content-Disposition'] = f'attachment; filename="financeiro_{mes}_{ano}.pdf"'
 
-    # RECEITAS
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(2*cm, y, "Receitas")
-    y -= 0.8*cm
-
-    pdf.setFont("Helvetica", 10)
-    for r in receitas:
-        pdf.drawString(
-            2*cm, y, f"{r.data.strftime('%d/%m/%Y')} - {r.descricao} - R$ {r.valor}")
-        y -= 0.5*cm
-        if y < 2*cm:
-            pdf.showPage()
-            y = altura - 2*cm
-
-    y -= 1*cm
-
-    # DESPESAS
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(2*cm, y, "Despesas")
-    y -= 0.8*cm
-
-    pdf.setFont("Helvetica", 10)
-    for d in despesas:
-        pdf.drawString(
-            2*cm, y, f"{d.data.strftime('%d/%m/%Y')} - {d.descricao} - R$ {d.valor}")
-        y -= 0.5*cm
-        if y < 2*cm:
-            pdf.showPage()
-            y = altura - 2*cm
-
-    pdf.showPage()
-    pdf.save()
-
+    pdf = pisa.CreatePDF(html, dest=response)
     return response
