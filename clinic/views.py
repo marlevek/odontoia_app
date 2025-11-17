@@ -1692,32 +1692,64 @@ def financeiro_dashboard(request):
     # Filtros opcionais
     mes = request.GET.get("mes")
     ano = request.GET.get("ano")
+    data_inicio = request.GET.get('data_inicio')
+    data_fim = request.GET.get('data_fim')
 
     # se nada selecionado -> mês atual
     hoje = datetime.now()
-    if not mes:
-        mes = hoje.month
-    if not ano:
-        ano = hoje.year
+    
+    # Se não tem filtro por data -> usa mes/ano
+    if not data_inicio and not data_fim:
+        if not mes:
+            mes = hoje.month
+        if not ano:
+            ano = hoje.year
 
-    mes = int(mes)
-    ano = int(ano)
+        mes = int(mes)
+        ano = int(ano)
 
-    # Dados principais
-    stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
+        # Dados principais
+        stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
 
-    # Puxa lista de receitas e despesas para exibir no dashboard
-    incomes = Income.objects.filter(
-        owner=request.user,
-        data__month=mes,
-        data__year=ano
-    ).order_by('-data')[:10]
+        # Puxa lista de receitas e despesas para exibir no dashboard
+        incomes = Income.objects.filter(
+            owner=request.user,
+            data__month=mes,
+            data__year=ano
+        ).order_by('-data')[:10]
 
-    expenses = Expense.objects.filter(
-        owner=request.user,
-        data__month=mes,
-        data__year=ano
-    ).order_by('-data')[:10]
+        expenses = Expense.objects.filter(
+            owner=request.user,
+            data__month=mes,
+            data__year=ano
+        ).order_by('-data')[:10]
+
+    else:
+        if data_inicio:
+            data_inicio = datetime.strptime(data_inicio, "%Y-%m-%d").date()
+        if data_fim:
+            data_fim = datetime.strptime(data_fim, "%Y-%m-%d").date()
+
+        incomes = Income.objects.filter(owner=request.user)
+        expenses = Expense.objects.filter(owner=request.user)
+        
+        if data_inicio:
+            incomes = incomes.filter(data__gte=data_inicio)
+            expenses = expenses.filter(data__get=data_inicio)
+            
+        if data_fim:
+            incomes = incomes.filter(data__lte=data_fim)
+            expenses = expenses.filter(data__lte=data_fim)
+        
+        total_receitas = incomes.aggregate(Sum('valor'))['valor__sum'] or 0
+        total_despesas = expenses.aggregate(Sum('valor'))['valor__sum'] or 0
+
+        stats = {
+            'receitas': total_receitas,
+            'despesas': total_despesas,
+            'saldo': total_receitas - total_despesas,
+        }
+
 
     context = {
         'stats': stats,

@@ -7,32 +7,45 @@
     <hr>
 
     <form method="GET" class="row g-3 mb-4">
-
+        <!-- Filtro por mês -->
         <div class="col-md-3">
-            <label>Mês</label>
+            <label>Mês:</label>
             <select name="mes" class="form-select">
                 {% for numero, nome in meses %}
-                <option value="{{ numero }}" {% if numero == mes %}selected{% endif %}>
-
-                    {{ nome }}
-                </option>
+                <option value="{{ numero }}" {% if numero==mes %}selected{% endif %}>{{ nome }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        <div class="col-md-3">
-            <label>Ano</label>
+        <!-- Filtro por ano -->
+        <div class="col-md-2">
+            <label>Ano:</label>
             <select name="ano" class="form-select">
                 {% for a in anos %}
-                <option value="{{ a }}" {% if a == ano %}selected{% endif %}>
-                    {{ a }}
-                </option>
+                <option value="{{ a }}" {% if a==ano %}selected{% endif %}>{{ a }}</option>
                 {% endfor %}
             </select>
         </div>
 
         <div class="col-md-2 d-flex align-items-end">
-            <button class="btn btn-primary w-100">Filtrar</button>
+            <button class="btn btn-primary w-100">Filtrar Mês/Ano</button>
+        </div>
+
+        <hr class="mt-4">
+
+        <!-- Filtro por intervalo -->
+        <div class="col-md-3">
+            <label>De:</label>
+            <input type="date" name="data_inicio" value="{{ data_inicio }}" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+            <label>Até:</label>
+            <input type="date" name="data_fim" value="{{ data_fim }}" class="form-control">
+        </div>
+
+        <div class="col-md-2 d-flex align-items-end">
+            <button class="btn btn-dark w-100">Filtrar Período</button>
         </div>
 
     </form>
