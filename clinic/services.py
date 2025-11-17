@@ -34,9 +34,9 @@ def get_graficos_financeiros(owner, ano):
     despesas_mes = []
     
     for mes in meses:
-        total_r = Income.objects.filter(owner=owner, data__year=ano, data__month=mes).aggregate(Sum('valor'))['valor_sum'] or 0
+        total_r = Income.objects.filter(owner=owner, data__year=ano, data__month=mes).aggregate(Sum('valor'))['valor__sum'] or 0
         
-        total_d = Expense.objects.filter(owner=owner, data__year=ano, data__month=mes).aggregate(Sum('valor'))['valor_sum'] or 0
+        total_d = Expense.objects.filter(owner=owner, data__year=ano, data__month=mes).aggregate(Sum('valor'))['valor__sum'] or 0
         
         receitas_mes.append(float(total_r))
         despesas_mes.append(float(total_d))
