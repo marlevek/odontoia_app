@@ -22,7 +22,7 @@
 
     <h2 class="mb-3">📊 Dashboard Financeiro</h2>
     <hr>
-    <form method="GET" class="row g-3 mb-4 mt-3">
+    <form method="GET" class="row g-3 mb-4 mt-3 mx-auto text-center">
 
         <div class="col-md-2">
             <label>Mês:</label>
@@ -64,7 +64,7 @@
 
     </form>
 
-    <div class="d-flex justify-content-end gap-2 mb-3">
+    <div class="mx-auto text-center gap-2 mb-3">
         <a href="{% url 'clinic:financeiro_export_excel' %}?mes={{ mes }}&ano={{ ano }}&data_inicio={{ data_inicio }}&data_fim={{ data_fim }}"
             class="btn btn-success">
             📊 Exportar Excel
