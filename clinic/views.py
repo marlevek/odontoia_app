@@ -315,6 +315,7 @@ def consulta_update(request, pk):
             if consulta.procedimento:
                 consulta.valor = consulta.procedimento.valor_base
 
+            form.save_m2m()
             consulta.save()
 
             messages.success(request, "Consulta atualizada!")
