@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
 import datetime as datetime
@@ -21,7 +21,6 @@ from django.views.decorators.http import require_POST, require_GET
 from django.utils.dateparse import parse_datetime
 from django.db.models import Count, Sum, Avg
 import calendar
-from datetime import timedelta
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -1694,7 +1693,6 @@ def ia_insights(request):
 @require_active_subscription
 def financeiro_dashboard(request):
     from .services import get_fluxo_caixa, get_graficos_financeiros
-    from datetime import datetime
 
     # Filtros opcionais
     mes = request.GET.get("mes")
@@ -1891,7 +1889,7 @@ import io
 @require_active_subscription
 def financeiro_export_excel(request):
     mes = request.GET.get("mes")
-    ano = request.GET.get("ano")
+    ano_param = request.GET.get("ano")
 
     hoje = datetime.now()
     mes = int(mes) if mes else hoje.month
@@ -1934,13 +1932,13 @@ def financeiro_export_excel(request):
 def financeiro_export_pdf(request):
     # Filtros
     mes = request.GET.get("mes")
-    ano = request.GET.get("ano")
+    ano_param = request.GET.get("ano")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
     hoje = datetime.now()
     mes = int(mes) if mes else hoje.month
-    ano = int(ano) if ano else hoje.year
+    ano = int(ano_param) if ano_param else hoje.year
 
     # Query do período
     receitas = Income.objects.filter(
