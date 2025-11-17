@@ -1652,3 +1652,30 @@ def ia_insights(request):
         return redirect("clinic:dashboard")
 
     return render(request, "clinic/ia_insights.html")
+
+
+# Dashboard Financeiro
+@login_required
+@require_active_subscription
+def financeiro_dashboard(request):
+    from .services import get_fluxo_caixa
+    
+    # Filtros opcionais
+    mes = request.GET.get("mes")
+    ano = request.GET.get("ano")
+
+    stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
+
+    # Puxa lista de receitas e despesas para exibir no dashboard
+    incomes = Income.objects.filter(owner=request.user).order_by('-data')[:10]
+    expenses = Expense.objects.filter(owner=request.user).order_by('-data')[:10]
+
+    context = {
+        'stats': stats,
+        'incomes': incomes,
+        'expenses': expenses,
+        'mes': mes,
+        'ano': ano,
+    }
+
+    return render(request, 'clinic/financeiro_dashboard.html', context)

@@ -194,3 +194,40 @@ class Pagamento(models.Model):
     def __str__(self):
         return f"{self.assinatura.user.username} - {self.status} - {self.valor}"
     
+
+
+# Receitas e Despesas
+class Income(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='incomes')
+    
+    ORIGIN_CHOICES = [
+        ('consulta', 'Consulta'),
+        ('manual', 'Lançamento Manual'),
+    ]
+    
+    origem = models.CharField(max_length=20, choices=ORIGIN_CHOICES)
+    consulta = models.ForeignKey('Consulta', null=True, blank=True, on_delete=models.SET_NULL)
+    descricao = models.CharField(max_length=255)
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    data = models.DateField(default=timezone.now)
+    pago = models.BooleanField(default=True)  # sempre pago se veio da consulta
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.descricao} - R$ {self.valor:.2f}" 
+
+
+class Expense(models.Model):
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='expenses')
+
+    categoria = models.CharField(max_length=100)
+    descricao = models.CharField(max_length=255)
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    data = models.DateField(default=timezone.now)
+    pago = models.BooleanField(default=False)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.categoria} - R$ {self.valor:.2f}"

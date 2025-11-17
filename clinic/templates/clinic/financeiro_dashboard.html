@@ -1,0 +1,90 @@
+{% extends 'clinic/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h2 class="mb-3">📊 Dashboard Financeiro</h2>
+    <hr>
+
+    <!-- Cards Resumo -->
+    <div class="row text-center mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm p-3 border-0">
+                <h4>R$ {{ stats.receitas }}</h4>
+                <p class="text-muted">Total de Receitas</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm p-3 border-0">
+                <h4>R$ {{ stats.despesas }}</h4>
+                <p class="text-muted">Total de Despesas</p>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm p-3 border-0">
+                <h4>
+                    {% if stats.saldo >= 0 %}
+                        <span class="text-success">R$ {{ stats.saldo }}</span>
+                    {% else %}
+                        <span class="text-danger">R$ {{ stats.saldo }}</span>
+                    {% endif %}
+                </h4>
+                <p class="text-muted">Saldo do Período</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas Receitas -->
+    <h4 class="mt-4">💰 Últimas Receitas</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Data</th>
+                <th>Origem</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for i in incomes %}
+            <tr>
+                <td>{{ i.descricao }}</td>
+                <td>R$ {{ i.valor }}</td>
+                <td>{{ i.data|date:"d/m/Y" }}</td>
+                <td>{{ i.origem }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">Nenhuma receita registrada</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Últimas Despesas -->
+    <h4 class="mt-4">📉 Últimas Despesas</h4>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Categoria</th>
+                <th>Descrição</th>
+                <th>Valor</th>
+                <th>Data</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for e in expenses %}
+            <tr>
+                <td>{{ e.categoria }}</td>
+                <td>{{ e.descricao }}</td>
+                <td>R$ {{ e.valor }}</td>
+                <td>{{ e.data|date:"d/m/Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center">Nenhuma despesa registrada</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}
