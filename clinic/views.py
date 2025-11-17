@@ -6,7 +6,7 @@ from django.utils.dateparse import parse_date
 from django.db.models import Q, Sum, Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Paciente, Consulta, Dentista, Procedimento, Assinatura, Pagamento
+from .models import Paciente, Consulta, Dentista, Procedimento, Assinatura, Pagamento, Income, Expense
 from .forms import PacienteForm, ProcedimentoForm
 from .forms_consulta import ConsultaForm
 from django.views.decorators.csrf import csrf_exempt
