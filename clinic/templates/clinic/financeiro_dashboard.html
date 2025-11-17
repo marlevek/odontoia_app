@@ -12,7 +12,7 @@
             <label>Mês:</label>
             <select name="mes" class="form-select">
                 {% for numero, nome in meses %}
-                <option value="{{ numero }}" {% if numero == mes %}selected{% endif %}>{{ nome }}</option>
+                <option value="{{ numero }}" {% if numero==mes %}selected{% endif %}>{{ nome }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -22,7 +22,7 @@
             <label>Ano:</label>
             <select name="ano" class="form-select">
                 {% for a in anos %}
-                <option value="{{ a }}" {% if a == ano %}selected{% endif %}>{{ a }}</option>
+                <option value="{{ a }}" {% if a==ano %}selected{% endif %}>{{ a }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -134,5 +134,70 @@
         </tbody>
     </table>
 
+    <h4 class="mt-5">📈 Receita x Despesa (Mensal)</h4>
+    <canvas id="graficoLinha"></canvas>
+    <h4 class="mt-5">🥧 Despesas por Categoria</h4>
+    <canvas id="graficoPizza"></canvas>
+    <h4 class="mt-5">📊 Origem das Receitas</h4>
+    <canvas id="graficoBarras"></canvas>
 </div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    const meses = {{ graficos.meses| safe }};
+    const receitasMes = {{ graficos.receitas_mes| safe }};
+    const despesasMes = {{ graficos.despesas_mes| safe }};
+
+    new Chart(document.getElementById("graficoLinha"), {
+        type: 'line',
+        data: {
+            labels: meses,
+            datasets: [
+                {
+                    label: "Receitas",
+                    data: receitasMes,
+                    borderColor: "green",
+                    tension: 0.2
+                },
+                {
+                    label: "Despesas",
+                    data: despesasMes,
+                    borderColor: "red",
+                    tension: 0.2
+                }
+            ]
+        }
+    });
+</script>
+
+<script>
+    // Pizza – Despesas por categoria
+    new Chart(document.getElementById("graficoPizza"), {
+        type: 'doughnut',
+        data: {
+            labels: {{ graficos.labels_categorias | safe }},
+        datasets: [{
+            data: {{ graficos.valores_categorias | safe }},
+        }]
+    }
+});
+</script>
+
+<script>
+    // Barras – Receitas por origem
+    new Chart(document.getElementById("graficoBarras"), {
+        type: 'bar',
+        data: {
+            labels: {{ graficos.labels_receitas_origem | safe }},
+        datasets: [{
+            label: "Receita",
+            data: {{ graficos.valores_receitas_origem | safe }},
+        }]
+    }
+});
+</script>
+
+
 {% endblock %}

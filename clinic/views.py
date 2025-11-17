@@ -1686,7 +1686,7 @@ def ia_insights(request):
 @login_required
 @require_active_subscription
 def financeiro_dashboard(request):
-    from .services import get_fluxo_caixa
+    from .services import get_fluxo_caixa, get_graficos_financeiros
     from datetime import datetime
 
     # Filtros opcionais
@@ -1750,6 +1750,7 @@ def financeiro_dashboard(request):
             'saldo': total_receitas - total_despesas,
         }
 
+    graficos = get_graficos_financeiros(request.user, ano)
 
     context = {
         'stats': stats,
@@ -1762,8 +1763,14 @@ def financeiro_dashboard(request):
             (5, 'Maio'), (6, 'Junho'), (7, 'Julho'), (8, 'Agosto'),
             (9, 'Setembro'), (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
         ],
-        'anos': range(2023,2031)
+        'anos': range(2023,2031),
+        
+        # Dados para os gráficos
+        'graficos': graficos,
     }
+    
+    
+    
 
     return render(request, 'clinic/financeiro_dashboard.html', context)
 
