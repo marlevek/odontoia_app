@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
-import datetime as datetime
 import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
