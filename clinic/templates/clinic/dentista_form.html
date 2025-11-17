@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container py-4">
-    <h2 class="mb-4">🦷 {{ titulo }}</h2>
+    <h2 class="mb-4"> 🦷 {{ titulo|default:"Cadastrar Dentista" }}</h2>
 
     <form method="post" class="card p-4 shadow-sm">
         {% csrf_token %}
