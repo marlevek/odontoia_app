@@ -45,11 +45,19 @@
 
         <a href="{% url 'clinic:financeiro_dashboard' %}"
             class="menu-item {% if '/financeiro/dashboard/' in request.path %}active{% endif %}">
-            <i class="bi bi-bar-chart-line"></i> Dashboard Financeiro
+            <i class="bi bi-speedometer"></i> Dashboard Financeiro
+        </a>
+
+        <a href="{% url 'clinic:receitas_list' %}" class="menu-item">
+            <i class="bi bi-cash-stack"></i> Receitas
+        </a>
+
+        <a href="{% url 'clinic:despesas_list' %}" class="menu-item">
+            <i class="bi bi-wallet2"></i> Despesas
         </a>
 
         <a href="{% url 'clinic:financeiro_resumo' %}" class="menu-item">
-            <i class="bi bi-cash-coin"></i> Resumo Financeiro
+            <i class="bi bi-graph-up"></i> Resumo Financeiro
         </a>
         {% endif %}
 
