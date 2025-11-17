@@ -1,3 +1,8 @@
+from datetime import datetime
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import A4
+import datetime as datetime
+import pandas as pd
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from .utils.contexto_dinamico import gerar_contexto_dinamico
@@ -1880,8 +1885,7 @@ def despesa_delete(request, pk):
 
 
 # Exportar Excel
-import pandas as pd
-import datetime as datetime
+import io
 
 @login_required
 @require_active_subscription
@@ -1925,28 +1929,20 @@ def financeiro_export_excel(request):
 
 
 # Exportar PDF
-from django.template.loader import render_to_string
-from xhtml2pdf import pisa
-from .services import get_fluxo_caixa
-import io
-
 @login_required
 @require_active_subscription
 def financeiro_export_pdf(request):
+    # Filtros
     mes = request.GET.get("mes")
     ano = request.GET.get("ano")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
-    # Garantir valores padrão
-    from datetime import datetime
     hoje = datetime.now()
     mes = int(mes) if mes else hoje.month
     ano = int(ano) if ano else hoje.year
 
-    # Dados
-    stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
-
+    # Query do período
     receitas = Income.objects.filter(
         owner=request.user,
         data__month=mes,
@@ -1959,26 +1955,51 @@ def financeiro_export_pdf(request):
         data__year=ano
     )
 
-    # Render HTML
-    html = render_to_string("clinic/financeiro_pdf.html", {
-        "mes": mes,
-        "ano": ano,
-        "stats": stats,
-        "receitas": receitas,
-        "despesas": despesas,
-    })
+    # --- PDF ---
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=financeiro_{mes}_{ano}.pdf'
 
-    # Gera PDF
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="financeiro_{mes}_{ano}.pdf"'
+    pdf = canvas.Canvas(response, pagesize=A4)
+    largura, altura = A4
 
-    pisa_status = pisa.CreatePDF(
-        html,
-        dest=response,
-        encoding="utf-8",
-    )
+    y = altura - 2*cm
 
-    if pisa_status.err:
-        return HttpResponse("Erro ao gerar PDF", status=500)
+    # Título
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(2*cm, y, f"Relatório Financeiro - {mes}/{ano}")
+    y -= 1.2*cm
+
+    # RECEITAS
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(2*cm, y, "Receitas")
+    y -= 0.8*cm
+
+    pdf.setFont("Helvetica", 10)
+    for r in receitas:
+        pdf.drawString(
+            2*cm, y, f"{r.data.strftime('%d/%m/%Y')} - {r.descricao} - R$ {r.valor}")
+        y -= 0.5*cm
+        if y < 2*cm:
+            pdf.showPage()
+            y = altura - 2*cm
+
+    y -= 1*cm
+
+    # DESPESAS
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(2*cm, y, "Despesas")
+    y -= 0.8*cm
+
+    pdf.setFont("Helvetica", 10)
+    for d in despesas:
+        pdf.drawString(
+            2*cm, y, f"{d.data.strftime('%d/%m/%Y')} - {d.descricao} - R$ {d.valor}")
+        y -= 0.5*cm
+        if y < 2*cm:
+            pdf.showPage()
+            y = altura - 2*cm
+
+    pdf.showPage()
+    pdf.save()
 
     return response
