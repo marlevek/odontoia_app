@@ -1696,7 +1696,7 @@ def financeiro_dashboard(request):
 
     # Filtros opcionais
     mes = request.GET.get("mes")
-    ano = request.GET.get("ano")
+    ano_param = request.GET.get("ano")
     data_inicio = request.GET.get('data_inicio')
     data_fim = request.GET.get('data_fim')
 
@@ -1707,11 +1707,11 @@ def financeiro_dashboard(request):
     if not data_inicio and not data_fim:
         if not mes:
             mes = hoje.month
-        if not ano:
-            ano = hoje.year
+        if not ano_param:
+            ano_param = hoje.year
 
         mes = int(mes)
-        ano = int(ano)
+        ano = int(ano_param)
 
         # Dados principais
         stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
