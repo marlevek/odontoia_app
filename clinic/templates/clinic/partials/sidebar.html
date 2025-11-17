@@ -24,7 +24,7 @@
             <i class="bi bi-tools"></i> Procedimentos
         </a>
 
-        {% if assinatura and assinatura.tipo in ('profissional premium') %}
+        {% if assinatura and assinatura.tipo in 'profissional premium' %}
         <a href="{% url 'clinic:dentistas_list' %}" class="menu-item">
             <i class="bi bi-person-badge"></i> Dentistas
         </a>
@@ -40,7 +40,7 @@
             <i class="bi bi-calendar-event"></i> Agenda
         </a>
 
-        {% if assinatura and assinatura.tipo in ('profissional premium') %}
+        {% if assinatura and assinatura.tipo in 'profissional premium' %}
         <div class="menu-group-title">Financeiro</div>
 
         <a href="{% url 'clinic:financeiro_dashboard' %}"
