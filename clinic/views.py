@@ -36,9 +36,9 @@ import openpyxl
 from openpyxl.utils import get_column_letter
 
 
-
 # inicializa o client globalmente mas de forma segura
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 
 def _odontoia_system_prompt(user):
     from .utils.contexto_dinamico import gerar_contexto_dinamico
@@ -99,6 +99,7 @@ def _get_openai_client():
         return None, f"Falha ao criar cliente OpenAI: {e}"
 
 # ── Endpoint de diagnóstico (opcional, ajuda no debug) ─────────────────────
+
 
 @csrf_exempt
 @login_required
@@ -245,7 +246,8 @@ def consultas_list(request):
     status = request.GET.get('status')
     data_filtro = request.GET.get('data')
 
-    consultas = Consulta.objects.filter(owner=request.user).select_related('paciente', 'dentista', 'procedimento').order_by('-data')
+    consultas = Consulta.objects.filter(owner=request.user).select_related(
+        'paciente', 'dentista', 'procedimento').order_by('-data')
 
     # 🔍 Filtro por nome do paciente ou dentista
     if search:
@@ -268,10 +270,9 @@ def consultas_list(request):
                 consultas = consultas.filter(data__date=data_formatada)
         except:
             pass
-        
 
     return render(request, 'clinic/consultas_list.html', {
-         'consultas': consultas,
+        'consultas': consultas,
         'search': search or '',
         'status': status or '',
         'data_filtro': data_filtro or '',
@@ -317,27 +318,26 @@ def consulta_update(request, pk):
 
             consulta.save()
             form.save_m2m()
-            
+
             # integração financeira
             if consulta.paga:
-               if not Income.objects.filter(consulta=consulta).exists():
-                   Income.objects.create(
-                       owner = request.user,
-                       origem = 'consulta',
-                       consulta = consulta,
-                       descricao = f'Consulta - {consulta.paciente.nome}',
-                       valor = consulta.valor,
-                       data = consulta.data.date(),
-                       pago = True,
+                if not Income.objects.filter(consulta=consulta).exists():
+                    Income.objects.create(
+                        owner=request.user,
+                        origem='consulta',
+                        consulta=consulta,
+                        descricao=f'Consulta - {consulta.paciente.nome}',
+                        valor=consulta.valor,
+                        data=consulta.data.date(),
+                        pago=True,
                     )
-               
+
             messages.success(request, "Consulta atualizada!")
             return redirect('clinic:consultas_list')
         else:
             messages.error(request, "Corrija os erros abaixo.")
     else:
         form = ConsultaForm(instance=consulta, user=request.user)
-        
 
     return render(request, 'clinic/consulta_form.html', {'form': form})
 
@@ -346,13 +346,14 @@ def consulta_update(request, pk):
 @require_active_subscription
 def consulta_delete(request, pk):
     consulta = get_object_or_404(Consulta, pk=pk, owner=request.user)
-    
+
     if request.method == 'POST':
         consulta.delete()
         messages.success(request, "Consulta excluída com sucesso.")
         return redirect('clinic:consultas_list')
-        
+
     return render(request, 'clinic/consulta_confirm_delete.html', {'consulta': consulta})
+
 
 @login_required
 @require_active_subscription
@@ -391,7 +392,8 @@ def consultas_calendar(request):
         'dentistas': Dentista.objects.filter(owner=request.user),
         'procedimentos': Procedimento.objects.filter(owner=request.user),
     })
-    
+
+
 @csrf_exempt
 @login_required
 @require_active_subscription
@@ -454,7 +456,8 @@ def dashboard(request):
     total_pacientes = Paciente.objects.filter(owner=user).count()
     total_consultas = Consulta.objects.filter(owner=user).count()
     consultas_concluidas = consultas_pagas.filter(concluida=True).count()
-    consultas_pendentes = Consulta.objects.filter(owner=user, concluida=False).count()
+    consultas_pendentes = Consulta.objects.filter(
+        owner=user, concluida=False).count()
 
     # === Faturamento ===
     faturamento_total = consultas_pagas.aggregate(
@@ -500,10 +503,13 @@ def dashboard(request):
     )
 
     if consultas_por_dentista:
-        dentistas_labels = [c['dentista__nome'] for c in consultas_por_dentista]
+        dentistas_labels = [c['dentista__nome']
+                            for c in consultas_por_dentista]
         dentistas_qtd = [c['total_consultas'] for c in consultas_por_dentista]
-        dentistas_receita = [float(c['receita'] or 0) for c in consultas_por_dentista]
-        dentistas_comissao = [float(c['comissao'] or 0) for c in consultas_por_dentista]
+        dentistas_receita = [float(c['receita'] or 0)
+                             for c in consultas_por_dentista]
+        dentistas_comissao = [float(c['comissao'] or 0)
+                              for c in consultas_por_dentista]
     else:
         dentistas_labels = ['Sem dados']
         dentistas_qtd = [0]
@@ -610,6 +616,7 @@ def dashboard(request):
     }
 
     return render(request, 'clinic/dashboard.html', contexto)
+
 
 @login_required
 @require_active_subscription
@@ -730,15 +737,16 @@ def _accent_insensitive_regex(prefix: str) -> str:
         pattern += base.get(ch, ch)
     return '^' + pattern  # começa com
 
+
 @login_required
 @require_active_subscription
 def dentista_create(request):
     assinatura = Assinatura.objects.filter(user=request.user).first()
-    
+
     if not assinatura:
         messages.error(request, 'Não foi possível encontrar sua assinatura')
         return redirect('clinic:dashboard')
-    
+
     plano = assinatura.tipo
 
     # Limites por plano
@@ -750,7 +758,7 @@ def dentista_create(request):
     }
 
     limite_max = LIMITE.get(plano, 1)
-    
+
     dentistas_atual = Dentista.objects.filter(owner=request.user).count()
 
     # Bloqueia se atingiu o limite
@@ -777,6 +785,7 @@ def dentista_create(request):
         form = DentistaForm()
 
     return render(request, "clinic/dentista_form.html", {"form": form})
+
 
 @login_required
 @require_active_subscription
@@ -884,12 +893,13 @@ def dentistas_list(request):
 @require_active_subscription
 def pacientes_list(request):
     search = (request.GET.get('search') or '').strip()
-    pacientes = Paciente.objects.filter(owner=request.user).order_by('-data_cadastro')
+    pacientes = Paciente.objects.filter(
+        owner=request.user).order_by('-data_cadastro')
 
     if search:
         regex = _accent_insensitive_regex(search)
         pacientes = pacientes.filter(
-            Q(nome__iregex=regex) | 
+            Q(nome__iregex=regex) |
             Q(cidade__iregex=regex) |
             Q(cpf__icontains=search)
         )
@@ -933,7 +943,7 @@ def paciente_update(request, pk):
             return redirect('clinic:pacientes_list')
     else:
         form = PacienteForm(instance=paciente)
-        
+
     return render(request, 'clinic/paciente_form.html', {'form': form, 'titulo': 'Editar Paciente'})
 
 
@@ -999,7 +1009,7 @@ def registrar_teste(request):
         )
         user.date_joined = timezone.now()
         user.save()
-        
+
         # Cria assinatura trial automaticamente
         Assinatura.objects.create(user=user, tipo='trial')
 
@@ -1013,7 +1023,7 @@ def registrar_teste(request):
             recipient_list=[user.email],
             fail_silently=True,
         )
-        
+
         # Faz login automático após criar conta
         login(request, user)
 
@@ -1030,7 +1040,8 @@ def registrar_teste(request):
 @login_required
 @require_active_subscription
 def procedimentos_list(request):
-    procedimentos = Procedimento.objects.filter(owner=request.user).order_by('nome')
+    procedimentos = Procedimento.objects.filter(
+        owner=request.user).order_by('nome')
     return render(request, 'clinic/procedimentos_list.html', {'procedimentos': procedimentos})
 
 
@@ -1044,7 +1055,7 @@ def procedimento_valor(request, id):
 def procedimento_create(request):
     if request.method == 'POST':
         form = ProcedimentoForm(request.POST)
-        
+
         if form.is_valid():
             procedimento = form.save(commit=False)
             procedimento.owner = request.user
@@ -1053,9 +1064,9 @@ def procedimento_create(request):
             return redirect('clinic:procedimentos_list')
         else:
             messages.error(request, 'Corrija os erros antes de salvar')
-    else:        
+    else:
         form = ProcedimentoForm()
-        
+
     return render(request, 'clinic/procedimento_form.html', {'form': form, 'titulo': 'Novo Procedimento'})
 
 
@@ -1063,7 +1074,7 @@ def procedimento_create(request):
 @require_active_subscription
 def procedimento_edit(request, id):
     procedimento = get_object_or_404(Procedimento, id=id, owner=request.user)
-    
+
     if request.method == 'POST':
         form = ProcedimentoForm(request.POST, instance=procedimento)
         if form.is_valid():
@@ -1074,7 +1085,7 @@ def procedimento_edit(request, id):
             messages.error(request, 'Corrija os erros abaixo.')
     else:
         form = ProcedimentoForm(instance=procedimento)
-        
+
     return render(request, 'clinic/procedimento_form.html', {'form': form, 'titulo': 'Editar Procedimento'})
 
 
@@ -1082,12 +1093,12 @@ def procedimento_edit(request, id):
 @require_active_subscription
 def procedimento_delete(request, id):
     procedimento = get_object_or_404(Procedimento, id=id, owner=request.user)
-    
+
     if request.method == 'POST':
         procedimento.delete()
         messages.success(request, "Procedimento excluído com sucesso.")
         return redirect('clinic:procedimentos_list')
-    
+
     return render(request, 'clinic/procedimento_confirm_delete.html', {'procedimento': procedimento})
 
 
@@ -1340,7 +1351,8 @@ def mercadopago_webhook(request):
 
     status = payment_info.get("status")
     external_reference = payment_info.get("external_reference")
-    payment_method = (payment_info.get("payment_method_id") or "desconhecido").lower()
+    payment_method = (payment_info.get("payment_method_id")
+                      or "desconhecido").lower()
 
     if not external_reference:
         return JsonResponse({"ok": True, "missing_external_reference": True})
@@ -1425,7 +1437,6 @@ def pagamento_sucesso(request):
         "plano": plano,
     })
 
-    
 
 # Checkout publico
 def checkout_publico(request, plano):
@@ -1513,7 +1524,8 @@ def financeiro_resumo(request):
     Tela de resumo financeiro (por dentista, receita, comissões, líquido)
     Disponível apenas para planos Profissional e Premium.
     """
-    assinatura = Assinatura.objects.filter(user=request.user, ativa=True).first()
+    assinatura = Assinatura.objects.filter(
+        user=request.user, ativa=True).first()
 
     if not assinatura or assinatura.tipo not in ("profissional", "premium"):
         messages.error(
@@ -1544,15 +1556,15 @@ def financeiro_resumo(request):
         )
         .order_by("-receita")
     )
-    
+
     # Cálculo líquido por dentista
     lista_dentistas = []
     for d in por_dentista:
         receita = d['receita'] or 0
         comissoes = d['comissoes'] or 0
-        d['liquido'] = receita - comissoes 
+        d['liquido'] = receita - comissoes
         lista_dentistas.append(d)
-        
+
     totais = consultas.aggregate(
         total_receita=Sum("valor_final"),
         total_comissoes=Sum("comissao_valor"),
@@ -1560,13 +1572,13 @@ def financeiro_resumo(request):
     total_receita = totais["total_receita"] or 0
     total_comissoes = totais["total_comissoes"] or 0
     total_liquido = total_receita - total_comissoes
-    
+
     # Adiciona valor líquido por dentista
     lista_dentistas = []
     for dent in por_dentista:
         receita = dent['receita'] or 0
         comissao = dent['comissoes'] or 0
-        dent['liquido'] = receita - comissao 
+        dent['liquido'] = receita - comissao
         lista_dentistas.append(dent)
 
     context = {
@@ -1576,8 +1588,7 @@ def financeiro_resumo(request):
         "total_comissoes": total_comissoes,
         "total_liquido": total_liquido,
     }
-    
-    
+
     return render(request, "clinic/financeiro_resumo.html", context)
 
 
@@ -1588,7 +1599,8 @@ def financeiro_exportar_excel(request):
     Exporta o mesmo resumo financeiro para Excel (XLSX).
     Também restrito a Profissional / Premium.
     """
-    assinatura = Assinatura.objects.filter(user=request.user, ativa=True).first()
+    assinatura = Assinatura.objects.filter(
+        user=request.user, ativa=True).first()
 
     if not assinatura or assinatura.tipo not in ("profissional", "premium"):
         messages.error(
@@ -1602,7 +1614,7 @@ def financeiro_exportar_excel(request):
     data_inicial = hoje - timedelta(days=periodo)
 
     consultas = Consulta.objects.filter(
-        owner = request.user,
+        owner=request.user,
         data__date__gte=data_inicial,
         data__date__lte=hoje
     )
@@ -1623,7 +1635,8 @@ def financeiro_exportar_excel(request):
     ws = wb.active
     ws.title = "Financeiro"
 
-    headers = ["Dentista", "Total Consultas", "Receita (R$)", "Comissões (R$)", "Líquido (R$)"]
+    headers = ["Dentista", "Total Consultas",
+               "Receita (R$)", "Comissões (R$)", "Líquido (R$)"]
     ws.append(headers)
 
     for row in por_dentista:
@@ -1662,7 +1675,8 @@ def ia_insights(request):
     assinatura = Assinatura.objects.filter(user=request.user).first()
 
     if not assinatura or assinatura.tipo != "premium":
-        messages.error(request, "Apenas assinantes Premium podem acessar IA & Insights.")
+        messages.error(
+            request, "Apenas assinantes Premium podem acessar IA & Insights.")
         return redirect("clinic:dashboard")
 
     return render(request, "clinic/ia_insights.html")
@@ -1673,16 +1687,37 @@ def ia_insights(request):
 @require_active_subscription
 def financeiro_dashboard(request):
     from .services import get_fluxo_caixa
-    
+    from datetime import datetime
+
     # Filtros opcionais
     mes = request.GET.get("mes")
     ano = request.GET.get("ano")
 
+    # se nada selecionado -> mês atual
+    hoje = datetime.now()
+    if not mes:
+        mes = hoje.month
+    if not ano:
+        ano = ano.year
+
+    mes = int(mes)
+    ano = int(ano)
+
+    # Dados principais
     stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
 
     # Puxa lista de receitas e despesas para exibir no dashboard
-    incomes = Income.objects.filter(owner=request.user).order_by('-data')[:10]
-    expenses = Expense.objects.filter(owner=request.user).order_by('-data')[:10]
+    incomes = Income.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    ).order_by('-data')[:10]
+
+    expenses = Expense.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    ).order_by('-data')[:10]
 
     context = {
         'stats': stats,
@@ -1690,6 +1725,12 @@ def financeiro_dashboard(request):
         'expenses': expenses,
         'mes': mes,
         'ano': ano,
+        'meses': [
+            (1, 'Janeiro'), (2, 'Fevereiro'), (3, 'Março'), (4, 'Abril'),
+            (5, 'Maio'), (6, 'Junho'), (7, 'Julho'), (8, 'Agosto'),
+            (9, 'Setembro'), (10, 'Outubro'), (11, 'Novembro'), (12, 'Dezembro')
+        ],
+        'anos': range(2023,2031)
     }
 
     return render(request, 'clinic/financeiro_dashboard.html', context)
@@ -1699,7 +1740,7 @@ def financeiro_dashboard(request):
 @login_required
 @require_active_subscription
 def receitas_list(request):
-    receitas = Income.objects.filter(owner = request.user).order_by('-data')
+    receitas = Income.objects.filter(owner=request.user).order_by('-data')
     return render(request, 'clinic/receitas_list.html', {'receitas': receitas})
 
 
@@ -1718,7 +1759,7 @@ def receita_create(request):
 
     else:
         form = IncomeForm()
-            
+
     return render(request, "clinic/receita_form.html", {'form': form})
 
 
@@ -1765,7 +1806,7 @@ def despesa_create(request):
             despesa = form.save(commit=False)
             despesa.owner = request.user
             despesa.save()
-            
+
             messages.success(request, "Despesa adicionada!")
             return redirect("clinic:despesas_list")
     else:
