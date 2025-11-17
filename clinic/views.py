@@ -1881,6 +1881,7 @@ def despesa_delete(request, pk):
 
 # Exportar Excel
 import pandas as pd
+import datetime as datetime
 
 @login_required
 @require_active_subscription
