@@ -111,9 +111,7 @@ urlpatterns = [
     # Financeiro
     path('financeiro/', views.financeiro_home, name='financeiro_home'),
     path('financeiro/resumo/', views.financeiro_resumo, name='financeiro_resumo'),
-    path('financeiro/exportar/', views.financeiro_exportar_excel,
-         name='financeiro_exportar_excel'),
-
+    
     # Finanças
     path('financeiro/dashboard/', views.financeiro_dashboard,
          name='financeiro_dashboard'),
