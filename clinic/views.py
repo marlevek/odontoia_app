@@ -1880,111 +1880,104 @@ def despesa_delete(request, pk):
 
 
 # Exportar Excel
-
+import pandas as pd
 
 @login_required
 @require_active_subscription
 def financeiro_export_excel(request):
-    # Obtém filtros atuais
     mes = request.GET.get("mes")
     ano = request.GET.get("ano")
-    data_inicio = request.GET.get("data_inicio")
-    data_fim = request.GET.get("data_fim")
 
-    # Consulta base
-    receitas = Income.objects.filter(owner=request.user)
-    despesas = Expense.objects.filter(owner=request.user)
+    hoje = datetime.now()
+    mes = int(mes) if mes else hoje.month
+    ano = int(ano) if ano else hoje.year
 
-    # Aplica filtros
-    if mes and ano:
-        receitas = receitas.filter(data__month=mes, data__year=ano)
-        despesas = despesas.filter(data__month=mes, data__year=ano)
+    receitas = Income.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    ).values("descricao", "valor", "data", "origem")
 
-    if data_inicio and data_fim:
-        receitas = receitas.filter(data__range=[data_inicio, data_fim])
-        despesas = despesas.filter(data__range=[data_inicio, data_fim])
+    despesas = Expense.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    ).values("categoria", "descricao", "valor", "data")
 
-    # Criar workbook
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Financeiro"
+    # Cria Excel com múltiplas abas
+    output = io.BytesIO()
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
 
-    ws.append(["Descrição", "Valor", "Data", "Origem / Categoria", "Tipo"])
+    pd.DataFrame(receitas).to_excel(writer, index=False, sheet_name='Receitas')
+    pd.DataFrame(despesas).to_excel(writer, index=False, sheet_name='Despesas')
 
-    for r in receitas:
-        ws.append([r.descricao, r.valor, r.data.strftime(
-            "%d/%m/%Y"), r.origem, "Receita"])
+    writer.close()
+    output.seek(0)
 
-    for d in despesas:
-        ws.append([d.descricao, d.valor, d.data.strftime(
-            "%d/%m/%Y"), d.categoria, "Despesa"])
-
-    # Auto-ajuste de colunas
-    for col in ws.columns:
-        tamanho = max(len(str(c.value)) for c in col)
-        ws.column_dimensions[get_column_letter(
-            col[0].column)].width = tamanho + 2
-
-    # Resposta
     response = HttpResponse(
-        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        output,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
-    response["Content-Disposition"] = 'attachment; filename="financeiro.xlsx"'
-    wb.save(response)
+    response["Content-Disposition"] = f'attachment; filename=financeiro_{mes}_{ano}.xlsx'
 
     return response
 
 
 # Exportar PDF
-
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from .services import get_fluxo_caixa
+import io
 
 @login_required
 @require_active_subscription
 def financeiro_export_pdf(request):
-
     mes = request.GET.get("mes")
     ano = request.GET.get("ano")
     data_inicio = request.GET.get("data_inicio")
     data_fim = request.GET.get("data_fim")
 
-    receitas = Income.objects.filter(owner=request.user)
-    despesas = Expense.objects.filter(owner=request.user)
+    # Garantir valores padrão
+    from datetime import datetime
+    hoje = datetime.now()
+    mes = int(mes) if mes else hoje.month
+    ano = int(ano) if ano else hoje.year
 
-    if mes and ano:
-        receitas = receitas.filter(data__month=mes, data__year=ano)
-        despesas = despesas.filter(data__month=mes, data__year=ano)
+    # Dados
+    stats = get_fluxo_caixa(request.user, mes=mes, ano=ano)
 
-    if data_inicio and data_fim:
-        receitas = receitas.filter(data__range=[data_inicio, data_fim])
-        despesas = despesas.filter(data__range=[data_inicio, data_fim])
+    receitas = Income.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    )
 
+    despesas = Expense.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    )
+
+    # Render HTML
+    html = render_to_string("clinic/financeiro_pdf.html", {
+        "mes": mes,
+        "ano": ano,
+        "stats": stats,
+        "receitas": receitas,
+        "despesas": despesas,
+    })
+
+    # Gera PDF
     response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = 'attachment; filename="financeiro.pdf"'
+    response["Content-Disposition"] = f'attachment; filename="financeiro_{mes}_{ano}.pdf"'
 
-    p = canvas.Canvas(response, pagesize=letter)
-    y = 750
+    pisa_status = pisa.CreatePDF(
+        html,
+        dest=response,
+        encoding="utf-8",
+    )
 
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(30, y, "Relatório Financeiro")
-    y -= 40
+    if pisa_status.err:
+        return HttpResponse("Erro ao gerar PDF", status=500)
 
-    p.setFont("Helvetica", 10)
-
-    p.drawString(30, y, "Receitas:")
-    y -= 20
-    for r in receitas:
-        p.drawString(
-            40, y, f"{r.data.strftime('%d/%m/%Y')} - {r.descricao} - R$ {r.valor}")
-        y -= 15
-
-    y -= 20
-    p.drawString(30, y, "Despesas:")
-    y -= 20
-    for d in despesas:
-        p.drawString(
-            40, y, f"{d.data.strftime('%d/%m/%Y')} - {d.descricao} - R$ {d.valor}")
-        y -= 15
-
-    p.showPage()
-    p.save()
     return response
