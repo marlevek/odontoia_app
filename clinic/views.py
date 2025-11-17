@@ -1698,7 +1698,7 @@ def financeiro_dashboard(request):
     if not mes:
         mes = hoje.month
     if not ano:
-        ano = ano.year
+        ano = hoje.year
 
     mes = int(mes)
     ano = int(ano)
