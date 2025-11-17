@@ -2,7 +2,9 @@
 {% block content %}
 <div class="container py-4">
     <h2>💰 Receitas</h2>
-    <a href="{% url 'clinic:receita_create' %}" class="btn btn-primary mb-3">+ Nova Receita</a>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalReceita">
+        + Nova Receita
+    </button>
 
     <table class="table table-striped">
         <thead>
@@ -23,7 +25,12 @@
                 <td>{% if r.pago %}✔️{% else %}❌{% endif %}</td>
                 <td>
                     <a href="{% url 'clinic:receita_update' r.pk %}" class="btn btn-sm btn-warning">Editar</a>
-                    <a href="{% url 'clinic:receita_delete' r.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Deseja realmente excluir esta receita?')">Excluir</a>
+                    <a href="{% url 'clinic:receita_delete' r.pk %}" class="btn btn-sm btn-danger delete-receita"
+                        data-id="{{ r.pk }}">
+                        Excluir
+                    </a>
+
+
                 </td>
             </tr>
             {% empty %}
@@ -35,3 +42,27 @@
     </table>
 </div>
 {% endblock %}
+
+<script>
+document.querySelectorAll('.delete-receita').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        const url = this.getAttribute('href');
+
+        Swal.fire({
+            title: 'Excluir Receita?',
+            text: "Esta ação não pode ser desfeita.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = url;
+            }
+        });
+    });
+});
+</script>

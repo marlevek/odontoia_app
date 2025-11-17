@@ -1716,8 +1716,8 @@ def receita_create(request):
             messages.success(request, 'Receita adicionada!')
             return redirect('clinic:receitas_list')
 
-        else:
-            form = IncomeForm()
+    else:
+        form = IncomeForm()
             
     return render(request, "clinic/receita_form.html", {'form': form})
 
