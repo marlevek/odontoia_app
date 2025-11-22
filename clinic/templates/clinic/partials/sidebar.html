@@ -10,7 +10,7 @@
 
 <div class="sidebar-header">
 
-    {% if clinica_config and clinica_config.logo %}
+   {% if clinica_config and clinica_config.logo and clinica_config.logo.name %}
         <!-- LOGO PERSONALIZADO -->
         <img src="{{ clinica_config.logo.url }}" 
              class="sidebar-logo"
