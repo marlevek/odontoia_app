@@ -57,6 +57,14 @@
         </a>
         {% endif %}
 
+<!-- Configuração da Clínica-->
+        {% if assinatura and assinatura.tipo == "premium" %}
+<a href="{% url 'clinic:clinica_config' %}" class="menu-item">
+    <i class="bi bi-gear"></i> Configurações da Clínica
+</a>
+{% endif %}
+
+
         <!-- Logout -->
         <a href="{% url 'clinic:logout' %}" class="logout-link">
             <i class="bi bi-box-arrow-right"></i> Sair

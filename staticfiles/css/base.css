@@ -38,12 +38,10 @@ body {
   height: 100%;
 }
 
-.logo {
+.navbar .logo {
   height: 100%;
-  width: 120px;
-  max-height: 150px;
-  object-fit: contain;
-  display: block;
+  max-height: 90px;
+  width: auto;
 }
 
 .logo-container h1 {
@@ -208,14 +206,18 @@ body {
 
 
 /* Link "Sair" minimalista, sem fundo/borda */
-.logout-link, .login-link {
+.logout-link,
+.login-link {
   color: #d32f2f !important;
   font-weight: 600;
   text-decoration: none;
   transition: color 0.2 ease;
-  padding: 0;            /* sem padding pra não parecer botão */
-  border: none;          /* garantia */
-  background: transparent !important; /* sem fundo */
+  padding: 0;
+  /* sem padding pra não parecer botão */
+  border: none;
+  /* garantia */
+  background: transparent !important;
+  /* sem fundo */
 }
 
 .logout-link:hover {
@@ -230,20 +232,31 @@ body {
   width: 350px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   z-index: 10000;
 }
+
 .chat-body {
   max-height: 350px;
   overflow-y: auto;
   background: #f8f9fa;
 }
+
 .message {
   margin: 6px 0;
   padding: 8px 12px;
   border-radius: 10px;
 }
-.message.user { background: #007bff; color: white; text-align: right; }
-.message.bot { background: #e9ecef; color: black; text-align: left; }
 
+.message.user {
+  background: #007bff;
+  color: white;
+  text-align: right;
+}
+
+.message.bot {
+  background: #e9ecef;
+  color: black;
+  text-align: left;
+}
