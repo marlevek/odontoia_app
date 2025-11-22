@@ -1,20 +1,32 @@
 {% load static %}
 
+<!-- DEBUG -->
+<p style="color:white; font-size:14px;">
+    DEBUG: Nome clínica = {{ clinica_config.nome_clinica }}
+</p>
+
+
 <aside id="sidebar" class="sidebar">
 
 <div class="sidebar-header">
+
     {% if clinica_config and clinica_config.logo %}
-    <img src="{{ clinica_config.logo.url }}" class="sidebar-logo" alt="Logo da Clínica">
-{% else %}
-    <img src="{% static 'img/logo_odontoIA.png' %}" class="sidebar-logo" alt="OdontoIA">
-{% endif %}
-    <span class="sidebar-title">OdontoIA</span>
+        <img src="{{ clinica_config.logo.url }}" class="sidebar-logo" alt="Logo da clínica">
+    {% else %}
+        <img src="{% static 'img/logo_odontoIA.png' %}" class="sidebar-logo" alt="Logo padrão OdontoIA">
+    {% endif %}
+
+    <span class="sidebar-title">
+        {% if clinica_config and clinica_config.nome_clinica %}
+            {{ clinica_config.nome_clinica }}
+        {% else %}
+            OdontoIA
+        {% endif %}
+    </span>
 </div>
 
-
     <nav class="sidebar-menu">
-    
-        <a href="{% url 'clinic:dashboard' %}"
+            <a href="{% url 'clinic:dashboard' %}"
             class="menu-item {% if request.path == '/dashboard/' %}active{% endif %}">
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
