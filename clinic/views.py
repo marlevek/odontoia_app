@@ -1,3 +1,4 @@
+import os
 from django.contrib.staticfiles import finders
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib import colors
@@ -37,7 +38,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from openai import OpenAI
 import json
-import os
 import uuid
 import mercadopago
 from decimal import Decimal
@@ -1858,50 +1858,59 @@ def financeiro_export_excel(request):
 @login_required
 @require_active_subscription
 def financeiro_export_pdf(request):
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
-    from reportlab.lib.styles import getSampleStyleSheet
+    mes = request.GET.get("mes")
+    ano_param = request.GET.get("ano")
 
-    # --- filtros ---
-    mes = int(request.GET.get("mes", datetime.now().month))
-    ano = int(request.GET.get("ano", datetime.now().year))
+    hoje = datetime.now()
+    mes = int(mes) if mes else hoje.month
+    ano = int(ano_param) if ano_param else hoje.year
 
-    receitas = Income.objects.filter(owner=request.user, data__month=mes, data__year=ano)
-    despesas = Expense.objects.filter(owner=request.user, data__month=mes, data__year=ano)
+    receitas = Income.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    )
 
-    # --- configurações da clínica ---
+    despesas = Expense.objects.filter(
+        owner=request.user,
+        data__month=mes,
+        data__year=ano
+    )
+
+    # ======== CONFIGURAÇÃO DO LOGO ===============
     config = ClinicaConfig.objects.filter(owner=request.user).first()
 
-    # LOGO ---
+    # caso tenha logo da clínica
     if config and config.logo:
-        logo_path = config.logo.path
+        logo_path = config.logo.path     # ← caminho real no disco
     else:
+        # logo padrão
         logo_path = finders.find("img/logo_odontoIA.png")
 
-    # RODAPÉ ---
-    if config and config.rodape_pdf:
-        rodape = config.rodape_pdf
-    else:
-        rodape = "Relatório gerado automaticamente pelo sistema OdontoIA · odontoia.codertec.com.br"
-
-    # --- cria PDF ---
+    # ======== CRIA PDF ===============
     buffer = io.BytesIO()
     pdf = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
+
     elementos = []
+    styles = getSampleStyleSheet()
 
-    # LOGO
-    if logo_path:
-        elementos.append(Image(logo_path, width=120, height=50))
-        elementos.append(Spacer(1, 12))
+    # ---- LOGO ----
+    if logo_path and os.path.exists(logo_path):
+        try:
+            img = Image(logo_path, width=120, height=40)
+            elementos.append(img)
+            elementos.append(Spacer(1, 12))
+        except:
+            pass  # se der erro, apenas não mostra logo
 
-    # Título
-    titulo = f"Relatório Financeiro — {mes:02d}/{ano}"
+    # ---- TÍTULO ----
+    titulo = f"Relatório Financeiro - {mes:02d}/{ano}"
     elementos.append(Paragraph(titulo, styles["Title"]))
     elementos.append(Spacer(1, 20))
 
-    # ------------------------- RECEITAS -------------------------
+    # -------------------------------------
+    # TABELA DE RECEITAS
+    # -------------------------------------
     elementos.append(Paragraph("<b>Receitas</b>", styles["Heading2"]))
     elementos.append(Spacer(1, 6))
 
@@ -1920,22 +1929,25 @@ def financeiro_export_pdf(request):
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4A90E2")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("ALIGN", (3, 1), (3, -1), "RIGHT"),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey)
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
     ]))
+
     elementos.append(tabela_receitas)
     elementos.append(Spacer(1, 20))
 
-    # ------------------------- DESPESAS -------------------------
+    # -------------------------------------
+    # TABELA DE DESPESAS
+    # -------------------------------------
     elementos.append(Paragraph("<b>Despesas</b>", styles["Heading2"]))
     elementos.append(Spacer(1, 6))
 
     dados_despesas = [["Data", "Categoria", "Descrição", "Valor (R$)"]]
 
     for d in despesas:
-        categoria = d.categoria.nome if hasattr(d.categoria, "nome") else "-"
         dados_despesas.append([
             d.data.strftime("%d/%m/%Y"),
-            categoria,
+            getattr(d.categoria, "nome", "-"),
             d.descricao,
             f"{d.valor:.2f}"
         ])
@@ -1945,25 +1957,32 @@ def financeiro_export_pdf(request):
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D0021B")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("ALIGN", (3, 1), (3, -1), "RIGHT"),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey)
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
     ]))
 
     elementos.append(tabela_despesas)
     elementos.append(Spacer(1, 30))
 
-    # ------------------------- RODAPÉ -------------------------
-    rodape_p = Paragraph(
-        f"<para alignment='center'><font size='9' color='#666'>{rodape}</font></para>",
-        styles["Normal"]
-    )
-    elementos.append(rodape_p)
+    # -------------------------------------
+    # RODAPÉ CUSTOMIZADO OU PADRÃO
+    # -------------------------------------
+    rodape = None
+    if config and config.rodape_pdf:
+        rodape = config.rodape_pdf
+    else:
+        rodape = "Relatório gerado automaticamente pelo sistema OdontoIA"
 
-    # FINALIZA PDF
+    elementos.append(Paragraph(f"<para align='center'><font size=9>{rodape}</font></para>"))
+
+    # -------------------------------------
+    # FINALIZA
+    # -------------------------------------
     pdf.build(elementos)
 
     buffer.seek(0)
     response = HttpResponse(buffer, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename=financeiro_{mes}_{ano}.pdf'    
+    response['Content-Disposition'] = f'attachment; filename=\"financeiro_{mes}_{ano}.pdf\"'
 
     return response
 
