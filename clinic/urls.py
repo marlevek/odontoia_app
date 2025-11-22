@@ -111,7 +111,7 @@ urlpatterns = [
     # Financeiro
     path('financeiro/', views.financeiro_home, name='financeiro_home'),
     path('financeiro/resumo/', views.financeiro_resumo, name='financeiro_resumo'),
-    
+
     # Finanças
     path('financeiro/dashboard/', views.financeiro_dashboard,
          name='financeiro_dashboard'),
@@ -128,13 +128,16 @@ urlpatterns = [
          views.despesa_update, name="despesa_update"),
     path("financeiro/despesas/<int:pk>/deletar/",
          views.despesa_delete, name="despesa_delete"),
-    path('financeiro/exportar/pdf/', views.financeiro_export_pdf, name='financeiro_export_pdf'),
-    path('financeiro/exportar/excel/', views.financeiro_export_excel, name='financeiro_export_excel'),
+    path('financeiro/exportar/pdf/', views.financeiro_export_pdf,
+         name='financeiro_export_pdf'),
+    path('financeiro/exportar/excel/', views.financeiro_export_excel,
+         name='financeiro_export_excel'),
 
 
     # IA e Insights
     path("ia-insights/", views.ia_insights, name="ia_insights"),
-    
+
     # Configurações da Clínica
-     path('configuracoes/clinica/', views.clinica_config, name='clinica_config'),
+    path('configuracoes/clinica/', views.clinica_config_view, name='clinica_config'),
+
 ]
