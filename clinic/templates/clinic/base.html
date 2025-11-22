@@ -19,6 +19,15 @@
     <link rel="stylesheet" href="{% static 'clinic/css/sidebar.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="icon" href="{% static 'img/logo_odontoIA.png' %}" type="image/png">
+
+    {% if clinica_config %}
+<style>
+    :root {
+        --cor-primaria: {{ clinica_config.cor_primaria|default:'#0033ff' }};
+        --cor-secundaria: {{ clinica_config.cor_secundaria|default:'#0055ff' }};
+    }
+</style>
+{% endif %}
 </head>
 
 <body>

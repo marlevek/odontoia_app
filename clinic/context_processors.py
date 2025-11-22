@@ -1,6 +1,6 @@
 # clinic/context_processors.py
 from .utils.subscription import verificar_assinatura
-from .models import Assinatura
+from .models import Assinatura, ClinicaConfig
 from django.utils import timezone
 
 
@@ -28,4 +28,15 @@ def trial_status(request):
         "trial_alerta": alerta,
         "trial_dias": dias,
         "trial_ativo": ativo,
+    }
+
+
+def clinica_config(request):
+    if not request.user.is_authenticated:
+        return {}
+    
+    config = ClinicaConfig.objects.filter(owner=request.user).first()
+    
+    return {
+        "clinica_config": config
     }

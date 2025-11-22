@@ -12,7 +12,7 @@
     left: 0;
     width: 240px;
     height: 100vh;
-    background: var(--sidebar-bg);
+    background-color: var(--cor-primaria);
     color: var(--sidebar-text);
     padding: 20px 10px;
     display: flex;
@@ -26,6 +26,7 @@
     padding: 0 10px 20px;
     gap: 10px;
 }
+
 
 .sidebar-logo {
     width: 45px;
@@ -65,7 +66,7 @@
 }
 
 .menu-item.active {
-    background: var(--sidebar-active);
+    background-color: var(--cor-secundaria);
 }
 
 .logout {
