@@ -69,11 +69,10 @@
         {% endif %}
 
         {% if assinatura and assinatura.tipo == "premium" %}
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'clinic:clinica_config' %}">
-                <i class="bi bi-gear"></i> Configurações da Clínica
-            </a>
-        </li>
+        <div class="menu-group-title">Configurações</div>
+        <a class="menu-item" href="{% url 'clinic:clinica_config' %}">
+            <i class="bi bi-gear"></i> Configurações da Clínica</a>
+       
         {% endif %}
 
         <div class="menu-group-title">Conta</div>
