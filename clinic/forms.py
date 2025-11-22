@@ -27,9 +27,20 @@ class ClinicaConfigForm(forms.ModelForm):
             "logo": forms.FileInput(attrs={"class": "form-control"}),
             "cor_primaria": forms.TextInput(attrs={"type": "color", "class": "form-control form-control-color"}),
             "cor_secundaria": forms.TextInput(attrs={"type": "color", "class": "form-control form-control-color"}),
-            "rodape_pdf": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-        }
-    
+            "rodape_pdf": forms.Textarea(attrs={
+                "placeholder": 'Ex: Clínica Sorriso - CRO 12345 - Endereço: Rua Exemplo, 123 - Telefone: (00) 0000-0000',
+                "class": "form-control", 
+                "rows": 3,
+                })
+            }
+        help_texts = {
+        "rodape_pdf": (
+            "Texto que será exibido no rodapé dos relatórios PDF.<br>"
+            "<strong>Sugestão:</strong> Nome da clínica, CRO, telefone, site etc.<br>"
+            "Exemplo: <em>Clínica Sorriso — CRO-PR 12345 • (41) 99999-8888</em>"
+        )
+    }
+   
     
 class DentistaForm(forms.ModelForm):
     class Meta:

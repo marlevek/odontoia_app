@@ -1992,8 +1992,13 @@ def clinica_config_view(request):
             return redirect("clinic:clinica_config")
     else:
         form = ClinicaConfigForm(instance=config)
+        
+    rodape_padrao = "Relatório gerado automaticamente pelo sistema OdontoIA."
 
     return render(request, "clinic/clinica_config.html", {
         "form": form,
         'config': config,
+        'clinica_config': config,
+        'assinatura': assinatura,
+        'rodape_padrao': rodape_padrao,
         })
