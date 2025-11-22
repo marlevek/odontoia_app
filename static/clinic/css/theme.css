@@ -1,0 +1,7 @@
+/* VALORES PADRÃO */
+:root {
+    --cor-primaria: #0b5394;
+    --cor-secundaria: #09396b;
+}
+
+/* Sobrescrita via Django (ClinicaConfig) acontece no base.html */
