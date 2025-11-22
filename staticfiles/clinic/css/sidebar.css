@@ -1,9 +1,10 @@
 :root {
-    --sidebar-bg: var(--cor-primaria);
+    --sidebar-bg: var(--cor-primaria, #0b5394);
+    --sidebar-active: var(--cor-secundaria, #072f58);
+    --sidebar-hover: var(--cor-primaria, #09396b);
     --sidebar-text: #ffffff;
-    --sidebar-hover: var(--cor-secundaria);
-    --sidebar-active: var(--cor-secundaria);
 }
+
 
 /* ==== SIDEBAR ==== */
 .sidebar {
@@ -12,7 +13,7 @@
     left: 0;
     width: 240px;
     height: 100vh;
-    background-color: var(--sidebar-bg);
+    background-color: var(---cor-primaria) !important;
     color: var(--sidebar-text);
     padding: 20px 10px;
     display: flex;
@@ -29,7 +30,11 @@
 
 
 .sidebar-logo {
-    width: 45px;
+    width: 120px;
+    height: auto;
+    margin: 0 auto;
+    object-fit: contain;
+    border-radius: 8px;
 }
 
 .sidebar-title {
@@ -66,7 +71,7 @@
 }
 
 .menu-item.active {
-    background-color: var(--sidebar-active);
+    background-color: var(--cor-secundaria) !important;
 }
 
 .logout {
@@ -101,7 +106,8 @@
     padding: 6px 10px;
     font-size: 22px;
     z-index: 2100;
-    display: none;  /* só aparece no mobile */
+    display: none;
+    /* só aparece no mobile */
 }
 
 /* ==== MOBILE ==== */

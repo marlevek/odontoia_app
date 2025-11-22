@@ -5,9 +5,9 @@
     <div class="sidebar-header">
         {% if clinica_config and clinica_config.logo %}
     <img src="{{ clinica_config.logo.url }}" ...>
-{% else %}
-    <img src="{% static 'img/logo_odontoIA.png' %}">
-{% endif %}
+    {% else %}
+        <img src="{% static 'img/logo_odontoIA.png' %}">
+    {% endif %}
         <span class="sidebar-title">OdontoIA</span>
     </div>
 
