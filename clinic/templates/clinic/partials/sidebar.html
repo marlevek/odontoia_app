@@ -3,7 +3,11 @@
 <aside id="sidebar" class="sidebar">
 
     <div class="sidebar-header">
-        <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo" class="sidebar-logo">
+        {% if clinica_config and clinica_config.logo %}
+    <img src="{{ clinica_config.logo.url }}" ...>
+{% else %}
+    <img src="{% static 'img/logo_odontoIA.png' %}">
+{% endif %}
         <span class="sidebar-title">OdontoIA</span>
     </div>
 
