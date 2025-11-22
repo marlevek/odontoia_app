@@ -1,175 +1,140 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        font-size: 12px;
-        margin: 0;
-        padding: 0;
-    }
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 13px;
+            color: #333;
+        }
 
-    .container {
-        padding: 20px 35px;
-    }
+        .header {
+            width: 100%;
+            border-bottom: 2px solid #0077cc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    /* Cabeçalho */
-    .header {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        border-bottom: 2px solid #ccc;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
+        .header img {
+            height: 65px;
+            object-fit: contain;
+        }
 
-    .logo {
-        width: 65px;
-        height: 65px;
-        object-fit: contain;
-    }
+        h2 {
+            margin: 0;
+            color: #0077cc;
+            text-align: right;
+        }
 
-    .title-block h1 {
-        margin: 0;
-        font-size: 22px;
-        color: #003366;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+        
+        th {
+            background: #0077cc;
+            color: white;
+            padding: 8px;
+            font-size: 13px;
+            text-align: left;
+        }
 
-    .title-block p {
-        margin: 2px 0;
-        color: #444;
-        font-size: 12px;
-    }
+        td {
+            padding: 7px;
+            border-bottom: 1px solid #ccc;
+            font-size: 12px;
+        }
 
-    h2 {
-        color: #003366;
-        margin-top: 30px;
-        margin-bottom: 8px;
-        font-size: 18px;
-        border-bottom: 1px solid #ccc;
-        padding-bottom: 4px;
-    }
+        .section-title {
+            margin-top: 25px;
+            font-size: 16px;
+            color: #0077cc;
+            font-weight: bold;
+        }
 
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 8px;
-    }
-
-    th {
-        background: #e5edf7;
-        padding: 6px;
-        text-align: left;
-        font-size: 12px;
-    }
-
-    td {
-        padding: 6px;
-        border-bottom: 1px solid #ddd;
-        font-size: 12px;
-    }
-
-    .footer {
-        margin-top: 40px;
-        padding-top: 10px;
-        border-top: 1px solid #ccc;
-        text-align: center;
-        font-size: 11px;
-        color: #555;
-    }
-
-</style>
+        .footer {
+            width: 100%;
+            margin-top: 30px;
+            padding-top: 10px;
+            font-size: 11px;
+            border-top: 1px solid #ccc;
+            text-align: center;
+            color: #555;
+        }
+    </style>
 </head>
+
 <body>
 
-<div class="container">
-
-    <!-- Cabeçalho (Logo + Nome da clínica ou fallback) -->
-    <div class="header">
+<!-- CABEÇALHO -->
+<div class="header">
+    <div>
         {% if clinica_config and clinica_config.logo %}
-            <img src="{{ clinica_config.logo.url }}" class="logo">
+            <img src="{{ clinica_config.logo.url }}">
         {% else %}
-            <img src="{{ STATIC_URL }}img/logo_odontoIA.png" class="logo">
-        {% endif %}
-
-        <div class="title-block">
-            <h1>
-                {% if clinica_config and clinica_config.nome_clinica %}
-                    {{ clinica_config.nome_clinica }}
-                {% else %}
-                    OdontoIA — Relatório Financeiro
-                {% endif %}
-            </h1>
-
-            <p>Período: {{ mes }}/{{ ano }}</p>
-            <p>Gerado em: {{ hoje|date:"d/m/Y H:i" }}</p>
-        </div>
-    </div>
-
-    <!-- Receitas -->
-    <h2>Receitas</h2>
-    {% if receitas %}
-    <table>
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Descrição</th>
-                <th>Origem</th>
-                <th>Valor (R$)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in receitas %}
-            <tr>
-                <td>{{ r.data|date:"d/m/Y" }}</td>
-                <td>{{ r.descricao }}</td>
-                <td>{{ r.origem }}</td>
-                <td>R$ {{ r.valor|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p>Nenhuma receita registrada no período.</p>
-    {% endif %}
-
-    <!-- Despesas -->
-    <h2>Despesas</h2>
-    {% if despesas %}
-    <table>
-        <thead>
-            <tr>
-                <th>Data</th>
-                <th>Categoria</th>
-                <th>Descrição</th>
-                <th>Valor (R$)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for d in despesas %}
-            <tr>
-                <td>{{ d.data|date:"d/m/Y" }}</td>
-                <td>{{ d.categoria }}</td>
-                <td>{{ d.descricao }}</td>
-                <td>R$ {{ d.valor|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    {% else %}
-        <p>Nenhuma despesa registrada no período.</p>
-    {% endif %}
-
-    <!-- RODAPÉ -->
-    <div class="footer">
-        {% if clinica_config and clinica_config.rodape_pdf %}
-            {{ clinica_config.rodape_pdf|default:rodape_padrao }}
-        {% else %}
-            Relatório gerado automaticamente pelo sistema OdontoIA.
+            <img src="{{ logo_padrao }}">
         {% endif %}
     </div>
 
+    <div>
+        <h2>Relatório Financeiro – {{ mes }}/{{ ano }}</h2>
+    </div>
+</div>
+
+<!-- RECEITAS -->
+<div class="section-title">Receitas</div>
+<table>
+    <tr>
+        <th>Data</th>
+        <th>Descrição</th>
+        <th>Valor (R$)</th>
+    </tr>
+
+    {% for r in receitas %}
+    <tr>
+        <td>{{ r.data|date:"d/m/Y" }}</td>
+        <td>{{ r.descricao }}</td>
+        <td>{{ r.valor }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">Nenhuma receita registrada.</td></tr>
+    {% endfor %}
+</table>
+
+<!-- DESPESAS -->
+<div class="section-title">Despesas</div>
+<table>
+    <tr>
+        <th>Data</th>
+        <th>Categoria</th>
+        <th>Descrição</th>
+        <th>Valor (R$)</th>
+    </tr>
+
+    {% for d in despesas %}
+    <tr>
+        <td>{{ d.data|date:"d/m/Y" }}</td>
+        <td>{{ d.categoria }}</td>
+        <td>{{ d.descricao }}</td>
+        <td>{{ d.valor }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">Nenhuma despesa registrada.</td></tr>
+    {% endfor %}
+</table>
+
+<!-- RODAPÉ -->
+<div class="footer">
+    {% if clinica_config and clinica_config.rodape_pdf %}
+        {{ clinica_config.rodape_pdf }}
+    {% else %}
+        Relatório gerado automaticamente pelo sistema OdontoIA · https://odontoia.com.br
+    {% endif %}
 </div>
 
 </body>

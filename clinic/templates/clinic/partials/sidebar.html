@@ -1,28 +1,19 @@
 {% load static %}
 
-<!-- DEBUG -->
-<p style="color:white; font-size:14px;">
-    DEBUG: Nome clínica = {{ clinica_config.nome_clinica }}
-</p>
-
-
 <aside id="sidebar" class="sidebar">
 
 <div class="sidebar-header">
 
-   {% if clinica_config and clinica_config.logo and clinica_config.logo.name %}
-        <!-- LOGO PERSONALIZADO -->
-        <img src="{{ clinica_config.logo.url }}" 
+    {% if clinica_config and clinica_config.logo %}
+        <img src="{{ clinica_config.logo.url }}"
              class="sidebar-logo"
              style="width:55px; height:55px; object-fit:contain;">
     {% else %}
-        <!-- LOGO PADRÃO -->
         <img src="{% static 'img/logo_odontoIA.png' %}"
              class="sidebar-logo"
              style="width:55px; height:55px; object-fit:contain;">
     {% endif %}
 
-    <!-- NOME DA CLÍNICA OU “OdontoIA” COMO FALLBACK -->
     <span class="sidebar-title">
         {% if clinica_config and clinica_config.nome_clinica %}
             {{ clinica_config.nome_clinica }}
@@ -32,7 +23,6 @@
     </span>
 
 </div>
-
 
     <nav class="sidebar-menu">
             <a href="{% url 'clinic:dashboard' %}"

@@ -1813,7 +1813,6 @@ def despesa_delete(request, pk):
 
 # Exportar Excel
 
-
 @login_required
 @require_active_subscription
 def financeiro_export_excel(request):
@@ -1856,52 +1855,53 @@ def financeiro_export_excel(request):
 
 
 # Exportar PDF
-
-
 @login_required
 @require_active_subscription
 def financeiro_export_pdf(request):
-    mes = request.GET.get("mes")
-    ano_param = request.GET.get("ano")
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet
 
-    hoje = datetime.now()
-    mes = int(mes) if mes else hoje.month
-    ano = int(ano_param) if ano_param else hoje.year
+    # --- filtros ---
+    mes = int(request.GET.get("mes", datetime.now().month))
+    ano = int(request.GET.get("ano", datetime.now().year))
 
-    receitas = Income.objects.filter(
-        owner=request.user,
-        data__month=mes,
-        data__year=ano
-    )
+    receitas = Income.objects.filter(owner=request.user, data__month=mes, data__year=ano)
+    despesas = Expense.objects.filter(owner=request.user, data__month=mes, data__year=ano)
 
-    despesas = Expense.objects.filter(
-        owner=request.user,
-        data__month=mes,
-        data__year=ano
-    )
+    # --- configurações da clínica ---
+    config = ClinicaConfig.objects.filter(owner=request.user).first()
 
-    # ---- CRIA PDF NA MEMÓRIA ----
+    # LOGO ---
+    if config and config.logo:
+        logo_path = config.logo.path
+    else:
+        logo_path = finders.find("img/logo_odontoIA.png")
+
+    # RODAPÉ ---
+    if config and config.rodape_pdf:
+        rodape = config.rodape_pdf
+    else:
+        rodape = "Relatório gerado automaticamente pelo sistema OdontoIA · odontoia.codertec.com.br"
+
+    # --- cria PDF ---
     buffer = io.BytesIO()
     pdf = SimpleDocTemplate(buffer, pagesize=A4)
-
-    elementos = []
     styles = getSampleStyleSheet()
+    elementos = []
 
-    # ---- LOGO ----
-    logo_path = finders.find("img/logo_odontoIA.png")
+    # LOGO
     if logo_path:
-        img = Image(logo_path, width=120, height=40)
-        elementos.append(img)
+        elementos.append(Image(logo_path, width=120, height=50))
         elementos.append(Spacer(1, 12))
 
-    # ---- TÍTULO ----
-    titulo = f"Relatório Financeiro - {mes:02d}/{ano}"
+    # Título
+    titulo = f"Relatório Financeiro — {mes:02d}/{ano}"
     elementos.append(Paragraph(titulo, styles["Title"]))
     elementos.append(Spacer(1, 20))
 
-    # -------------------------------------
-    # TABELA DE RECEITAS
-    # -------------------------------------
+    # ------------------------- RECEITAS -------------------------
     elementos.append(Paragraph("<b>Receitas</b>", styles["Heading2"]))
     elementos.append(Spacer(1, 6))
 
@@ -1920,25 +1920,22 @@ def financeiro_export_pdf(request):
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#4A90E2")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("ALIGN", (3, 1), (3, -1), "RIGHT"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey)
     ]))
-
     elementos.append(tabela_receitas)
     elementos.append(Spacer(1, 20))
 
-    # -------------------------------------
-    # TABELA DE DESPESAS
-    # -------------------------------------
+    # ------------------------- DESPESAS -------------------------
     elementos.append(Paragraph("<b>Despesas</b>", styles["Heading2"]))
     elementos.append(Spacer(1, 6))
 
     dados_despesas = [["Data", "Categoria", "Descrição", "Valor (R$)"]]
 
     for d in despesas:
+        categoria = d.categoria.nome if hasattr(d.categoria, "nome") else "-"
         dados_despesas.append([
             d.data.strftime("%d/%m/%Y"),
-            d.categoria.nome if hasattr(d.categoria, "nome") else "-",
+            categoria,
             d.descricao,
             f"{d.valor:.2f}"
         ])
@@ -1948,20 +1945,25 @@ def financeiro_export_pdf(request):
         ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#D0021B")),
         ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
         ("ALIGN", (3, 1), (3, -1), "RIGHT"),
-        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold")
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey)
     ]))
 
     elementos.append(tabela_despesas)
+    elementos.append(Spacer(1, 30))
 
-    # -------------------------------------
-    # FINALIZA
-    # -------------------------------------
+    # ------------------------- RODAPÉ -------------------------
+    rodape_p = Paragraph(
+        f"<para alignment='center'><font size='9' color='#666'>{rodape}</font></para>",
+        styles["Normal"]
+    )
+    elementos.append(rodape_p)
+
+    # FINALIZA PDF
     pdf.build(elementos)
 
     buffer.seek(0)
     response = HttpResponse(buffer, content_type="application/pdf")
-    response['Content-Disposition'] = f'attachment; filename="financeiro_{mes}_{ano}.pdf"'
+    response["Content-Disposition"] = f'attachment; filename=financeiro_{mes}_{ano}.pdf'    
 
     return response
 
