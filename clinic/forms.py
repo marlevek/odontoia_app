@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 
 class ClinicaConfigForm(forms.ModelForm):
     class Meta:
-        modelo = ClinicaConfig
+        model = ClinicaConfig
         fields = [
             'nome_clinica',
             'telefone',
