@@ -1993,4 +1993,7 @@ def clinica_config_view(request):
     else:
         form = ClinicaConfigForm(instance=config)
 
-    return render(request, "clinic/clinica_config.html", {"form": form})
+    return render(request, "clinic/clinica_config.html", {
+        "form": form,
+        'config': config,
+        })
