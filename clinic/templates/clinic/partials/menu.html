@@ -1,14 +1,14 @@
 {% load static %}
 
 <header class="navbar">
-    <div class="logo-container">
-        <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo OdontoIA" class="logo">
-        {% if clinica_config and clinica_config.logo %}
-    <img src="{{ clinica_config.logo.url }}" alt="Logo da Clínica" class="sidebar-logo">
+   <div class="logo-container">
+    {% if clinica_config and clinica_config.logo %}
+        <img src="{{ clinica_config.logo.url }}" alt="Logo da Clínica" class="logo">
     {% else %}
-    <img src="{% static 'img/logo_odontoIA.png' %}" alt="OdontoIA" class="sidebar-logo">
+        <img src="{% static 'img/logo_odontoIA.png' %}" alt="Logo OdontoIA" class="logo">
     {% endif %}
-    </div>
+</div>
+
 
     <!-- Botão mobile -->
     <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
