@@ -17,8 +17,8 @@ from django.utils.dateparse import parse_date
 from django.db.models import Q, Sum, Count
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from .models import Paciente, Consulta, Dentista, Procedimento, Assinatura, Pagamento, Income, Expense
-from .forms import PacienteForm, ProcedimentoForm, IncomeForm, ExpenseForm
+from .models import Paciente, Consulta, Dentista, Procedimento, Assinatura, Pagamento, Income, Expense, ClinicaConfig
+from .forms import PacienteForm, ProcedimentoForm, IncomeForm, ExpenseForm, ClinicaConfigForm
 from .forms_consulta import ConsultaForm
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
@@ -1971,3 +1971,26 @@ def is_premium(user):
     if not assinatura:
         return False
     return assinatura.tipo == 'premium' and assinatura.ativa
+
+
+@login_required
+@require_active_subscription
+def clinica_config_view(request):
+    # Só premium pode acessar
+    assinatura = Assinatura.objects.filter(user=request.user, ativa=True).first()
+    if not assinatura or assinatura.tipo != "premium":
+        messages.error(request, "Este recurso está disponível apenas no Plano Premium.")
+        return redirect("clinic:dashboard")
+
+    config, _ = ClinicaConfig.objects.get_or_create(owner=request.user)
+
+    if request.method == "POST":
+        form = ClinicaConfigForm(request.POST, request.FILES, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Configurações atualizadas com sucesso!")
+            return redirect("clinic:clinica_config")
+    else:
+        form = ClinicaConfigForm(instance=config)
+
+    return render(request, "clinic/clinica_config.html", {"form": form})

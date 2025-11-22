@@ -1,11 +1,36 @@
 from django import forms
 from validate_docbr import CPF
-from .models import Paciente, Procedimento, Dentista, Consulta, Income, Expense
+from .models import Paciente, Procedimento, Dentista, Consulta, Income, Expense, ClinicaConfig
 from django.conf import settings 
 from django.core.validators import EmailValidator 
 from django.core.exceptions import ValidationError
 
 
+class ClinicaConfigForm(forms.ModelForm):
+    class Meta:
+        modelo = ClinicaConfig
+        fields = [
+            'nome_clinica',
+            'telefone',
+            'endereco',
+            'site', 
+            'logo',
+            'cor_primaria',
+            'cor_secundaria',
+            'rodape_pdf',                  
+            ]
+        widgets = {
+            "nome_clinica": forms.TextInput(attrs={"class": "form-control"}),
+            "telefone": forms.TextInput(attrs={"class": "form-control"}),
+            "endereco": forms.TextInput(attrs={"class": "form-control"}),
+            "site": forms.URLInput(attrs={"class": "form-control"}),
+            "logo": forms.FileInput(attrs={"class": "form-control"}),
+            "cor_primaria": forms.TextInput(attrs={"type": "color", "class": "form-control form-control-color"}),
+            "cor_secundaria": forms.TextInput(attrs={"type": "color", "class": "form-control form-control-color"}),
+            "rodape_pdf": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+        }
+    
+    
 class DentistaForm(forms.ModelForm):
     class Meta:
         model = Dentista

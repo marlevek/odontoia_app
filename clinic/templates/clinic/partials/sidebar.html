@@ -8,6 +8,13 @@
     </div>
 
     <nav class="sidebar-menu">
+        {% if assinatura and assinatura.tipo == "premium" %}
+<li class="nav-item">
+    <a class="nav-link" href="{% url 'clinic:clinica_config' %}">
+        <i class="bi bi-gear"></i> Configurações da Clínica
+    </a>
+</li>
+{% endif %}
 
         <a href="{% url 'clinic:dashboard' %}"
             class="menu-item {% if request.path == '/dashboard/' %}active{% endif %}">

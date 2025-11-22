@@ -134,4 +134,7 @@ urlpatterns = [
 
     # IA e Insights
     path("ia-insights/", views.ia_insights, name="ia_insights"),
+    
+    # Configurações da Clínica
+     path('configuracoes/clinica/', views.clinica_config, name='clinica_config'),
 ]
