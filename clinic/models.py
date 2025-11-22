@@ -231,3 +231,35 @@ class Expense(models.Model):
 
     def __str__(self):
         return f"{self.categoria} - R$ {self.valor:.2f}"
+    
+
+# Configuração da clínica (plano Premium)
+class ClinicaConfig(models.Model):
+    owner = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='clinica_config'
+    )
+    nome_clinica = models.CharField(max_length=255, default="Minha Clínica")
+    logo = models.ImageField(upload_to="logos_clinicas/", blank=True, null=True)
+    cor_primaria = models.CharField(max_length=20, blank=True, null=True, help_text="Ex: #0033ff")
+    cor_secundaria = models.CharField(max_length=20, blank=True, null=True)
+    rodape_pdf = models.CharField(max_length=255, blank=True, null=True)
+    endereco = models.CharField(max_length=255, blank=True, null=True)
+    telefone = models.CharField(max_length=50, blank=True, null=True)
+    site = models.CharField(max_length=120, blank=True, null=True)
+
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Configuração da clínica de {self.owner.username}"
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+@receiver(post_save, sender=Assinatura)
+def criar_config_clinica(sender, instance, created, **kwargs):
+    """Cria uma configuração de clínica padrão ao ativar o plano Premium."""
+    if instance.tipo == 'premium' and instance.ativa:
+        ClinicaConfig.objects.get_or_create(owner=instance.user)

@@ -1,3 +1,8 @@
+from django.contrib.staticfiles import finders
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+import io
 from datetime import datetime, timedelta
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import A4
@@ -1807,7 +1812,7 @@ def despesa_delete(request, pk):
 
 
 # Exportar Excel
-import io
+
 
 @login_required
 @require_active_subscription
@@ -1851,11 +1856,6 @@ def financeiro_export_excel(request):
 
 
 # Exportar PDF
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from django.contrib.staticfiles import finders
 
 
 @login_required
@@ -1964,3 +1964,10 @@ def financeiro_export_pdf(request):
     response['Content-Disposition'] = f'attachment; filename="financeiro_{mes}_{ano}.pdf"'
 
     return response
+
+
+def is_premium(user):
+    assinatura = getattr(user, 'assinatura', None)
+    if not assinatura:
+        return False
+    return assinatura.tipo == 'premium' and assinatura.ativa
